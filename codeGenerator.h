@@ -9,7 +9,7 @@
 void genCstInstruction(const char *cstInstruct);
 
 /**
- *  \brief \brief Ser the value of a register to a const val
+ *  \brief \brief Set the value of a register to a const val
  *  @param reg The register to modify
  *  @param val The value to load
  */

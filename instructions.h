@@ -32,6 +32,17 @@
  */
 #define MIPS_RETURN_TO_REG "la %s ($v0)\n"
 
+/**
+ * @brief Calculate the sum of $a0 and $a1, return the sum value to $v0
+ * 
+ */
+#define MIPS_INT_SUM "la $t0 ($zero)\nadd $t0 $a0 $a1\nla $v0 ($t0)\n"
+
+/**
+ * @brief @brief Calculate the diferance between $a0 and $a1 ($a0 - $a1), return the sum value to $v0
+ * 
+ */
+
 
 
 #endif

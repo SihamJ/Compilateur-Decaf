@@ -7,12 +7,16 @@ typedef struct type {
 } type;
 
 const type INTEGER = {"INT", 4};
-const type DOUBLE = {"DOUBLE", 8};
-const type CHAR = {"CHAR", 1};
+const type BOOLEAN = {"BOOLEAN", 4};
+// Funtions are declared globally, we won't save them on stack. Hence, its size on stack is zero.(Its size should be useless.)
+const type FUNCTION = {"FUNCTION", 0};
 
 typedef struct entry {
     struct entry *parent;
     type type;
+    // As the prof did during TD, we use INT to represent BOOL
+    const char* name;
+    int value;
 } entry;
 
 
