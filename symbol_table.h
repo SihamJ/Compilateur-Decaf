@@ -6,10 +6,9 @@ typedef struct type {
     int size;
 } type;
 
-#define INTEGER type{"INT", 4};
-#define DOUBLE type{"DOUBLE", 8};
-#define CHAR type{"CHAR", 1};
-
+const type INTEGER = {"INT", 4};
+const type DOUBLE = {"DOUBLE", 8};
+const type CHAR = {"CHAR", 1};
 
 typedef struct entry {
     struct entry *parent;
