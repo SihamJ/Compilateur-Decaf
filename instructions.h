@@ -1,5 +1,5 @@
-#ifndef _OPERATIONS_H
-#define _OPERATIONS_H
+#ifndef OPERATIONS_H_
+#define OPERATIONS_H_
 
 /**
  * @param $a0 variable value

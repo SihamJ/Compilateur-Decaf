@@ -1,5 +1,5 @@
-#ifndef _SYMBOL_TABLE_H
-#define _SYMBOL_TABLE_H
+#ifndef SYMBOL_TABLE_H_
+#define SYMBOL_TABLE_H_
 
 typedef struct type {
     const char* name;

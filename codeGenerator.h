@@ -1,5 +1,5 @@
-#ifndef _CODE_GENERATOR_H
-#define _CODE_GENERATOR_H
+#ifndef CODE_GENERATOR_H_
+#define CODE_GENERATOR_H_
 
 /**
  * @brief Generate constant instructions (instructions without parameters)
