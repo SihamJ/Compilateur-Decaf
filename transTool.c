@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "instructions.h"
+#include "transTool.h"
 
 extern FILE *fout;
 
