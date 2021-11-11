@@ -42,7 +42,7 @@
  * @brief @brief Calculate the diferance between $a0 and $a1 ($a0 - $a1), return the sum value to $v0
  * 
  */
-
+#define MIPS_INT_SUB "la $t0 ($zero)\nadd $t0 $a0 $a1\nla $v0 ($t0)\n"
 
 
 #endif
