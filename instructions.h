@@ -20,29 +20,25 @@
 #define MIPS_ELIM_STACK "addiu $sp $sp $a0\n"
 
 /**
- * @brief Read value from stack at offset
- * @attention Always offer offset when using this instruction
- * \return $v0 Result value of reading
- */
-#define MIPS_READ_STACK "lw $v0 %d($sp)\n"
-
-/**
- * @brief By convention, a MIPS function's return value is stored in $v0
- *         this instruction copies the value to another register
- */
-#define MIPS_RETURN_TO_REG "la %s ($v0)\n"
-
-/**
  * @brief Calculate the sum of $a0 and $a1, return the sum value to $v0
  * 
  */
-#define MIPS_INT_SUM "la $t0 ($zero)\nadd $t0 $a0 $a1\nla $v0 ($t0)\n"
+#define MIPS_INT_SUM "la $v0 ($zero)\nadd $v0 $a0 $a1\n"
 
 /**
  * @brief @brief Calculate the diferance between $a0 and $a1 ($a0 - $a1), return the sum value to $v0
  * 
  */
-#define MIPS_INT_SUB "la $t0 ($zero)\nadd $t0 $a0 $a1\nla $v0 ($t0)\n"
+#define MIPS_INT_SUB "la $t0 ($zero)\nsub $t0 $a0 $a1\nla $v0 ($t0)\n"
 
+#define MIPS_INT_MULT "mult $a0 $a1\nmvlo $v0\n"
+
+#define MIPS_INT_DIV "div $a0 $a1\nmvlo $v0\n"
+
+#define MIPS_INT_MOD "div $a0 $a1\nmvhi $v0\n"
+
+// TODO: decl, read, write tab
+// TODO: decl str
+// TODO: I/O
 
 #endif
