@@ -1,16 +1,11 @@
-#define Q_ADD 100
-#define Q_SUB 101
-#define Q_MUL 102
-#define Q_DIV 103
-#define Q_GOTO 104
-
-#define QO_BOOL 200
-#define QO_INT 201
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct next{
   int addr;
   struct next* suiv;
-}next*;
+}*next;
 
 typedef enum quadop_type{
     QO_BOOL, QO_INT,
