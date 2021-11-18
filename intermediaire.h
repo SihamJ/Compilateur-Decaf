@@ -7,6 +7,10 @@
 #define QO_BOOL 200
 #define QO_INT 201
 
+typedef struct next{
+  int addr;
+  struct next* suiv;
+}next*;
 
 typedef enum quadop_type{
     QO_BOOL, QO_INT,
@@ -29,12 +33,14 @@ typedef struct quad{
   quad_type type;
   quadop op1, op2, op3;
   int label;
-} quad, quad_list*;
+} quad;
 
 
 quad global_code[5000]; // code généré
 size_t nextquad; // n° du prochain quad
 size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
-quad get_quad(quad_type type, quadop op1, quadop op2, quadop op3, int label); // retourne un quad avec les attributs spécifiés dans les paramètres
-void gencode(quad q); // écrie q dans global_code[nextquad] et incrémente nextquad
+void gencode(quad_type type, quadop op1, quadop op2, quadop op3, int label); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
 quadop* new_temp();
+next crelist(int addr);
+void complete(next n, int addr);
+next concat(next n1, next n2);

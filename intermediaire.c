@@ -12,17 +12,34 @@ quadop* new_temp(){
   return op;
 }
 
-quad get_quad(type t, quadop op1, quadop op2, quadop op3, int label){
-  quad q;
-  q.type = t;
-  q.op1 = op1;
-  q.op2 = op2;
-  q.op3 = op3;
-  q.label = label;
-  return q;
+void gencode(type t, quadop op1, quadop op2, quadop op3, int label){
+  global_code[nextquad].type = t;
+  global_code[nextquad].op1 = op1;
+  global_code[nextquad].op2 = op2;
+  global_code[nextquad].op3 = op3;
+  global_code[nextquad].label = label;
+  nextquad++;
 }
 
-void gencode(quad q){
-  global_code[nextquad] = q;
-  nextquad++;
+next crelist(int addr){
+  next n = malloc(sizeof(struct next));
+  n->addr = addr;
+  n->suiv = NULL;
+  return n;
+}
+
+void complete(next n, int addr){
+  next pt = n;
+  while(pt->suiv != NULL){
+    global_code[pt->addr].label = addr;
+    pt = pt->suiv;
+  }
+}
+
+next concat(next n1, next n2){
+  next pt = n1;
+  while(pt->suiv != NULL)
+    pt = pt->suiv;
+  pt->suiv = n2;
+  return n1;
 }
