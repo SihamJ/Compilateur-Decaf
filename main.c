@@ -6,8 +6,9 @@ extern int yylex();
 extern int yydebug;
 
 int main(){
-yydebug=1;
+//yydebug=1;
 int t = yyparse();
-printf("size: %ld, nb_var: %ld\n",nextquad,tmpCount);
+if (t==0)
+print_globalcode();
 return 0;
 }

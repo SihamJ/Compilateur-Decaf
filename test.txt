@@ -1,6 +1,9 @@
 {
+    int a;
+    int b;
+    bool c;
+    bool ay;
     a = 3+2*3; 
     b = c || d && 1;
-    b += a*c-(3+9);
-    ay = 2;
+    alpha += a*c-(3+9);
 }

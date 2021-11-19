@@ -4,8 +4,15 @@
 
 quadop new_temp(){
   quadop op;
-  op.u.name = malloc(10);
-  snprintf(op.u.name,9,"t%ld",tmpCount);
+  int a = tmpCount;
+  int cpt = 1;
+  while(a){
+    a=a/10;
+    cpt++;
+  }
+  op.u.name = malloc(cpt+2);
+  op.type = QO_ID;
+  sprintf(op.u.name,"t%ld",tmpCount);
   // TO DO: mettre op dans la table des symboles
   tmpCount++;
   return op;
@@ -27,14 +34,6 @@ list crelist(int addr){
   return n;
 }
 
-void complete(list n, int addr){
-  list pt = n;
-  while(pt->suiv != NULL){
-    global_code[pt->addr].label = addr;
-    pt = pt->suiv;
-  }
-}
-
 list concat(list n1, list n2){
   list pt = n1;
   while(pt->suiv != NULL)
@@ -50,5 +49,25 @@ quadop quadop_name(char *name){
   return q;
 }
 
+void print_globalcode(){
+  printf("__________________________\n    op1   op2   op3   oper\n__________________________\n");
+  for (int i=0; i<nextquad; i++){
+    printf("%d: ",i);
+    if(global_code[i].op1.type == QO_ID )
+      printf(" %s   ",global_code[i].op1.u.name);
+    else
+      printf(" %d   ",global_code[i].op1.u.cst);
+    if(global_code[i].op2.type == QO_ID)
+      printf(" %s   ",global_code[i].op2.u.name);
+    else
+      printf(" %d   ",global_code[i].op2.u.cst);
+    if(global_code[i].op3.type == QO_ID)
+      printf(" %s   ",global_code[i].op3.u.name);
+    else
+      printf(" %d   ",global_code[i].op3.u.cst);
 
+    printf("op[%d] \n",global_code[i].type);
+  }
+  printf("\n");
+}
 #endif

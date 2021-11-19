@@ -45,7 +45,9 @@ newline			\\n
 "{" return oac;
 "}" return cac;
 "!" return not;
-
+"int" return integer;
+"bool" return boolean;
+"," 	return sep;
 
 {bool_literal} 		{
 						yylval.boolval = (strcmp(yytext, "true") == 0);

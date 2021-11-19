@@ -2,14 +2,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef struct list{
   int addr;
   struct list* suiv;
 }*list;
 
+
 typedef enum quadop_type{
-    QO_BOOLCST, QO_INTCST, QO_BOOLID, QO_INTID 
+    QO_CST, QO_ID,
   }quadop_type;
 
 typedef enum quad_type{
