@@ -2,16 +2,16 @@
 #define __INTERMEDIAIRE_H__
 #include "intermediaire.h"
 
-quadop* new_temp(){
-  quadop* op;
-  op->u.name = malloc(10);
-  snprintf(op->u.name,9,"t%ld",tmpCount);
+quadop new_temp(){
+  quadop op;
+  op.u.name = malloc(10);
+  snprintf(op.u.name,9,"t%ld",tmpCount);
   // TO DO: mettre op dans la table des symboles
   tmpCount++;
   return op;
 }
 
-void gencode(quad_type t, quadop op1, quadop op2, quadop op3, int label){
+void gencode(quadop op1, quadop op2, quadop op3, quad_type t, int label){
   global_code[nextquad].type = t;
   global_code[nextquad].op1 = op1;
   global_code[nextquad].op2 = op2;
@@ -20,27 +20,35 @@ void gencode(quad_type t, quadop op1, quadop op2, quadop op3, int label){
   nextquad++;
 }
 
-next crelist(int addr){
-  next n = (next) malloc(sizeof(struct next));
+list crelist(int addr){
+  list n = (list) malloc(sizeof(struct list));
   n->addr = addr;
   n->suiv = NULL;
   return n;
 }
 
-void complete(next n, int addr){
-  next pt = n;
+void complete(list n, int addr){
+  list pt = n;
   while(pt->suiv != NULL){
     global_code[pt->addr].label = addr;
     pt = pt->suiv;
   }
 }
 
-next concat(next n1, next n2){
-  next pt = n1;
+list concat(list n1, list n2){
+  list pt = n1;
   while(pt->suiv != NULL)
     pt = pt->suiv;
   pt->suiv = n2;
   return n1;
 }
+
+quadop quadop_name(char *name){
+  quadop q;
+  q.u.name = malloc(strlen(name));
+  strcpy(q.u.name, name);
+  return q;
+}
+
 
 #endif

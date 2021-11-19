@@ -1,18 +1,19 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-typedef struct next{
+typedef struct list{
   int addr;
-  struct next* suiv;
-}*next;
+  struct list* suiv;
+}*list;
 
 typedef enum quadop_type{
-    QO_BOOL, QO_INT,
+    QO_BOOLCST, QO_INTCST, QO_BOOLID, QO_INTID 
   }quadop_type;
 
 typedef enum quad_type{
-    Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_GOTO,
+    Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AND, Q_OR, Q_NOT, Q_AFF, Q_AFFADD, Q_AFFSUB,  
   }quad_type;
 
 typedef struct quadop {
@@ -34,8 +35,10 @@ typedef struct quad{
 quad global_code[5000]; // code généré
 size_t nextquad; // n° du prochain quad
 size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
-void gencode(quad_type type, quadop op1, quadop op2, quadop op3, int label); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
-quadop* new_temp();
-next crelist(int addr);
-void complete(next n, int addr);
-next concat(next n1, next n2);
+void gencode(quadop op1, quadop op2, quadop op3, quad_type type, int label); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
+quadop new_temp();
+list crelist(int addr);
+void complete(list n, int addr);
+list concat(list n1, list n2);
+quadop quadop_name(char *name);
+void print_globalcode();
