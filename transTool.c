@@ -1,0 +1,105 @@
+#include <stdio.h>
+#include "instructions.h"
+#include "transTool.h"
+
+extern FILE *fout;
+static int tmp_reg_count = 0;
+
+
+void mips_load_immediate(char *reg, int val) {
+    fprintf(fout, "li %s %d\n", reg, val);
+}
+
+void mips_load_from_addr(char *target, char *src) {
+    fprintf(fout, "la %s (%s)\n", target, src);
+}
+
+
+void mips_copy_rtn_val(char *target) {
+    fprintf(fout, "la %s ($v0)\n", target);
+}
+
+int mips_save_const_int(int val) {   
+    mips_load_immediate("$a1", sizeof(int));
+    mips_load_immediate("$a0", val);
+
+    mips_instruction(MIPS_PUSH);
+    return sizeof(int);
+}
+
+void mips_read_stack(char* target, int offset) {
+    fprintf(fout, "lw $v0 %d($sp)\n", offset);
+
+    if (target!=NULL)
+        mips_copy_rtn_val(target);
+}
+
+void mips_instruction(const char *cstInstruct) {
+    fprintf(fout, cstInstruct);
+}
+
+int mips_save_tmp_int(int val) {
+    fprintf(fout, "li $t%d %d\n", tmp_reg_count, val);
+    tmp_reg_count++;
+    return tmp_reg_count-1;
+}
+
+void mips_destroy_tmp_vals(int count) {
+    tmp_reg_count-=count;
+}
+
+// if target != null, copy result from $v0 to target
+void mips_sum(char *target, char *addL, char *addR) {
+    mips_load_from_addr("$a0", addL);
+    mips_load_from_addr("$a1", addR);
+
+    mips_instruction(MIPS_INT_SUM);
+
+    if (target != NULL)
+        mips_copy_rtn_val(target);
+}
+
+// if target != null, copy result from $v0 to target
+void mips_sub(char *target, char *subL, char *subR) {
+    mips_load_from_addr("$a0", subL);
+    mips_load_from_addr("$a1", subR);
+
+    mips_instruction(MIPS_INT_SUB);
+
+    if (target != NULL)
+        mips_copy_rtn_val(target);
+}
+
+// if target != null, copy result from $v0 to target
+// long int result is not supported
+void mips_mult(char *target, char *multL, char *multR) {
+    mips_load_from_addr("$a0", multL);
+    mips_load_from_addr("$a1", multR);
+
+    mips_instruction(MIPS_INT_MULT);
+
+    if (target != NULL)
+        mips_copy_rtn_val(target);
+}
+
+// if target != null, copy result from $v0 to target
+void mips_div(char *target, char *divL, char *divR) {
+    mips_load_from_addr("$a0", divL);
+    mips_load_from_addr("$a1", divR);
+
+    mips_instruction(MIPS_INT_DIV);
+
+    if (target != NULL)
+        mips_copy_rtn_val(target);
+}
+
+// if target != null, copy result from $v0 to target
+void mips_mod(char *target, char *modL, char *modR) {
+    mips_load_from_addr("$a0", modL);
+    mips_load_from_addr("$a1", modR);
+
+    mips_instruction(MIPS_INT_MOD);
+
+    if (target != NULL)
+        mips_copy_rtn_val(target);
+}

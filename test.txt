@@ -1,0 +1,9 @@
+{
+    int a;
+    int b;
+    bool c;
+    bool ay;
+    a = 3+2*3; 
+    b = c || d && 1;
+    alpha += a*c-(3+9);
+}
