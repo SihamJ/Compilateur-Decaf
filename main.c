@@ -6,7 +6,7 @@ extern int yylex();
 extern int yydebug;
 
 int main(){
-//yydebug=1;
+// yydebug=1;
 int t = yyparse();
 if (t==0)
 print_globalcode();

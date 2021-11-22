@@ -45,8 +45,10 @@ newline			\\n
 "{" return oac;
 "}" return cac;
 "!" return not;
-"int" return integer;
-"bool" return boolean;
+"int" {yylval.intval = 1;
+		return integer;}
+"bool" {yylval.intval = 0;
+		return boolean;}
 "," 	return sep;
 
 {bool_literal} 		{
@@ -70,7 +72,7 @@ newline			\\n
 					}
 
 {id}				{
-						yylval.stringval = malloc(strlen(yytext));
+						yylval.stringval = malloc(strlen(yytext)+1);
 						strcpy(yylval.stringval, yytext);
 						return id;
 					}

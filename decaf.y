@@ -4,6 +4,10 @@
 	#include <stdbool.h>
 	#include <string.h>
 	#include "intermediaire.h"
+
+	#define INT 1
+	#define BOOL 0
+
 	int yylex();
 	void yyerror(char*);
 %}
@@ -54,18 +58,19 @@ A 			:	A S	{;}
 
 var_decl 	:  	type B instr {	
 								quadop qo,q1;
-								if($1 == integer)
+								if($1 == INT)
 									q1.u.cst = 0;
-								else if($1 == boolean)
+								else if($1 == BOOL)
 									q1.u.cst = false;
 								struct decl *pt = &$2;
 								q1.type = QO_CST;
-								q1.u.cst = false;
+								// q1.u.cst = 0;
 								qo.type = QO_ID;
 								while(pt != NULL){
-									qo.u.name = malloc(strlen(pt->name));
+									qo.u.name = malloc((strlen(pt->name)+1));
 									strcpy(qo.u.name, pt->name);
 									gencode(qo,q1,q1,Q_AFF,-1);
+									// Inserer dans la table des symboles
 									pt = pt->suiv;
 								}
 							 }
@@ -73,8 +78,8 @@ var_decl 	:  	type B instr {
 type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
 
-B 			:	B sep id 	{ 	struct decl var; var.name = malloc(strlen($3)); strcpy(var.name,$3);var.suiv = &$$; $$ = var;}
-			|	id			{	$$.name = malloc(strlen($1)); strcpy($$.name,$1); $$.suiv = NULL;}
+B 			:	id sep B 	{ 	struct decl var; var.name = malloc((strlen($1)+1)); strcpy(var.name,$1);var.suiv = &$3; $$ = var;}
+			|	id			{	$$.name = malloc((strlen($1)+1)); strcpy($$.name,$1); $$.suiv = NULL;}
 
 S 			:	id assign_op expr instr {
 											quadop q1, q2;
