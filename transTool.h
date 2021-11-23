@@ -16,10 +16,15 @@ void mips_instruction(const char *cstInstruct);
 void mips_load_immediate(char *reg, int val);
 
 /**
- * \brief Save one Integer to the stack
+ * \brief Save one word to the stack
  * \return The size occupied on the stack
  */
-int mips_save_const_int(int val);
+int mips_push_word(int val);
+
+/**
+ * \brief Pop one word from the stack to $v0
+ */
+void mips_pop_word();
 
 /**
  * @brief  Copy the value from stack(at offset) to the target register
