@@ -19,10 +19,8 @@ void mips_copy_rtn_val(char *target) {
     fprintf(fout, "la %s ($v0)\n", target);
 }
 
-int mips_push_word(int val) {   
-    mips_load_immediate("$a1", sizeof(int));
-    mips_load_immediate("$a0", val);
-
+int mips_push_word(char *src) {
+    mips_load_from_addr("$a0", src);
     mips_instruction(MIPS_PUSH);
     return sizeof(int);
 }

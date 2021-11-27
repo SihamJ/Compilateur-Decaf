@@ -19,7 +19,7 @@ void mips_load_immediate(char *reg, int val);
  * \brief Save one word to the stack
  * \return The size occupied on the stack
  */
-int mips_push_word(int val);
+int mips_push_word(char *val);
 
 /**
  * \brief Pop one word from the stack to $v0
@@ -33,5 +33,15 @@ void mips_pop_word();
  * @param offset 
  */
 void mips_read_stack(char *target, int offset);
+
+void mips_sum(char *target, char *addL, char *addR);
+
+void mips_sub(char *target, char *subL, char *subR);
+
+void mips_div(char *target, char *subL, char *subR);
+
+void mips_mod(char *target, char *subL, char *subR);
+
+void mips_mult(char *target, char *subL, char *subR)
 
 #endif
