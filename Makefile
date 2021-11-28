@@ -1,5 +1,6 @@
 prefixe=decaf
 dep=intermediaire
+dep2=hashtable
 # exige 3 fichiers:
 # - $(prefixe).y (fichier bison)
 # - $(prefixe).lex (fichier flex)
@@ -11,12 +12,12 @@ dep=intermediaire
 
 all: main
 
-main: $(prefixe).tab.o lex.yy.o main.o $(dep).o
+main: $(prefixe).tab.o lex.yy.o main.o $(dep).o $(dep2).o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-*.c : $(dep).h
-*.y : $(dep).h
-*.lex : $(dep).h
+*.c : $(dep).h $(dep2).h
+*.y : $(dep).h $(dep2).h
+*.lex : $(dep).h $(dep2).h
 
 $(prefixe).tab.c: $(prefixe).y
 	bison -t -d $(prefixe).y

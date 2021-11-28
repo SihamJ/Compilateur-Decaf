@@ -4,7 +4,9 @@
 	#include <stdbool.h>
 	#include <string.h>
 	#include "intermediaire.h"
+	#include "hashtable.h"
 	#include "decaf.tab.h"
+	#include "token.h"
 %}
 
 %option noyywrap
@@ -23,33 +25,33 @@ id 				{alpha}{alpha_num}*
 newline			\\n
 %%
 
-"=" return aff;
+"=" return '=';
 "+=" return aff_add;
 "-=" return aff_sub;
-"+" return add;
-"-" return sub;
-"/" return divide;
-"*" return mul;
-"%" return mod;
-"<" return lt;
-">" return gt;
+"+" return '+';
+"-" return '-';
+"/" return '/';
+"*" return '*';
+"%" return '%';
+"<" return '<';
+">" return '>';
 ">=" geq;
 "<=" leq;
 "==" return eq;
 "!=" return neq;
 "&&" return and;
 "||" return or;
-"(" return opar;
-")" return cpar;
-";" return instr;
-"{" return oac;
-"}" return cac;
-"!" return not;
-"int" {yylval.intval = 1;
+"(" return '(';
+")" return ')';
+";" return ';';
+"{" return '{';
+"}" return '}';
+"!" return '!';
+"int" {yylval.intval = INT;
 		return integer;}
-"bool" {yylval.intval = 0;
+"bool" {yylval.intval = BOOL;
 		return boolean;}
-"," 	return sep;
+"," 	return ',';
 
 {bool_literal} 		{
 						yylval.boolval = (strcmp(yytext, "true") == 0);
@@ -77,11 +79,7 @@ newline			\\n
 						return id;
 					}
 
-{newline}			{
-						return newline;
-					}
-
-[[:space:]] ;
+[[:space:]] 		;
 
 .					;
 

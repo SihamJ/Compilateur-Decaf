@@ -2,7 +2,6 @@
 #define __HASHTABLE_H__
 #include "hashtable.h"
 
-#define CAPACITY 50000 // Size of the Hash Table
 
 unsigned long hash_function(char *str)
 {
@@ -66,7 +65,6 @@ static Ht_item *linkedlist_remove(LinkedList *list)
     Ht_item *it = NULL;
     memcpy(temp->item, it, sizeof(Ht_item));
     free(temp->item->key);
-    free(temp->item->value);
     free(temp->item);
     free(temp);
     return it;
@@ -80,7 +78,6 @@ static void free_linkedlist(LinkedList *list)
         temp = list;
         list = list->next;
         free(temp->item->key);
-        free(temp->item->value);
         free(temp->item);
         free(temp);
     }
@@ -102,14 +99,13 @@ static void free_lists(HashTable *table)
     free(lists);
 }
 
-Ht_item *create_item(char *key, char *value)
+Ht_item *create_item(char *key, int val)
 {
-    Ht_item *item = (Ht_item *)malloc(sizeof(Ht_item));
-    item->key = (char *)malloc(strlen(key) + 1);
-    item->value = (char *)malloc(strlen(value) + 1);
-
+    Ht_item *item = (Ht_item *) malloc(sizeof(Ht_item));
+    item->key = (char *) malloc(strlen(key) + 1);
     strcpy(item->key, key);
-    strcpy(item->value, value);
+
+    item->value = val;
 
     return item;
 }
@@ -130,7 +126,6 @@ HashTable *create_table()
 void free_item(Ht_item *item)
 {
     free(item->key);
-    free(item->value);
     free(item);
 }
 
@@ -154,7 +149,7 @@ void handle_collision(HashTable *table, unsigned long index, Ht_item *item)
 
     if (head == NULL)
     {
-        // We need to crate the list
+        // We need to create the list
         head = allocate_list();
         head->item = item;
         table->lists[index] = head;
@@ -168,12 +163,10 @@ void handle_collision(HashTable *table, unsigned long index, Ht_item *item)
     }
 }
 
-void ht_insert(HashTable *table, char *key, char *value)
+void ht_insert(HashTable *table, Ht_item *item)
 {
-    // Create the item
-    Ht_item *item = create_item(key, value);
 
-    unsigned long index = hash_function(key);
+    unsigned long index = hash_function(item->key);
 
     Ht_item *current_item = table->items[index];
 
@@ -197,9 +190,9 @@ void ht_insert(HashTable *table, char *key, char *value)
     else
     {
         //update value
-        if (strcmp(current_item->key, key) == 0)
+        if (strcmp(current_item->key, item->key) == 0)
         {
-            strcpy(table->items[index]->value, value);
+            table->items[index]->value = item->value;
             return;
         }
 
@@ -212,7 +205,7 @@ void ht_insert(HashTable *table, char *key, char *value)
     }
 }
 
-char *ht_search(HashTable *table, char *key)
+int ht_search(HashTable *table, char *key)
 {
     // Searches the key in the hashtable
     // and returns NULL if it doesn't exist
@@ -226,11 +219,11 @@ char *ht_search(HashTable *table, char *key)
         if (strcmp(item->key, key) == 0)
             return item->value;
         if (head == NULL)
-            return NULL;
+            return -1;
         item = head->item;
         head = head->next;
     }
-    return NULL;
+    return -1;
 }
 
 void ht_delete(HashTable *table, char *key)
@@ -311,14 +304,15 @@ void print_table(HashTable *table)
     {
         if (table->items[i])
         {
-            printf("Index:%d, Key:%s, Value:%s", i, table->items[i]->key, table->items[i]->value);
+            printf("Index:%d, Key:%s, Value:%d", i, table->items[i]->key, table->items[i]->value);
+
             if (table->lists[i])
             {
                 printf(" => list => ");
                 LinkedList *head = table->lists[i];
                 while (head)
                 {
-                    printf("Key:%s, Value:%s ", head->item->key, head->item->value);
+                    printf("Key:%s, Value:%d", head->item->key, head->item->value);
                     head = head->next;
                 }
             }
@@ -327,3 +321,42 @@ void print_table(HashTable *table)
     }
     printf("-------------------\n");
 }
+
+void pushctx(){
+    sommet++;
+    context[sommet] = create_table();
+}
+
+void popctx(){
+    sommet--;
+}
+
+HashTable* currentctx(){
+    return context[sommet];
+}
+
+void newname(Ht_item *item){
+    ht_insert(currentctx(), item);
+}
+
+int lookup(char *key){
+    int val;
+    for(int i=sommet; i>=0; i--){
+        if((val = ht_search(context[i], key)) != -1){
+            return val;
+        }
+    }
+    return -1;
+}
+
+void print_ctx(){
+    printf("\nTABLES DES SUMBOLES:\n\n");
+    for (int i=sommet; i>=0; i--){
+        printf("Context n° %d:",i);
+        print_table(context[i]);
+        printf("\n");
+    }
+    printf("\n");
+}
+
+#endif

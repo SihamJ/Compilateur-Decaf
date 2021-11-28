@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "token.h"
+
 
 typedef struct list{
   int addr;
@@ -42,5 +44,4 @@ quadop new_temp();
 list crelist(int addr);
 void complete(list n, int addr);
 list concat(list n1, list n2);
-quadop quadop_name(char *name);
 void print_globalcode();

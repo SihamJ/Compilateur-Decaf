@@ -42,15 +42,9 @@ list concat(list n1, list n2){
   return n1;
 }
 
-quadop quadop_name(char *name){
-  quadop q;
-  q.u.name = malloc(strlen(name));
-  strcpy(q.u.name, name);
-  return q;
-}
 
 void print_globalcode(){
-  printf("__________________________\n    op1   op2   op3   oper\n__________________________\n");
+  printf("\nCode Intermediaire:\n__________________________\n    op1   op2   op3   oper\n__________________________\n");
   for (int i=0; i<nextquad; i++){
     printf("%d: ",i);
     if(global_code[i].op1.type == QO_ID )
