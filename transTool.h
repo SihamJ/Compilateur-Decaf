@@ -42,6 +42,6 @@ void mips_div(char *target, char *subL, char *subR);
 
 void mips_mod(char *target, char *subL, char *subR);
 
-void mips_mult(char *target, char *subL, char *subR)
+void mips_mult(char *target, char *subL, char *subR);
 
 #endif
