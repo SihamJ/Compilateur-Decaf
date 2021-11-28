@@ -105,7 +105,6 @@ statement 	:	id assign_op expr ';' {				int val = lookup($1);
 													gencode(q1,$3.result,$3.result,$2,-1);
 												}
 
-/* TO_DO: Vérifier les types et définir le type de $$*/
 expr		:	expr '+' expr			{
 											if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
