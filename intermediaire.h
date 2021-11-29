@@ -1,9 +1,13 @@
+#ifndef INTERMEDIATE_H_
+#define INTERMEDIATE_H_
+
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "token.h"
+#include "hashtable.h"
 
 
 typedef struct list{
@@ -13,7 +17,7 @@ typedef struct list{
 
 
 typedef enum quadop_type{
-    QO_CST, QO_ID,
+    QO_CST, QO_ID, QO_TMP
   }quadop_type;
 
 typedef enum quad_type{
@@ -24,7 +28,8 @@ typedef struct quadop {
   quadop_type type;
   union {
     int cst;
-    char* name;
+	char* temp;
+    Ht_item* name;
   } u;
 } quadop;
 
@@ -45,3 +50,5 @@ list crelist(int addr);
 void complete(list n, int addr);
 list concat(list n1, list n2);
 void print_globalcode();
+
+#endif

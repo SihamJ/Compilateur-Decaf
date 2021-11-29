@@ -60,8 +60,6 @@ V 			:	var_decl V 	{;}
 
 var_decl 	:  	type B ';' {	
 								quadop qo,q1;
-								Ht_item *item = (Ht_item*) malloc(sizeof(Ht_item));
-								item->value = $1;
 								if($1 == INT)
 									q1.u.cst = 0;
 								else if($1 == BOOL)
@@ -70,11 +68,10 @@ var_decl 	:  	type B ';' {
 								q1.type = QO_CST;
 								qo.type = QO_ID;
 								while(pt != NULL){
-									qo.u.name = malloc(strlen(pt->name)+1);
-									strcpy(qo.u.name, pt->name);
+									Ht_item *item = (Ht_item*) malloc(sizeof(Ht_item));
+									qo.u.name = item;
 									gencode(qo,q1,q1,Q_AFF,-1);
-
-									// Insertion de item dans la table des symboles:
+									item->value = $1;
 									item->key = malloc(strlen(pt->name)+1);
 									strcpy(item->key, pt->name);
 									newname(item);
@@ -91,16 +88,15 @@ type		:	integer {$$=$1;}
 S 			: 	statement S 	{;}
 			| 	%empty			{;}
 
-statement 	:	id assign_op expr ';' {				int val = lookup($1);
-													if (val == -1)
+statement 	:	id assign_op expr ';' {				Ht_item *val = lookup($1);
+													if (!val)
 														yyerror("Erreur: Variable non déclarée\n");
-													if(val != $3.type)
+													if(val->value != $3.type)
 														yyerror("Erreur: Type de valeur incorrecte\n");
-													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val == BOOL || $3.type == BOOL))
+													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3.type == BOOL))
 														yyerror("Erreur: Type de valeur incorrecte\n");
 													quadop q1, q2;
-													q1.u.name = malloc(strlen($1));
-													strcpy(q1.u.name, $1);
+													q1.u.name = lookup($1);
 													q1.type = QO_ID;
 													gencode(q1,$3.result,$3.result,$2,-1);
 												}
@@ -150,13 +146,12 @@ expr		:	expr '+' expr			{
 											$$.type = $1.type;
 											}
 			|	id 						{
-											int val = lookup($1);
-											if(val == -1)
+											Ht_item *val = lookup($1);
+											if(!val)
 												yyerror("Erreur: Variable non déclarée\n");
-											$$.result.u.name = malloc(strlen($1)+1);
-											strcpy($$.result.u.name, $1);
+											$$.result.u.name = lookup($1);
 											$$.result.type = QO_ID;
-											$$.type = val;			
+											$$.type = val->value;			
 											}
 			|	'-' expr %prec NEG 		{
 											if($2.type != INT)

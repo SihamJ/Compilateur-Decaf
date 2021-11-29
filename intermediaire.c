@@ -11,8 +11,8 @@ quadop new_temp(){
     cpt++;
   }
   op.u.name = malloc(cpt+2);
-  op.type = QO_ID;
-  sprintf(op.u.name,"t%ld",tmpCount);
+  op.type = QO_TMP;
+  sprintf(op.u.temp, "t%ld",tmpCount);
   // TO DO: mettre op dans la table des symboles
   tmpCount++;
   return op;
@@ -48,17 +48,23 @@ void print_globalcode(){
   for (int i=0; i<nextquad; i++){
     printf("%d: ",i);
     if(global_code[i].op1.type == QO_ID )
-      printf(" %s   ",global_code[i].op1.u.name);
-    else
+      printf(" %s   ",global_code[i].op1.u.name->key);
+    else if(global_code[i].op1.type == QO_CST)
       printf(" %d   ",global_code[i].op1.u.cst);
+	else
+	  printf(" %s   ",global_code[i].op1.u.temp);
     if(global_code[i].op2.type == QO_ID)
-      printf(" %s   ",global_code[i].op2.u.name);
-    else
+      printf(" %s   ",global_code[i].op2.u.name->key);
+    else if(global_code[i].op2.type == QO_CST)
       printf(" %d   ",global_code[i].op2.u.cst);
+	else
+	  printf(" %s   ",global_code[i].op2.u.temp);
     if(global_code[i].op3.type == QO_ID)
-      printf(" %s   ",global_code[i].op3.u.name);
-    else
+      printf(" %s   ",global_code[i].op3.u.name->key);
+    else if(global_code[i].op3.type == QO_CST)
       printf(" %d   ",global_code[i].op3.u.cst);
+	else
+	  printf(" %s   ",global_code[i].op3.u.temp);
 
     printf("op[%d] \n",global_code[i].type);
   }

@@ -184,7 +184,6 @@ void ht_insert(HashTable *table, Ht_item *item)
 
         // Insert directly
         table->items[index] = item;
-        table->count++;
     }
 
     else
@@ -205,7 +204,7 @@ void ht_insert(HashTable *table, Ht_item *item)
     }
 }
 
-int ht_search(HashTable *table, char *key)
+Ht_item *ht_search(HashTable *table, char *key)
 {
     // Searches the key in the hashtable
     // and returns NULL if it doesn't exist
@@ -217,13 +216,13 @@ int ht_search(HashTable *table, char *key)
     while (item != NULL)
     {
         if (strcmp(item->key, key) == 0)
-            return item->value;
+            return item;
         if (head == NULL)
-            return -1;
+            return NULL;
         item = head->item;
         head = head->next;
     }
-    return -1;
+    return NULL;
 }
 
 void ht_delete(HashTable *table, char *key)
@@ -323,37 +322,39 @@ void print_table(HashTable *table)
 }
 
 void pushctx(){
-    sommet++;
-    context[sommet] = create_table();
+    HashTable *temp = create_table();
+	temp->next = curr_context;
+	curr_context = temp;
 }
 
 void popctx(){
-    sommet--;
-}
-
-HashTable* currentctx(){
-    return context[sommet];
+    struct HashTable *temp = curr_context;
+	curr_context = curr_context->next;
+	free_table(temp);
 }
 
 void newname(Ht_item *item){
-    ht_insert(currentctx(), item);
+	item->order = curr_context->count++;
+	item->tos = curr_context;
+    ht_insert(curr_context, item);
 }
 
-int lookup(char *key){
-    int val;
-    for(int i=sommet; i>=0; i--){
-        if((val = ht_search(context[i], key)) != -1){
+Ht_item *lookup(char *key){
+    Ht_item *val;
+    for(HashTable *i=curr_context; i; i = i->next){
+        if((val = ht_search(i, key)) != NULL){
             return val;
         }
     }
-    return -1;
+    return NULL;
 }
 
 void print_ctx(){
     printf("\nTABLES DES SUMBOLES:\n\n");
-    for (int i=sommet; i>=0; i--){
-        printf("Context n° %d:",i);
-        print_table(context[i]);
+	int count = 0;
+    for (HashTable *i=curr_context; i; i = i->next){
+        printf("Context n° %d:",count++);
+        print_table(i);
         printf("\n");
     }
     printf("\n");
