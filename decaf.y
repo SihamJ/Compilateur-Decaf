@@ -53,7 +53,7 @@
 
 
 %%
-block 		:	'{' {pushctx();} V S '}' { /* popctx() */ ;}
+block 		:	'{' {pushctx(); glob_context = curr_context;} V S '}' {/* popctx() */;}
 
 V 			:	var_decl V 	{;}
 			|	%empty		{;}
@@ -69,7 +69,7 @@ var_decl 	:  	type B ';' {
 								qo.type = QO_ID;
 								while(pt != NULL){
 									Ht_item *item = (Ht_item*) malloc(sizeof(Ht_item));
-									qo.u.name = item;
+									qo.u.offset = -4;
 									gencode(qo,q1,q1,Q_AFF,-1);
 									item->value = $1;
 									item->key = malloc(strlen(pt->name)+1);
@@ -96,7 +96,7 @@ statement 	:	id assign_op expr ';' {				Ht_item *val = lookup($1);
 													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3.type == BOOL))
 														yyerror("Erreur: Type de valeur incorrecte\n");
 													quadop q1, q2;
-													q1.u.name = lookup($1);
+													q1.u.offset = offset(val);
 													q1.type = QO_ID;
 													gencode(q1,$3.result,$3.result,$2,-1);
 												}
@@ -149,7 +149,7 @@ expr		:	expr '+' expr			{
 											Ht_item *val = lookup($1);
 											if(!val)
 												yyerror("Erreur: Variable non déclarée\n");
-											$$.result.u.name = lookup($1);
+											$$.result.u.offset = offset(val);
 											$$.result.type = QO_ID;
 											$$.type = val->value;			
 											}

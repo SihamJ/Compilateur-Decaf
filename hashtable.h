@@ -6,13 +6,12 @@
 #include <stdbool.h>
 #include "token.h"
 
+
 typedef struct Ht_item {
     char *key;
     int value;
 	int order;
-	struct Hashtable *tos;
 } Ht_item;
-
 
 typedef struct LinkedList {
     Ht_item *item;
@@ -45,6 +44,9 @@ void newname(Ht_item *item);
 Ht_item *lookup(char *key);
 void print_ctx();
 
+int offset(Ht_item *item);
+
 HashTable* curr_context;
+HashTable* glob_context;
 
 #endif

@@ -1,5 +1,3 @@
-#ifndef __HASHTABLE_H__
-#define __HASHTABLE_H__
 #include "hashtable.h"
 
 
@@ -335,7 +333,6 @@ void popctx(){
 
 void newname(Ht_item *item){
 	item->order = curr_context->count++;
-	item->tos = curr_context;
     ht_insert(curr_context, item);
 }
 
@@ -350,7 +347,7 @@ Ht_item *lookup(char *key){
 }
 
 void print_ctx(){
-    printf("\nTABLES DES SUMBOLES:\n\n");
+    printf("\nTABLES DES SYMBOLES:\n\n");
 	int count = 0;
     for (HashTable *i=curr_context; i; i = i->next){
         printf("Context n° %d:",count++);
@@ -360,4 +357,13 @@ void print_ctx(){
     printf("\n");
 }
 
-#endif
+int offset(Ht_item *item){
+	int out = 0;
+	out += 4*(curr_context->count - item->order - 1);
+	HashTable *temp = curr_context->next;
+	while(temp != glob_context && temp){
+		out += 4*temp->count;
+		temp = temp->next;
+	}
+	return out;
+}

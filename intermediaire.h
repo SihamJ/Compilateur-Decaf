@@ -29,7 +29,7 @@ typedef struct quadop {
   union {
     int cst;
 	char* temp;
-    Ht_item* name;
+    int offset;
   } u;
 } quadop;
 

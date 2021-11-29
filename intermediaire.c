@@ -1,5 +1,3 @@
-#ifndef __INTERMEDIAIRE_H__
-#define __INTERMEDIAIRE_H__
 #include "intermediaire.h"
 
 quadop new_temp(){
@@ -10,7 +8,7 @@ quadop new_temp(){
     a=a/10;
     cpt++;
   }
-  op.u.name = malloc(cpt+2);
+  op.u.temp = malloc(cpt+2);
   op.type = QO_TMP;
   sprintf(op.u.temp, "t%ld",tmpCount);
   // TO DO: mettre op dans la table des symboles
@@ -48,19 +46,19 @@ void print_globalcode(){
   for (int i=0; i<nextquad; i++){
     printf("%d: ",i);
     if(global_code[i].op1.type == QO_ID )
-      printf(" %s   ",global_code[i].op1.u.name->key);
+      printf(" %d   ", global_code[i].op1.u.offset);
     else if(global_code[i].op1.type == QO_CST)
       printf(" %d   ",global_code[i].op1.u.cst);
 	else
 	  printf(" %s   ",global_code[i].op1.u.temp);
     if(global_code[i].op2.type == QO_ID)
-      printf(" %s   ",global_code[i].op2.u.name->key);
+      printf(" %d   ", global_code[i].op2.u.offset);
     else if(global_code[i].op2.type == QO_CST)
       printf(" %d   ",global_code[i].op2.u.cst);
 	else
 	  printf(" %s   ",global_code[i].op2.u.temp);
     if(global_code[i].op3.type == QO_ID)
-      printf(" %s   ",global_code[i].op3.u.name->key);
+      printf(" %d   ", global_code[i].op3.u.offset);
     else if(global_code[i].op3.type == QO_CST)
       printf(" %d   ",global_code[i].op3.u.cst);
 	else
@@ -70,4 +68,3 @@ void print_globalcode(){
   }
   printf("\n");
 }
-#endif
