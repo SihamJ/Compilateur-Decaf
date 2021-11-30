@@ -34,6 +34,12 @@ void mips_pop_word();
  */
 void mips_read_stack(char *target, int offset);
 
+void mips_write_stack(char *target, int offset);
+
+void mips_read_tmp(char *tmp, char *target);
+
+void mips_write_tmp(char *tmp, char *target);
+
 void mips_sum(char *target, char *addL, char *addR);
 
 void mips_sub(char *target, char *subL, char *subR);

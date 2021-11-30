@@ -36,6 +36,18 @@ void mips_read_stack(char* target, int offset) {
         mips_copy_rtn_val(target);
 }
 
+void mips_write_stack(char *target, int offset) {
+	fprintf(fout, "sw %s %d($sp)\n", target, offset);
+}
+
+void mips_read_tmp(char *tmp, char *target) {
+	fprintf(fout, "la %s (%s)\n", target, tmp);
+}
+
+void mips_write_tmp(char *tmp, char *target) {
+	fprintf(fout, "la %s (%s)\n", tmp, target);
+}
+
 void mips_instruction(const char *cstInstruct) {
     fprintf(fout, cstInstruct);
 }
