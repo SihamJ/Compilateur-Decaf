@@ -49,7 +49,7 @@ void mips_write_tmp(char *tmp, char *target) {
 }
 
 void mips_instruction(const char *cstInstruct) {
-    fprintf(fout, cstInstruct);
+    fprintf(fout, "%s", cstInstruct);
 }
 
 int mips_save_tmp_int(int val) {
