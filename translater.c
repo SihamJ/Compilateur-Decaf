@@ -140,6 +140,18 @@ void translate() {
 			else
 				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
         	break;
+		case Q_EQ:
+			break;
+		case Q_NEQ:
+			break;
+		case Q_LT:
+			break;
+		case Q_GT:
+			break;
+		case Q_LEQ:
+			break;
+		case Q_GEQ:
+			break;
         default:
         	break;
         }

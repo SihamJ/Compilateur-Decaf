@@ -125,22 +125,22 @@ expr		:	expr '+' expr			{
 											$$.type = BOOL; $2 = Q_OR; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr '<' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = INT; $2 = Q_LT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_LT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr '>' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = INT; $2 = Q_GT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_GT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr geq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = INT; $2 = Q_GEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_GEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr leq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = INT; $2 = Q_LEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_LEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr eq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$$.type = $1.type; $2 = Q_EQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_EQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			|	expr neq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$$.type = $1.type; $2 = Q_NEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_NEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			| 	literal 				{
 											$$.result = $1.qop;
 											$$.type = $1.type;
