@@ -29,6 +29,11 @@ void translate() {
 			mips_sub("$v0", "$a0", "$a1");
 			mips_write_stack("$v0", global_code[i].op1.u.offset);
 			break;
+		case Q_NOT:
+			mips_load_1args(global_code[i]);
+			mips_beqz("$a0");
+			mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
 			mips_load_2args(global_code[i]);

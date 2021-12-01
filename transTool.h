@@ -46,6 +46,8 @@ void mips_load_1args(quad q);
 
 void mips_load_2args(quad q);
 
+mips_beqz(char *target);
+
 void mips_sum(char *target, char *addL, char *addR);
 
 void mips_sub(char *target, char *subL, char *subR);

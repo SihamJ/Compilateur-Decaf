@@ -93,6 +93,16 @@ void mips_load_2args(quad q) {
 		mips_load_immediate("$a1", q.op3.u.cst);
 }
 
+mips_beqz(char *target) {
+	fprintf(fout,"bgez $a0 true%d\n", branch_count);
+	mips_instruction(MIPS_TRUE);
+	mips_jump("false",branch_count);
+	mips_label("true",branch_count);
+	mips_instruction(MIPS_FALSE);
+	mips_label("false",branch_count);
+	branch_count++;
+}
+
 // if target != null, copy result from $v0 to target
 void mips_sum(char *target, char *addL, char *addR) {
     if (strcmp("$a0", addL))

@@ -170,8 +170,10 @@ expr		:	expr '+' expr			{
 			|	'!' expr %prec NEG 		{	if($2.type != BOOL)
 												yyerror("Erreur: NOT operator with non boolean value");
 											$$.type = BOOL; 
-											$$.t = $2.f;
-											$$.f = $2.t; }
+											quadop q0 = new_temp();
+											gencode(q0, $2.result, $2.result, Q_NOT, -1);
+											$$.result = q0;
+										}
 			|	'(' expr ')' 			{
 											$$ = $2; 	}
 

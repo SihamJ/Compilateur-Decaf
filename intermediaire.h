@@ -9,12 +9,10 @@
 #include "token.h"
 #include "hashtable.h"
 
-
 typedef struct list{
   int addr;
   struct list* suiv;
 }*list;
-
 
 typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP
