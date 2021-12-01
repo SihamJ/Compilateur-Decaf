@@ -1,6 +1,8 @@
 #ifndef TRANS_TOOL_H_
 #define TRANS_TOOL_H_
 
+#include "intermediaire.h"
+
 /**
  * @brief Generate constant instructions (instructions without parameters)
  * 
@@ -40,6 +42,10 @@ void mips_read_tmp(char *tmp, char *target);
 
 void mips_write_tmp(char *tmp, char *target);
 
+void mips_load_1args(quad q);
+
+void mips_load_2args(quad q);
+
 void mips_sum(char *target, char *addL, char *addR);
 
 void mips_sub(char *target, char *subL, char *subR);
@@ -49,5 +55,17 @@ void mips_div(char *target, char *subL, char *subR);
 void mips_mod(char *target, char *subL, char *subR);
 
 void mips_mult(char *target, char *subL, char *subR);
+
+void mips_eq(char *target, char *eqL, char *eqR);
+
+void mips_neq(char *target, char *neqL, char *neqR);
+
+void mips_lt(char *target, char *geqL, char *geqR);
+
+void mips_gt(char *target, char *geqL, char *geqR);
+
+void mips_leq(char *target, char *geqL, char *geqR);
+
+void mips_geq(char *target, char *geqL, char *geqR);
 
 #endif

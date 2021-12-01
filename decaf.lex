@@ -34,9 +34,9 @@ newline			\\n
 "*" return '*';
 "%" return '%';
 "<" return '<';
-">" return '>';
 ">=" geq;
 "<=" leq;
+">" return '>';
 "==" return eq;
 "!=" return neq;
 "&&" return and;

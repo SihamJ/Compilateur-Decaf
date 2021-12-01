@@ -1,5 +1,6 @@
 {
-int a,b;
-a = (2 * 5) - ((5 - 3)*(7 % 2));
-b = a / 2;
+	int a,b,c,d;
+	bool e,f;
+	e = a>=b;
+	f = c<d;
 }

@@ -1,6 +1,10 @@
 #ifndef OPERATIONS_H_
 #define OPERATIONS_H_
 
+#define MIPS_TRUE "li $v0 1\n"
+
+#define MIPS_FALSE "li $v0 0\n"
+
 /**
  * @param $a0 variable value
  * @param $a1 cariable size
@@ -11,7 +15,7 @@
  * @param $a0 Size of the variable to pop out
  * \return $v0 Value of the variable popped out
  */
-#define MIPS_POP_TO_V0 "lw $v0 ($sp)\nadd $sp $sp $a0\n"
+#define MIPS_POP_TO_V0 "lw $v0 ($sp)\nadd $sp $sp 4\n"
 
 
 /**
