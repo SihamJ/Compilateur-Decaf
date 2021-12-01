@@ -19,6 +19,16 @@ void translate() {
 			else
 				mips_write_stack("$a0", global_code[i].op1.u.offset);
 			break;
+		case Q_AFFADD:
+			mips_load_2args(global_code[i]);
+			mips_sum("$v0", "$a0", "$a1");
+			mips_write_stack("$v0", global_code[i].op1.u.offset);
+			break;
+		case Q_AFFSUB:
+			mips_load_2args(global_code[i]);
+			mips_sub("$v0", "$a0", "$a1");
+			mips_write_stack("$v0", global_code[i].op1.u.offset);
+			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
 			mips_load_2args(global_code[i]);

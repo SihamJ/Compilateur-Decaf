@@ -98,7 +98,10 @@ statement 	:	id assign_op expr ';' {				Ht_item *val = lookup($1);
 													quadop q1, q2;
 													q1.u.offset = offset(val);
 													q1.type = QO_ID;
-													gencode(q1,$3.result,$3.result,$2,-1);
+													if($2 == Q_AFF)
+														gencode(q1,$3.result,$3.result,$2,-1);
+													else
+														gencode(q1,q1,$3.result,$2,-1);
 												}
 
 expr		:	expr '+' expr			{
