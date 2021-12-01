@@ -94,11 +94,11 @@ void mips_load_2args(quad q) {
 }
 
 mips_beqz(char *target) {
-	fprintf(fout,"bgez $a0 true%d\n", branch_count);
-	mips_instruction(MIPS_TRUE);
+	fprintf(fout,"beqz $a0 true%d\n", branch_count);
+	mips_instruction(MIPS_FALSE);
 	mips_jump("false",branch_count);
 	mips_label("true",branch_count);
-	mips_instruction(MIPS_FALSE);
+	mips_instruction(MIPS_TRUE);
 	mips_label("false",branch_count);
 	branch_count++;
 }
