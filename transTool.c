@@ -21,7 +21,8 @@ void mips_copy_rtn_val(char *target) {
 }
 
 int mips_push_word(char *src) {
-    mips_load_from_addr("$a0", src);
+	if(strcmp("$a0", src))
+    	mips_load_from_addr("$a0", src);
     mips_instruction(MIPS_PUSH);
     return sizeof(int);
 }
@@ -31,10 +32,7 @@ void mips_pop_word() {
 }
 
 void mips_read_stack(char* target, int offset) {
-    fprintf(fout, "lw $v0 %d($sp)\n", offset);
-
-    if (target!=NULL)
-        mips_copy_rtn_val(target);
+    fprintf(fout, "lw %s %d($sp)\n",target, offset);
 }
 
 void mips_write_stack(char *target, int offset) {
@@ -54,7 +52,7 @@ void mips_instruction(const char *cstInstruct) {
 }
 
 int mips_save_tmp_int(int val) {
-    fprintf(fout, "li $t%d %d\n", tmp_reg_count, val);
+    fprintf(fout, "li t%d %d\n", tmp_reg_count, val);
     tmp_reg_count++;
     return tmp_reg_count-1;
 }
@@ -72,7 +70,7 @@ void mips_sum(char *target, char *addL, char *addR) {
 
     mips_instruction(MIPS_INT_SUM);
 
-    if (target != NULL && cmp(target, "$v0"))
+    if (target != NULL && strcmp(target, "$v0"))
         mips_copy_rtn_val(target);
 }
 
@@ -85,7 +83,7 @@ void mips_sub(char *target, char *subL, char *subR) {
 
     mips_instruction(MIPS_INT_SUB);
 
-    if (target != NULL && cmp(target, "$v0"))
+    if (target != NULL && strcmp(target, "$v0"))
         mips_copy_rtn_val(target);
 }
 
@@ -99,7 +97,7 @@ void mips_mult(char *target, char *multL, char *multR) {
 
     mips_instruction(MIPS_INT_MULT);
 
-    if (target != NULL && cmp(target, "$v0"))
+    if (target != NULL && strcmp(target, "$v0"))
         mips_copy_rtn_val(target);
 }
 
@@ -112,7 +110,7 @@ void mips_div(char *target, char *divL, char *divR) {
 
     mips_instruction(MIPS_INT_DIV);
 
-    if (target != NULL && cmp(target, "$v0"))
+    if (target != NULL && strcmp(target, "$v0"))
         mips_copy_rtn_val(target);
 }
 
@@ -125,6 +123,6 @@ void mips_mod(char *target, char *modL, char *modR) {
 
     mips_instruction(MIPS_INT_MOD);
 
-    if (target != NULL && cmp(target, "$v0"))
+    if (target != NULL && strcmp(target, "$v0"))
         mips_copy_rtn_val(target);
 }

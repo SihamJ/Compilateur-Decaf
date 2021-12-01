@@ -10,7 +10,7 @@ quadop new_temp(){
   }
   op.u.temp = malloc(cpt+2);
   op.type = QO_TMP;
-  sprintf(op.u.temp, "t%ld",tmpCount);
+  sprintf(op.u.temp, "$t%ld",tmpCount);
   // TO DO: mettre op dans la table des symboles
   tmpCount++;
   return op;

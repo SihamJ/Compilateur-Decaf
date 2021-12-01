@@ -5,7 +5,7 @@
  * @param $a0 variable value
  * @param $a1 cariable size
 */
-#define MIPS_PUSH "sub $sp $sp $a1\nsw $a0 ($sp)\n"
+#define MIPS_PUSH "sub $sp $sp 4\nsw $a0 ($sp)\n"
 
 /**
  * @param $a0 Size of the variable to pop out
@@ -23,19 +23,19 @@
  * @brief Calculate the sum of $a0 and $a1, return the sum value to $v0
  * 
  */
-#define MIPS_INT_SUM "la $v0 ($zero)\nadd $v0 $a0 $a1\n"
+#define MIPS_INT_SUM "add $v0 $a0 $a1\n"
 
 /**
  * @brief @brief Calculate the diferance between $a0 and $a1 ($a0 - $a1), return the sum value to $v0
  * 
  */
-#define MIPS_INT_SUB "la $t0 ($zero)\nsub $t0 $a0 $a1\nla $v0 ($t0)\n"
+#define MIPS_INT_SUB "sub $v0 $a0 $a1\n"
 
-#define MIPS_INT_MULT "mult $a0 $a1\nmvlo $v0\n"
+#define MIPS_INT_MULT "mult $a0 $a1\nmflo $v0\n"
 
-#define MIPS_INT_DIV "div $a0 $a1\nmvlo $v0\n"
+#define MIPS_INT_DIV "div $a0 $a1\nmflo $v0\n"
 
-#define MIPS_INT_MOD "div $a0 $a1\nmvhi $v0\n"
+#define MIPS_INT_MOD "div $a0 $a1\nmfhi $v0\n"
 
 // TODO: decl, read, write tab
 // TODO: decl str
