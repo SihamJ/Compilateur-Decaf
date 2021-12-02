@@ -1,6 +1,7 @@
 class Program {
     int a;
     int b;
+    
     int main (){
         bool c;
         bool ay;

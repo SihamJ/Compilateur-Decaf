@@ -54,8 +54,14 @@
 
 
 %%
+/* {pushctx(); glob_context = curr_context; }  FD MD */
 
-program	: class Program '{' {pushctx(); glob_context = curr_context; }  FD MD '}' { /* popctx()*/ ;}
+program	: class Program '{' {pushctx(); } P '}' { /* popctx()*/ ;}
+
+P 		: MD	{;}
+		| FD 	{;}
+		| FD MD {;}
+		| %empty	{;}
 
  FD 	: FD field_decl  {;}
 		| field_decl	{;}
