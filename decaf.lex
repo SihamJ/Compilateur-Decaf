@@ -51,7 +51,11 @@ newline			\\n
 		return integer;}
 "bool" {yylval.intval = BOOL;
 		return boolean;}
+"void" {yylval.intval = VOIDTYPE;
+		return voidtype;}
 "," 	return ',';
+"class" return class;
+"Program" return Program;
 
 {bool_literal} 		{
 						yylval.boolval = (strcmp(yytext, "true") == 0);

@@ -1,10 +1,18 @@
-{
+class Program {
     int a;
     int b;
-    bool c;
-    bool ay;
-    a = 3+2*3; 
-    a = -(a+3);
-    ay = c && true;
-    b += a-(3+9);
+    int main (){
+        bool c;
+        bool ay;
+        a = 3+2*3; 
+        a = -(a+3);
+        ay = c && true;
+        b += a-(3+9);
+        av();
+    }
+    int av(){
+        int e;
+        int a;
+        bool c;
+    }
 }

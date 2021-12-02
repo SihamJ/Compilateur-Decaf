@@ -32,15 +32,16 @@
 	} decl;
 }
 
-%token <intval> decimal_literal hex_literal char_literal eq neq and or not leq geq aff_add aff_sub integer boolean '+' '-' '%' '/' '<' '>' '=' '!' '*'
+%token <intval> decimal_literal hex_literal char_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
 %token <boolval> bool_literal
-%token <stringval> id
-
+%token <stringval> id 
+%token class Program If Else For Return Continue Break
 
 %type <exprval> expr S
-%type <intval> int_literal assign_op type
+%type <intval> int_literal assign_op type 
 %type <literal> literal
 %type <decl> B
+%type <stringval> location
 
 %left or
 %left and
@@ -53,9 +54,32 @@
 
 
 %%
-block 		:	'{' {pushctx(); glob_context = curr_context;} V S '}' {/* popctx() */;}
 
-V 			:	var_decl V 	{;}
+program	: class Program '{' {pushctx(); glob_context = curr_context; }  FD MD '}' { /* popctx()*/ ;}
+
+ FD 	: FD field_decl  {;}
+		| field_decl	{;}
+
+field_decl	:	var_decl	{;}
+			|	tab_decl	{;}
+
+MD	:	MD method_decl		{;}
+	|	method_decl		{;}
+
+method_decl	:	type id  '(' Param ')'  block	{;}
+			|	voidtype id '(' Param ')'  block	{;}
+
+
+Param	:	Param ',' type id 	{;}
+		|	type id				{;}
+		|	%empty				{;}
+
+ tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{;}
+			|	type id '[' int_literal ']'	';'					{;}
+
+block 		:	'{' { pushctx(); glob_context = curr_context; } V S '}' { /* popctx()*/  ;}
+
+ V 			:	V var_decl 	{;}
 			|	%empty		{;}
 
 var_decl 	:  	type B ';' {	
@@ -79,16 +103,16 @@ var_decl 	:  	type B ';' {
 								}
 							 }
 
-B 			:	id ',' B 	{ 	struct decl var; var.name = malloc((strlen($1)+1)); strcpy(var.name,$1);var.suiv = &$3; $$ = var;}
+B 			:	B ',' id  	{ 	struct decl var; var.name = malloc((strlen($3)+1)); strcpy(var.name,$3);var.suiv = &$1; $$ = var;}
 			|	id			{	$$.name = malloc((strlen($1)+1)); strcpy($$.name,$1); $$.suiv = NULL;}
 
 type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
 
-S 			: 	statement S 	{;}
+S 			: 	S statement 	{;}
 			| 	%empty			{;}
 
-statement 	:	id assign_op expr ';' {				Ht_item *val = lookup($1);
+statement 	:	location assign_op expr ';' {				Ht_item *val = lookup($1);
 													if (!val)
 														yyerror("Erreur: Variable non déclarée\n");
 													if(val->value != $3.type)
@@ -103,6 +127,29 @@ statement 	:	id assign_op expr ';' {				Ht_item *val = lookup($1);
 													else
 														gencode(q1,q1,$3.result,$2,-1);
 												}
+			|	method_call	';'					{;}
+			|	If '(' expr ')' block elseblock	{;}
+			|	For id '=' expr ',' expr block	{;}
+			|	Return return_val ';'			{;}
+			|	Break ';'						{;}
+			|	Continue ';'					{;}
+			|	block							{;}
+
+elseblock	:	Else block						{;}
+			|	%empty							{;}
+
+return_val	:	expr 							{;}
+			|	%empty							{;}
+
+
+method_call :	id '(' E ')' 	{;}
+
+E 			:	E ',' expr 		{;}
+			|	expr 			{;}
+			| 	%empty			{;}
+
+ location	:	id	{;}
+			|	id '[' expr ']'	{;}
 
 expr		:	expr '+' expr			{
 											if($1.type != INT || $3.type != INT)
@@ -148,7 +195,7 @@ expr		:	expr '+' expr			{
 											$$.result = $1.qop;
 											$$.type = $1.type;
 											}
-			|	id 						{
+			|	location 						{
 											Ht_item *val = lookup($1);
 											if(!val)
 												yyerror("Erreur: Variable non déclarée\n");
