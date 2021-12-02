@@ -11,7 +11,7 @@ extern FILE* fout;
 extern size_t tmpCount, nextquad;
 
 int main(){
-yydebug=1;
+//yydebug=1;
 curr_context = NULL;
 int t = yyparse();
 

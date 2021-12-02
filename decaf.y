@@ -54,9 +54,8 @@
 
 
 %%
-/* {pushctx(); glob_context = curr_context; }  FD MD */
 
-program	: class Program '{' {pushctx(); } P '}' { /* popctx()*/ ;}
+program	: class Program '{' {pushctx(); glob_context = curr_context;} P '}' { /* popctx()*/ ;}
 
 P 		: MD	{;}
 		| FD 	{;}
