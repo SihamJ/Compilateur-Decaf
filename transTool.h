@@ -1,6 +1,7 @@
 #ifndef TRANS_TOOL_H_
 #define TRANS_TOOL_H_
 
+#include "instructions.h"
 #include "intermediaire.h"
 
 /**
@@ -46,7 +47,7 @@ void mips_load_1args(quad q);
 
 void mips_load_2args(quad q);
 
-mips_beqz(char *target);
+void mips_beqz(char *target);
 
 void mips_sum(char *target, char *addL, char *addR);
 

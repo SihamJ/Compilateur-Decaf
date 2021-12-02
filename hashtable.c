@@ -1,5 +1,7 @@
 #include "hashtable.h"
 
+HashTable* curr_context;
+HashTable* glob_context;
 
 unsigned long hash_function(char *str)
 {

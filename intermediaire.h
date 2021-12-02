@@ -39,9 +39,9 @@ typedef struct quad{
 } quad;
 
 
-quad global_code[5000]; // code généré
-size_t nextquad; // n° du prochain quad
-size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
+extern quad global_code[5000]; // code généré
+extern size_t nextquad; // n° du prochain quad
+extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
 void gencode(quadop op1, quadop op2, quadop op3, quad_type type, int label); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
 quadop new_temp();
 list crelist(int addr);

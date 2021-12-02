@@ -1,5 +1,9 @@
 #include "intermediaire.h"
 
+quad global_code[5000];
+size_t nextquad; 
+size_t tmpCount; 
+
 quadop new_temp(){
   quadop op;
   int a = tmpCount;

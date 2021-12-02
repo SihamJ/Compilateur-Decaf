@@ -6,7 +6,7 @@
 
 extern quad global_code[]; // code généré
 extern size_t nextquad;
-FILE *fout;
+extern FILE *fout;
 
 void translate();
 

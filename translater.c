@@ -8,6 +8,8 @@
   * 
   */
 
+FILE *fout;
+
 void translate() {
 	for (int i=0; i < nextquad; i++) {
     	switch (global_code[i].type)
@@ -44,7 +46,6 @@ void translate() {
 			else
 				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
         	break;
-
         case Q_SUB:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
@@ -55,7 +56,6 @@ void translate() {
 			else
 				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
         	break;
-          
         case Q_MUL:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
@@ -66,7 +66,6 @@ void translate() {
 			else
 				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
         	break;
-          
         case Q_DIV:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
@@ -77,7 +76,6 @@ void translate() {
 			else
 				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
         	break;
-
         case Q_MOD:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);

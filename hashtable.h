@@ -46,7 +46,7 @@ void print_ctx();
 
 int offset(Ht_item *item);
 
-HashTable* curr_context;
-HashTable* glob_context;
+extern HashTable* curr_context;
+extern HashTable* glob_context;
 
 #endif
