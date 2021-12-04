@@ -251,3 +251,66 @@ void mips_geq(char *target, char *geqL, char *geqR) {
 	mips_label("false",branch_count);
 	branch_count++;
 }
+
+/** The abstraction of "For" and "While" should be the same.
+* (Looping the content in its block based on the value of a boolean. 
+* @param block_content The content to loop
+* @param condition_reg The register holding the boolean value
+*/
+void mips_loop(char *condition_reg, const char *block_content) {
+	mips_label("loop", branch_count);
+	fprintf(fout, "bnez %s, endloop%d\n", condition_reg, branch_count);
+	mips_instruction(block_content);
+	mips_jump("loop", branch_count);
+	mips_label("loop", branch_count);
+}
+
+/**
+ * Control structure if-else
+ * 
+ * @param condition_reg The condition register
+ * @param blk_if_content The content in "if's block"
+ * @param blk_el_content The content in "else's block", if this value is NULL, 
+ * 							none "else" block will be generated
+ */
+void mips_if_else(char *condition_reg, const char* blk_if_content, const char * blk_el_content) {
+	if (blk_el_content != NULL) {
+		fprintf(fout, "beqz %s, else%d\n", condition_reg, branch_count);
+		mips_instruction(blk_if_content);
+		mips_jump("endif", branch_count);
+		mips_label("else", branch_count);
+		mips_instruction(blk_el_content);
+		mips_label("endif", branch_count);
+	} else {
+		fprintf(fout, "beqz %s, endif%d\n", condition_reg, branch_count);
+		mips_instruction(blk_if_content);
+		mips_label("endif", branch_count);
+	}
+}
+
+/**
+ * @brief Declare a table
+ */
+void declare_tab(char *tab_name, int size) {
+	fprintf(fout, ".data\n%s: .space %d\n", tab_name, size*4);
+}
+
+/**
+ * @brief Save the value in the buffer to the target table at a specified offset
+ * @param buffer_reg The buffer register holding the value to save
+ * @param tab_name The name of the target table
+ * @param offset The offset
+ */
+void tab_put(char *buffer_reg, char *tab_name, int offset) {
+	fprintf(fout, "sw %s %s+%d\n", buffer_reg, tab_name, offset);
+}
+
+/**
+ * @brief Save the value in the table at a specified offset to the target buffer
+ * @param buffer_reg The target buffer to save a value 
+ * @param tab_name The name of the table
+ * @param offset The offset
+ */
+void tab_get(char *buffer_reg, char *tab_name, int offset) {
+	fprintf(fout, "lw %s %s+%d\n", buffer_reg, tab_name, offset);
+}
