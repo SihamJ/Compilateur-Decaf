@@ -147,9 +147,10 @@ void stack_to_code(ast_stack *stack){
 	ast_stack *temp = stack;
 	ast_node *node;
 	while(temp){
+		printf("AAA\n");
 		node = ast_stack_top(temp);
 		gencode(node->expr.result, node->children[0]->expr.result, node->children[1]->expr.result, node->type, -1);
-		temp = ast_stack_pop(temp);	
+		temp = ast_stack_pop(stack);	
 	}
 }
 
