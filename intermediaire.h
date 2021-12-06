@@ -77,6 +77,7 @@ ast_stack *ast_stack_push(ast_node *node, ast_stack *stack);
 ast_stack *ast_stack_pop(ast_stack *stack);
 void ast_stack_print(ast_stack *stack);
 ast_stack *ast_to_stack(ast_node *ast, ast_stack *stack);
+void stack_to_code(ast_stack *stack);
 void print_globalcode();
 
 #endif

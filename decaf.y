@@ -114,23 +114,29 @@ S 			: 	S statement 	{;}
 			| 	%empty			{;}
 
 statement 	:	id assign_op expr ';' {				
-													// Ht_item *val = lookup($1);
-													// if (!val)
-													// 	yyerror("Erreur: Variable non déclarée\n");
-													// if(val->value != $3.type)
-													// 	yyerror("Erreur: Type de valeur incorrecte\n");
-													// if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3.type == BOOL))
-													// 	yyerror("Erreur: Type de valeur incorrecte\n");
-													// quadop q1, q2;
-													// q1.u.offset = offset(val);
-													// q1.type = QO_ID;
-													// if($2 == Q_AFF)
-													// 	gencode(q1,$3.result,$3.result,$2,-1);
-													// else
-													// 	gencode(q1,q1,$3.result,$2,-1);
+													Ht_item *val = lookup($1);
+													if (!val)
+														yyerror("Erreur: Variable non déclarée\n");
+													if(val->value != $3->expr.type)
+														yyerror("Erreur: Type de valeur incorrecte\n");
+													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3->expr.type == BOOL))
+														yyerror("Erreur: Type de valeur incorrecte\n");
 													ast_print($3, 0);
+													quadop q0, q1;
+													q0.type = QO_TMP;
+													q0.u.temp = malloc(4*sizeof(char));
+													sprintf(q0.u.temp, "$t0");
+													$3->expr.result = q0;
 													ast_stack *stack = ast_to_stack($3, NULL);
 													ast_stack_print(stack);
+													stack_to_code(stack);
+													q1.u.offset = offset(val);
+													q1.type = QO_ID;
+													if($2 == Q_AFF)
+														gencode(q1,$3->expr.result, $3->expr.result,$2,-1);
+													else
+														gencode(q1,q1,$3->expr.result,$2,-1);
+
 												}
 			|	method_call	';'					{;}
 			|	If '(' expr ')' block elseblock	{;}
