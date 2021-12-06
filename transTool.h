@@ -71,4 +71,41 @@ void mips_leq(char *target, char *geqL, char *geqR);
 
 void mips_geq(char *target, char *geqL, char *geqR);
 
+/** The abstraction of "For" and "While" should be the same.
+* (Looping the content in its block: @param block_content
+* based on the value of a boolean: @param condition_reg) 
+*/
+void mips_loop(char *condition_reg, const char *block_content); 
+
+/**
+ * Control structure if-else
+ * 
+ * @param condition_reg The condition register
+ * @param blk_if_content The content in "if's block"
+ * @param blk_el_content The content in "else's block", if this value is NULL, 
+ * 							none "else" block will be generated
+ */
+void mips_if_else(char *condition_reg, const char* blk_if_content, const char * blk_el_content);
+
+/**
+ * @brief Declare a table
+ */
+void declare_tab(char *tab_name, int size);
+
+/**
+ * @brief Save the value in the buffer to the target table at a specified offset
+ * @param buffer_reg The buffer register holding the value to save
+ * @param tab_name The name of the target table
+ * @param offset The offset
+ */
+void tab_put(char *buffer_reg, char *tab_name, int offset);
+
+/**
+ * @brief Save the value in the table at a specified offset to the target buffer
+ * @param buffer_reg The target buffer to save a value 
+ * @param tab_name The name of the table
+ * @param offset The offset
+ */
+void tab_get(char *buffer_reg, char *tab_name, int offset);
+
 #endif
