@@ -12,7 +12,7 @@ FILE *fout;
 
 void translate() {
 	for (int i=0; i < nextquad; i++) {
-    	switch (global_code[i].type)
+		switch (global_code[i].type)
         {
 		case Q_AFF:
 			mips_load_1args(global_code[i]);			

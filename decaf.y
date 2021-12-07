@@ -83,7 +83,7 @@ block 		:	'{' { pushctx(); glob_context = curr_context; } V S '}' { /* popctx()*
  V 			:	V var_decl 	{;}
 			|	%empty		{;}
 
-var_decl 	:  	type B ';' {	
+var_decl 	:  	type B ';' {
 								quadop qo,q1;
 								if($1 == INT)
 									q1.u.cst = 0;
@@ -104,8 +104,14 @@ var_decl 	:  	type B ';' {
 								}
 							 }
 
-B 			:	B ',' id  	{ 	struct decl var; var.name = malloc((strlen($3)+1)); strcpy(var.name,$3);var.suiv = &$1; $$ = var;}
-			|	id			{	$$.name = malloc((strlen($1)+1)); strcpy($$.name,$1); $$.suiv = NULL;}
+B 			:	id ',' B  	{ 	struct decl var;
+								var.name = malloc((strlen($1)+1)); 
+								strcpy(var.name,$1);var.suiv = &$3;
+								$$ = var;
+								}
+			|	id			{	$$.name = malloc((strlen($1)+1)); 
+								strcpy($$.name,$1); 
+								$$.suiv = NULL;}
 
 type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
@@ -159,7 +165,7 @@ E 			:	E ',' expr 		{;}
 			|	expr 			{;}
 			| 	%empty			{;}
 
- location	:	id	{;}
+location	:	id	{;}
 			|	id '[' expr ']'	{;}
 
 expr		:	expr '+' expr			{
@@ -208,7 +214,7 @@ expr		:	expr '+' expr			{
 											eval.type = $1.type;
 											$$ = ast_new_leaf(eval);
 											}
-			|	location 						{
+			|	location 				{
 											Ht_item *val = lookup($1);
 											expr_val eval;
 											if(!val)

@@ -1,6 +1,9 @@
 {
 	"files.associations": {
 		"*.lex": "lex",
-		"chrono": "c"
+		"chrono": "c",
+		"array": "c",
+		"*.tcc": "c",
+		"type_traits": "c"
 	}
 }

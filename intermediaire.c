@@ -44,9 +44,6 @@ list concat(list n1, list n2){
   return n1;
 }
 
-ast_node *mock_tree(){
-
-}
 
 void ast_print(ast_node *ast, int depth){
 	for(int i = 0; i < depth; i++){
