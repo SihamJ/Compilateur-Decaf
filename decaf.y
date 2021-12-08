@@ -20,7 +20,6 @@
 		int type;
 	} literal;
 	expr_val exprval;
-	ast_node* ast;
 	struct decl{
 		char *name;
 		struct decl *suiv;
@@ -32,8 +31,7 @@
 %token <stringval> id 
 %token class Program If Else For Return Continue Break
 
-%type <exprval> S
-%type <ast> expr
+%type <exprval> expr S
 %type <intval> int_literal assign_op type
 %type <literal> literal
 %type <decl> B
@@ -123,25 +121,17 @@ statement 	:	id assign_op expr ';' {
 													Ht_item *val = lookup($1);
 													if (!val)
 														yyerror("Erreur: Variable non déclarée\n");
-													if(val->value != $3->expr.type)
+													if(val->value != $3.type)
 														yyerror("Erreur: Type de valeur incorrecte\n");
-													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3->expr.type == BOOL))
+													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3.type == BOOL))
 														yyerror("Erreur: Type de valeur incorrecte\n");
-													ast_print($3, 0);
-													quadop q0, q1;
-													q0.type = QO_TMP;
-													q0.u.temp = malloc(4*sizeof(char));
-													sprintf(q0.u.temp, "$t0");
-													$3->expr.result = q0;
-													ast_stack *stack = ast_to_stack($3, NULL);
-													ast_stack_print(stack);
-													stack_to_code(stack);
+													quadop q1, q2;
 													q1.u.offset = offset(val);
 													q1.type = QO_ID;
 													if($2 == Q_AFF)
-														gencode(q1,$3->expr.result, $3->expr.result,$2,-1);
+														gencode(q1,$3.result,$3.result,$2,-1);
 													else
-														gencode(q1,q1,$3->expr.result,$2,-1);
+														gencode(q1,q1,$3.result,$2,-1);
 
 												}
 			|	method_call	';'					{;}
@@ -169,80 +159,78 @@ location	:	id	{;}
 			|	id '[' expr ']'	{;}
 
 expr		:	expr '+' expr			{
-											if($1->expr.type != INT || $3->expr.type != INT)
+											if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$2 = Q_ADD; $$ = ast_new_node($1,$2,$3); $$->expr.type = INT;}
-			|	expr '-' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = INT; $2 = Q_ADD; quadop qo = new_temp() ;gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '-' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$2 = Q_SUB; $$ = ast_new_node($1,$2,$3); $$->expr.type = INT;}
-			|	expr '*' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = INT; $2 = Q_SUB;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '*' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$2 = Q_MUL; $$ = ast_new_node($1,$2,$3); $$->expr.type = INT;}
-			|	expr '/' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = INT; $2 = Q_MUL;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '/' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$2 = Q_DIV; $$ = ast_new_node($1,$2,$3); $$->expr.type = INT;}
-			|	expr '%' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = INT; $2 = Q_DIV; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '%' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$2 = Q_MOD; $$ = ast_new_node($1,$2,$3); $$->expr.type = INT;}
-			|	expr and expr			{	if($1->expr.type != BOOL || $3->expr.type != BOOL)
+											$$.type = INT; $2 = Q_MOD; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr and expr			{	if($1.type != BOOL || $3.type != BOOL)
 												yyerror("Erreur: AND operator with non boolean value");
-											$2 = Q_AND; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr or expr			{	if($1->expr.type != BOOL || $3->expr.type != BOOL)
+											$$.type = BOOL; $2 = Q_AND; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr or expr			{	if($1.type != BOOL || $3.type != BOOL)
 												yyerror("Erreur: OR operator with non boolean value");
-											$2 = Q_OR; $$ = ast_new_node($1,$2,$3);}
-			|	expr '<' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = BOOL; $2 = Q_OR; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '<' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$2 = Q_LT; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr '>' expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = BOOL; $2 = Q_LT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr '>' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$2 = Q_GT; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr geq expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = BOOL; $2 = Q_GT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr geq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$2 = Q_GEQ; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr leq expr			{	if($1->expr.type != INT || $3->expr.type != INT)
+											$$.type = BOOL; $2 = Q_GEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr leq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$2 = Q_LEQ; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr eq expr			{	if($1->expr.type != $3->expr.type )
+											$$.type = BOOL; $2 = Q_LEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr eq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$2 = Q_EQ; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
-			|	expr neq expr			{	if($1->expr.type != $3->expr.type )
+											$$.type = BOOL; $2 = Q_EQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+			|	expr neq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$2 = Q_NEQ; $$ = ast_new_node($1,$2,$3); $$->expr.type = BOOL;}
+											$$.type = BOOL; $2 = Q_NEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
 			| 	literal 				{
-											expr_val eval;
-											eval.result = $1.qop;
-											eval.type = $1.type;
-											$$ = ast_new_leaf(eval);
+											$$.result = $1.qop;
+											$$.type = $1.type;
 											}
 			|	location 				{
 											Ht_item *val = lookup($1);
-											expr_val eval;
 											if(!val)
 												yyerror("Erreur: Variable non déclarée\n");
-											eval.result.u.offset = offset(val);
-											eval.result.type = QO_ID;
-											eval.type = val->value;
-											$$ = ast_new_leaf(eval);			
+											$$.result.u.offset = offset(val);
+											$$.result.type = QO_ID;
+											$$.type = val->value;			
 											}
 			|	'-' expr %prec NEG 		{
-											if($2->expr.type != INT)
+											if($2.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
+											$$.type = INT;
+											quadop qo = new_temp();
 											quadop q1;
 											q1.type = QO_CST;
 											q1.u.cst = 0;
-											expr_val eval;
-											eval.type = INT;
-											eval.result = q1;
-											$$ = ast_new_node(ast_new_leaf(eval),Q_SUB, $2);
-											$$->expr.type = INT;
-										}
-			|	'!' expr %prec NEG 		{	if($2->expr.type != BOOL)
+											gencode(qo, q1, $2.result, Q_SUB, -1);
+											$$.result = qo;
+											}
+			|	'!' expr %prec NEG 		{	if($2.type != BOOL)
 												yyerror("Erreur: NOT operator with non boolean value");
-											$$ = ast_new_node($2, Q_NOT, $2);
-											$$->expr.type = BOOL;
-										}
+											$$.type = BOOL; 
+											quadop q0 = new_temp();
+											gencode(q0, $2.result, $2.result, Q_NOT, -1);
+											$$.result = q0;
+											}
 			|	'(' expr ')' 			{
-											$$ = $2; 	}
+											$$ = $2;
+											}
 
 
 literal		:	int_literal		{
