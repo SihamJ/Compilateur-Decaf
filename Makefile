@@ -1,4 +1,4 @@
-prefixe=decaf
+prefixe=decaf_plus
 dep=intermediaire
 dep2=hashtable
 dep3=translater
@@ -12,9 +12,9 @@ dep4=transTool
 # note : le programme principal ne doit surtout pas s'appeler $(prefixe).c
 # (make l'écraserait parce qu'il a une règle "%.c: %.y")
 
-all: main
+all: decaf
 
-main: $(prefixe).tab.o lex.yy.o main.o $(dep).o $(dep2).o $(dep3).o $(dep4).o
+decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 *.c : $(dep).h $(dep2).h $(dep3).h $(dep4).h
@@ -37,5 +37,6 @@ archive:
 	tar -cvzf $(prefixe).tar.gz *.c *.h *.lex *.y *.txt Makefile
 
 clean:
-	rm -f *.o $(prefixe).tab.c $(prefixe).tab.h lex.yy.c main *.gz \
+	rm -f *.o $(prefixe).tab.c $(prefixe).tab.h lex.yy.c decaf *.gz \
 		$(prefixe).output $(prefixe).dot $(prefixe).pdf
+

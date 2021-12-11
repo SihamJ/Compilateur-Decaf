@@ -1,7 +1,7 @@
 #include "hashtable.h"
 
-HashTable* curr_context;
-HashTable* glob_context;
+ HashTable* curr_context;
+ HashTable* glob_context;
 
 unsigned long hash_function(char *str)
 {
@@ -85,8 +85,8 @@ static void free_linkedlist(LinkedList *list)
 
 static LinkedList **create_lists(HashTable *table)
 {
-    LinkedList **lists = (LinkedList **)calloc(table->size, sizeof(LinkedList *));
-    for (int i = 0; i < table->size; i++)
+    LinkedList **lists = (LinkedList **)calloc(table->max_size, sizeof(LinkedList *));
+    for (int i = 0; i < table->max_size; i++)
         lists[i] = NULL;
     return lists;
 }
@@ -94,18 +94,20 @@ static LinkedList **create_lists(HashTable *table)
 static void free_lists(HashTable *table)
 {
     LinkedList **lists = table->lists;
-    for (int i = 0; i < table->size; i++)
+    for (int i = 0; i < table->max_size; i++)
         free_linkedlist(lists[i]);
     free(lists);
 }
 
-Ht_item *create_item(char *key, int val)
+Ht_item *create_item(char *key, int id_type, int value)
 {
     Ht_item *item = (Ht_item *) malloc(sizeof(Ht_item));
     item->key = (char *) malloc(strlen(key) + 1);
     strcpy(item->key, key);
 
-    item->value = val;
+    item->id_type = id_type;
+    item->value = value;
+    item->order = -1;
 
     return item;
 }
@@ -113,10 +115,11 @@ Ht_item *create_item(char *key, int val)
 HashTable *create_table()
 {
     HashTable *table = (HashTable *)malloc(sizeof(HashTable));
-    table->size = CAPACITY;
+    table->max_size = CAPACITY;
     table->count = 0;
-    table->items = (Ht_item **)calloc(table->size, sizeof(Ht_item *));
-    for (int i = 0; i < table->size; i++)
+    table->nb_var = 0;
+    table->items = (Ht_item **)calloc(table->max_size, sizeof(Ht_item *));
+    for (int i = 0; i < table->max_size; i++)
         table->items[i] = NULL;
     table->lists = create_lists(table);
 
@@ -131,7 +134,7 @@ void free_item(Ht_item *item)
 
 void free_table(HashTable *table)
 {
-    for (int i = 0; i < table->size; i++)
+    for (int i = 0; i < table->max_size; i++)
     {
         Ht_item *item = table->items[i];
         if (item != NULL)
@@ -173,7 +176,7 @@ void ht_insert(HashTable *table, Ht_item *item)
     if (current_item == NULL)
     {
         // no exist.
-        if (table->count == table->size)
+        if (table->count == table->max_size)
         {
             // Hash Table Full
             printf("Insert Error: Hash Table is full\n");
@@ -259,7 +262,9 @@ void ht_delete(HashTable *table, char *key)
                 LinkedList *node = head;
                 head = head->next;
                 node->next = NULL;
-                table->items[index] = create_item(node->item->key, node->item->value);
+
+                table->items[index] = create_item(node->item->key, node->item->id_type, node->item->value);
+                table->items[index]->order = node->item->order;
                 free_linkedlist(node);
                 table->lists[index] = head;
                 return;
@@ -299,7 +304,7 @@ void ht_delete(HashTable *table, char *key)
 void print_table(HashTable *table)
 {
     printf("\n-------------------\n");
-    for (int i = 0; i < table->size; i++)
+    for (int i = 0; i < table->max_size; i++)
     {
         if (table->items[i])
         {
@@ -334,19 +339,26 @@ void popctx(){
 }
 
 void newname(Ht_item *item){
-	item->order = curr_context->count++;
+	item->order = curr_context->nb_var;
+    curr_context->count ++;
     ht_insert(curr_context, item);
+    if(item->id_type == ID_VAR)
+        curr_context->nb_var++;
 }
 
-Ht_item *lookup(char *key){
-    Ht_item *val;
+item_table *lookup(char *key){
+
+    item_table *res = (item_table*) malloc(sizeof(item_table));
+
     for(HashTable *i=curr_context; i; i = i->next){
-        if((val = ht_search(i, key)) != NULL){
-            return val;
+        if((res->item = ht_search(i, key)) != NULL){
+            res->table = i;
+            return res;
         }
     }
     return NULL;
 }
+
 
 void print_ctx(){
     printf("\nTABLES DES SYMBOLES:\n\n");
@@ -359,13 +371,22 @@ void print_ctx(){
     printf("\n");
 }
 
-int offset(Ht_item *item){
+int offset(item_table *val){
 	int out = 0;
-	out += 4*(curr_context->count - item->order - 1);
-	HashTable *temp = curr_context->next;
-	while(temp != glob_context && temp){
-		out += 4*temp->count;
-		temp = temp->next;
-	}
+
+    out = 4*val->table->nb_var - 4*(val->item->order+1);
+
+    if(val->table == curr_context)
+        return out;
+
+	//out += 4*(curr_context->count - item->order - 1);
+
+    HashTable *temp = curr_context;
+
+    while(temp != val->table && temp){
+        out += 4*temp->nb_var;
+        temp = temp->next;
+    }
+
 	return out;
 }

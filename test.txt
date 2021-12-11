@@ -1,19 +1,17 @@
 class Program {
-    int a;
-    int b;
-    
+    int a,b;
+
     int main (){
-        bool c;
-        bool ay;
-        a = 3+2*3; 
-        a = -(a+3);
-        ay = c && true;
-        b += a-(3+9);
-        av();
+        boolean c;
+        boolean ay;
+                a = 1;
+        b = 2;
+        c = true;
+        ay = false;
     }
-    int av(){
-        int e;
-        int a;
-        bool c;
+    int al (){
+        int c;
+        c = 2;
+        a = 0;
     }
-}
+} 

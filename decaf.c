@@ -19,6 +19,10 @@ if (t==0)
     print_globalcode();
 print_ctx();
 fout = stdout;
-translate();
+//translate();
+/*
+int t=yylex();
+while(t)
+t=yylex();*/
 return 0;
 }

@@ -5,7 +5,7 @@
 	#include <string.h>
 	#include "intermediaire.h"
 	#include "hashtable.h"
-	#include "decaf.tab.h"
+	#include "decaf_plus.tab.h"
 	#include "token.h"
 %}
 
@@ -23,6 +23,7 @@ hex_literal		"0x"{hex_digit}{hex_digit}*
 decimal_literal	{digit}{digit}*
 id 				{alpha}{alpha_num}*
 newline			\\n
+comment 		\/\/.*{newline}
 %%
 
 "=" return '=';
@@ -47,15 +48,25 @@ newline			\\n
 "{" return '{';
 "}" return '}';
 "!" return '!';
+"[" return '[';
+"]" return ']';
 "int" {yylval.intval = INT;
 		return integer;}
-"bool" {yylval.intval = BOOL;
+"boolean" {yylval.intval = BOOL;
 		return boolean;}
 "void" {yylval.intval = VOIDTYPE;
 		return voidtype;}
 "," 	return ',';
 "class" return class;
 "Program" return Program;
+"if" return If;
+"else" return Else;
+"for" return For;
+"return" return Return;
+"continue" return Continue;
+"break" return Break;
+
+
 
 {bool_literal} 		{
 						yylval.boolval = (strcmp(yytext, "true") == 0);
@@ -83,8 +94,10 @@ newline			\\n
 						return id;
 					}
 
-[[:space:]] 		;
+[[:space:]]			;
 
-.					;
+{comment}			return comment;
+
+.					{fprintf(stderr,"erreur lexical\n");exit(0);}
 
 %%

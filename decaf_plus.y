@@ -29,7 +29,7 @@
 %token <intval> decimal_literal hex_literal char_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
 %token <boolval> bool_literal
 %token <stringval> id 
-%token class Program If Else For Return Continue Break
+%token class Program If Else For Return Continue Break comment
 
 %type <exprval> expr S
 %type <intval> int_literal assign_op type
@@ -46,15 +46,17 @@
 %left '!'
 %left NEG
 
-
+%start program
 %%
 
-program	: class Program '{' {pushctx(); glob_context = curr_context;} P '}' { /* popctx()*/ ;}
+program	:  class Program '{' {pushctx(); glob_context = curr_context;} P '}' { /* popctx()*/ ;}
+
 
 P 		: MD	{;}
 		| FD 	{;}
 		| FD MD {;}
 		| %empty	{;}
+
 
  FD 	: FD field_decl  {;}
 		| field_decl	{;}
@@ -65,16 +67,16 @@ field_decl	:	var_decl	{;}
 MD	:	MD method_decl		{;}
 	|	method_decl		{;}
 
-method_decl	:	type id  '(' Param ')'  block	{;}
-			|	voidtype id '(' Param ')'  block	{;}
+method_decl	:	type id  '(' Param ')'  block	{ /*Vérifier que id n'est pas le nom d'une méthode déjà déclarée*/ ;}
+			|	voidtype id '(' Param ')'  block	{ /*Vérifier que id n'est pas le nom d'une méthode déjà déclarée*/ ;}
 
 
 Param	:	Param ',' type id 	{;}
 		|	type id				{;}
 		|	%empty				{;}
 
- tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{;}
-			|	type id '[' int_literal ']'	';'					{;}
+tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{ /* Vérifier que int_literal supérieur à 0*/ ;}
+			|	type id '[' int_literal ']' ';'				{  /* Vérifier que int_literal supérieur à 0*/  ;}
 
 block 		:	'{' { pushctx(); glob_context = curr_context; } V S '}' { /* popctx()*/  ;}
 
@@ -91,12 +93,13 @@ var_decl 	:  	type B ';' {
 								q1.type = QO_CST;
 								qo.type = QO_ID;
 								while(pt != NULL){
-									Ht_item *item = (Ht_item*) malloc(sizeof(Ht_item));
+									if( ht_search(curr_context, pt->name) != NULL ) 
+										yyerror("Erreur: Variable déclarée deux fois\n");
+
 									qo.u.offset = -4;
-									gencode(qo,q1,q1,Q_AFF,-1);
-									item->value = $1;
-									item->key = malloc(strlen(pt->name)+1);
-									strcpy(item->key, pt->name);
+									gencode(qo,q1,q1,Q_AFF,NULL,-1, curr_context);
+
+									Ht_item *item = create_item(pt->name, ID_VAR, $1);
 									newname(item);
 									pt = pt->suiv;
 								}
@@ -118,25 +121,25 @@ S 			: 	S statement 	{;}
 			| 	%empty			{;}
 
 statement 	:	id assign_op expr ';' {				
-													Ht_item *val = lookup($1);
+													item_table *val = lookup($1);
 													if (!val)
 														yyerror("Erreur: Variable non déclarée\n");
-													if(val->value != $3.type)
+													if(val->item->value != $3.type)
 														yyerror("Erreur: Type de valeur incorrecte\n");
-													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->value == BOOL || $3.type == BOOL))
+													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->item->value == BOOL || $3.type == BOOL))
 														yyerror("Erreur: Type de valeur incorrecte\n");
 													quadop q1, q2;
 													q1.u.offset = offset(val);
 													q1.type = QO_ID;
 													if($2 == Q_AFF)
-														gencode(q1,$3.result,$3.result,$2,-1);
+														gencode(q1,$3.result,$3.result,$2,NULL,-1, curr_context);
 													else
-														gencode(q1,q1,$3.result,$2,-1);
+														gencode(q1,q1,$3.result,$2,NULL,-1, curr_context);
 
 												}
 			|	method_call	';'					{;}
-			|	If '(' expr ')' block elseblock	{;}
-			|	For id '=' expr ',' expr block	{;}
+			|	If '(' expr ')' block elseblock	{	/* Vérifier que expr est de type boolean*/ ;}
+			|	For id '=' expr ',' expr block	{   /* compteur de boucle for déclaré implicitement et expr1 de type int*/ ;}
 			|	Return return_val ';'			{;}
 			|	Break ';'						{;}
 			|	Continue ';'					{;}
@@ -156,59 +159,59 @@ E 			:	E ',' expr 		{;}
 			| 	%empty			{;}
 
 location	:	id	{;}
-			|	id '[' expr ']'	{;}
+			|	id '[' expr ']'	{ /* expr de type int */ ;}
 
 expr		:	expr '+' expr			{
 											if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$$.type = INT; $2 = Q_ADD; quadop qo = new_temp() ;gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = INT; $2 = Q_ADD; quadop qo = new_temp() ;gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '-' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$$.type = INT; $2 = Q_SUB;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = INT; $2 = Q_SUB;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '*' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$$.type = INT; $2 = Q_MUL;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = INT; $2 = Q_MUL;quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '/' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$$.type = INT; $2 = Q_DIV; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = INT; $2 = Q_DIV; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '%' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: Arithmètique non entière");
-											$$.type = INT; $2 = Q_MOD; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = INT; $2 = Q_MOD; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr and expr			{	if($1.type != BOOL || $3.type != BOOL)
 												yyerror("Erreur: AND operator with non boolean value");
-											$$.type = BOOL; $2 = Q_AND; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_AND; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr or expr			{	if($1.type != BOOL || $3.type != BOOL)
 												yyerror("Erreur: OR operator with non boolean value");
-											$$.type = BOOL; $2 = Q_OR; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_OR; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '<' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = BOOL; $2 = Q_LT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_LT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr '>' expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = BOOL; $2 = Q_GT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_GT; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr geq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = BOOL; $2 = Q_GEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_GEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr leq expr			{	if($1.type != INT || $3.type != INT)
 												yyerror("Erreur: REL OP non entière");
-											$$.type = BOOL; $2 = Q_LEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_LEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr eq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$$.type = BOOL; $2 = Q_EQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_EQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			|	expr neq expr			{	if($1.type != $3.type )
 												yyerror("Erreur: Comparaison de types différents");
-											$$.type = BOOL; $2 = Q_NEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,-1);$$.result = qo;}
+											$$.type = BOOL; $2 = Q_NEQ; quadop qo = new_temp();gencode(qo,$1.result,$3.result,$2,NULL,-1, curr_context);$$.result = qo;}
 			| 	literal 				{
 											$$.result = $1.qop;
 											$$.type = $1.type;
 											}
 			|	location 				{
-											Ht_item *val = lookup($1);
+											item_table *val = lookup($1);
 											if(!val)
 												yyerror("Erreur: Variable non déclarée\n");
 											$$.result.u.offset = offset(val);
 											$$.result.type = QO_ID;
-											$$.type = val->value;			
+											$$.type = val->item->value;			
 											}
 			|	'-' expr %prec NEG 		{
 											if($2.type != INT)
@@ -218,20 +221,20 @@ expr		:	expr '+' expr			{
 											quadop q1;
 											q1.type = QO_CST;
 											q1.u.cst = 0;
-											gencode(qo, q1, $2.result, Q_SUB, -1);
+											gencode(qo, q1, $2.result, Q_SUB, NULL,-1, curr_context);
 											$$.result = qo;
 											}
 			|	'!' expr %prec NEG 		{	if($2.type != BOOL)
 												yyerror("Erreur: NOT operator with non boolean value");
 											$$.type = BOOL; 
 											quadop q0 = new_temp();
-											gencode(q0, $2.result, $2.result, Q_NOT, -1);
+											gencode(q0, $2.result, $2.result, Q_NOT, NULL,-1, curr_context);
 											$$.result = q0;
 											}
 			|	'(' expr ')' 			{
 											$$ = $2;
 											}
-
+			|	method_call				{ /* verifier que el type de la méthode n'est pas void */	;}
 
 literal		:	int_literal		{
 									struct quadop q;

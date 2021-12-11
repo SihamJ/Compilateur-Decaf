@@ -20,12 +20,17 @@ quadop new_temp(){
   return op;
 }
 
-void gencode(quadop op1, quadop op2, quadop op3, quad_type t, int label){
+void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, HashTable* context){
   global_code[nextquad].type = t;
   global_code[nextquad].op1 = op1;
   global_code[nextquad].op2 = op2;
   global_code[nextquad].op3 = op3;
-  global_code[nextquad].label = label;
+  global_code[nextquad].jump = jump;
+  global_code[nextquad].context = context;
+  if(label != NULL ){
+    global_code[nextquad].label = malloc(strlen(label)+1);
+    strcpy(global_code[nextquad].label, label);
+  }
   nextquad++;
 }
 
@@ -45,27 +50,30 @@ list concat(list n1, list n2){
 }
 
 void print_globalcode(){
-  printf("\nCode Intermediaire:\n__________________________\n    op1   op2   op3   oper\n__________________________\n");
+  printf("\nCode Intermediaire:\n__________________________\n    op1   op2   op3   oper   context\n__________________________\n");
   for (int i=0; i<nextquad; i++){
     printf("%d: ",i);
+
     if(global_code[i].op1.type == QO_ID )
       printf(" %d   ", global_code[i].op1.u.offset);
     else if(global_code[i].op1.type == QO_CST)
       printf(" %d   ",global_code[i].op1.u.cst);
-	else
-	  printf(" %s   ",global_code[i].op1.u.temp);
+    else
+      printf(" %s   ",global_code[i].op1.u.temp);
+
     if(global_code[i].op2.type == QO_ID)
       printf(" %d   ", global_code[i].op2.u.offset);
     else if(global_code[i].op2.type == QO_CST)
       printf(" %d   ",global_code[i].op2.u.cst);
-	else
-	  printf(" %s   ",global_code[i].op2.u.temp);
+    else
+      printf(" %s   ",global_code[i].op2.u.temp);
+
     if(global_code[i].op3.type == QO_ID)
       printf(" %d   ", global_code[i].op3.u.offset);
     else if(global_code[i].op3.type == QO_CST)
       printf(" %d   ",global_code[i].op3.u.cst);
-	else
-	  printf(" %s   ",global_code[i].op3.u.temp);
+    else
+      printf(" %s   ",global_code[i].op3.u.temp);
 
     printf("op[%d] \n",global_code[i].type);
   }

@@ -9,7 +9,6 @@
   */
 
 FILE *fout;
-
 void translate() {
 	for (int i=0; i < nextquad; i++) {
 		switch (global_code[i].type)
