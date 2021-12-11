@@ -30,7 +30,7 @@ typedef struct quadop {
   quadop_type type;     // Constante, identificateur, ou temporaire
   union {
     int cst;
-	  char* temp;
+	  char* temp;  // a supprimer
     int offset;
   } u;
 } quadop;

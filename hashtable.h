@@ -31,7 +31,6 @@ typedef struct HashTable {
     int count;                  // Nombre d'élément dans la table
     int nb_var;                 // Nombre de variables (not method) dans la table (facilite le calcul des offsets)
 	struct HashTable *next;     
-    bool isGlobal;               // si context global alors = true
 } HashTable;
 
 typedef struct item_table {

@@ -16,8 +16,7 @@ int t = yyparse();
 
 if (t==0)
     print_globalcode();
-printf("%ld\n",tmpCount);
-//print_ctx();
+print_ctx();
 fout = stdout;
 //translate();
 /*

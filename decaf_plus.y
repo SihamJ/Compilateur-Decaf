@@ -49,7 +49,7 @@
 %start program
 %%
 
-program	:  class Program '{' {pushctx(); glob_context = curr_context;} P '}' { /* popctx()*/ ;}
+program	:  class Program '{' {pushctx(); glob_context = curr_context; } P '}' { /* popctx()*/ ;}
 
 
 P 		: MD	{;}
