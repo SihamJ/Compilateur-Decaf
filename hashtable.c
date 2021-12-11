@@ -245,6 +245,8 @@ void ht_delete(HashTable *table, char *key)
         {
             // No collision chain. Remove the item
             // and set table index to NULL
+            if(item->id_type == ID_TMP || item->id_type == ID_VAR)
+                table->nb_var--;
             table->items[index] = NULL;
             free_item(item);
             table->count--;
@@ -257,8 +259,10 @@ void ht_delete(HashTable *table, char *key)
             {
                 // Remove this item and set the head of the list
                 // as the new item
-
+                if(item->id_type == ID_TMP || item->id_type == ID_VAR)
+                    table->nb_var--;
                 free_item(item);
+                table->count--;
                 LinkedList *node = head;
                 head = head->next;
                 node->next = NULL;
@@ -277,11 +281,14 @@ void ht_delete(HashTable *table, char *key)
             {
                 if (strcmp(curr->item->key, key) == 0)
                 {
+                    if(item->id_type == ID_TMP || item->id_type == ID_VAR)
+                            table->nb_var--;
                     if (prev == NULL)
-                    {
+                    {                       
                         // First element of the chain. Remove the chain
                         free_linkedlist(head);
                         table->lists[index] = NULL;
+                        table->count --;
                         return;
                     }
                     else
@@ -291,8 +298,10 @@ void ht_delete(HashTable *table, char *key)
                         curr->next = NULL;
                         free_linkedlist(curr);
                         table->lists[index] = head;
+                        table->count --;
                         return;
                     }
+                
                 }
                 curr = curr->next;
                 prev = curr;
@@ -379,8 +388,6 @@ int offset(item_table *val){
     if(val->table == curr_context)
         return out;
 
-	//out += 4*(curr_context->count - item->order - 1);
-
     HashTable *temp = curr_context;
 
     while(temp != val->table && temp){
@@ -389,4 +396,35 @@ int offset(item_table *val){
     }
 
 	return out;
+}
+
+
+void pop_tmp(){
+
+    for (int i = 0; i < curr_context->max_size; i++){
+        if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
+            ht_delete(curr_context, curr_context->items[i]->key);
+        }
+    }
+    tmpCount = 0;
+}
+
+Ht_item* new_temp(int type){
+
+  int a = tmpCount;
+  int cpt = 1;
+
+  while(a){
+    a=a/10;
+    cpt++;
+  }
+  
+  char *name = malloc(cpt+3);
+  sprintf(name, "t%ld",tmpCount);
+
+  Ht_item *item = create_item(name, ID_TMP, type);
+	newname(item);
+
+  tmpCount++;
+  return item;
 }

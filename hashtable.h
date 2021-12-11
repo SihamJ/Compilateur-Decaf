@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "token.h"
+#include "intermediaire.h"
 
 typedef enum id_type{
     ID_VAR, ID_METHOD, ID_TMP
@@ -56,6 +57,8 @@ Ht_item *ht_search(HashTable *table, char *key);
 void ht_delete(HashTable *table, char *key);
 void print_table(HashTable *table);
 
+Ht_item* new_temp(int type);
+
 void pushctx();
 void popctx();
 void newname(Ht_item *item);
@@ -65,6 +68,8 @@ void print_ctx();
 int offset(item_table *item);
 
 int table_size(HashTable *table);
+
+void pop_tmp(); // dépile les var temporaires du contexte courant
 
 extern HashTable* curr_context;
 extern HashTable* glob_context;

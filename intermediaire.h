@@ -41,7 +41,6 @@ typedef struct quad{
   quadop op1, op2, op3; 
   char *label; // label à placer avant le quad dans le mips (pour une méthode par exemple)
   int jump; // index du label dans le tableau des quad où effectuer le GOTO, -1 si pas de jump à effectuer
-  HashTable *context; // TOS associé à ce contexte
 } quad;
 
 typedef struct expr_val {
@@ -55,11 +54,12 @@ typedef struct expr_val {
 extern quad global_code[5000]; // code généré
 extern size_t nextquad; // n° du prochain quad
 extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
-void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, HashTable *context); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
-Ht_item* new_temp(int type);
+void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
 list crelist(int addr);
 void complete(list n, int addr);
 list concat(list n1, list n2);
 void print_globalcode();
 char *op_type(int type);
+void update_offset(quadop *q1);
+void update_offsets(quadop *q1, quadop *q2);
 #endif

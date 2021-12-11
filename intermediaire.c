@@ -4,33 +4,14 @@ quad global_code[5000];
 size_t nextquad; 
 size_t tmpCount; 
 
-Ht_item* new_temp(int type){
 
-  int a = tmpCount;
-  int cpt = 1;
 
-  while(a){
-    a=a/10;
-    cpt++;
-  }
-  
-  char *name = malloc(cpt+3);
-  sprintf(name, "t%ld",tmpCount);
-
-  Ht_item *item = create_item(name, ID_TMP, type);
-	newname(item);
-
-  tmpCount++;
-  return item;
-}
-
-void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, HashTable* context){
+void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump){
   global_code[nextquad].type = t;
   global_code[nextquad].op1 = op1;
   global_code[nextquad].op2 = op2;
   global_code[nextquad].op3 = op3;
   global_code[nextquad].jump = jump;
-  global_code[nextquad].context = context;
 
   if(label != NULL ){
     global_code[nextquad].label = malloc(strlen(label)+1);
@@ -148,4 +129,16 @@ char *op_type(int type){
         default:
         	break;
         }
+}
+
+void update_offset(quadop *q1){
+        if(q1->type != QO_CST)
+        q1->u.offset +=4;
+}
+
+void update_offsets(quadop *q1, quadop *q2){
+    if(q1->type != QO_CST)
+        q1->u.offset +=4;
+    if(q2->type != QO_CST)
+        q2->u.offset +=4;
 }
