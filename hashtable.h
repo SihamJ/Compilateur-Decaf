@@ -7,12 +7,12 @@
 #include "token.h"
 
 typedef enum id_type{
-    ID_VAR, ID_METHOD
+    ID_VAR, ID_METHOD, ID_TMP
   }id_type;
 
 typedef struct Ht_item {
     char *key;      // identificateur
-    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE)
+    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP)
     int value;      // type (INT / BOOL / VOIDTYPE)
 	int order;      // order d'insértion dans la TOS
 } Ht_item;

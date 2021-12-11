@@ -13,12 +13,13 @@ void translate() {
 	for (int i=0; i < nextquad; i++) {
 		switch (global_code[i].type)
         {
+		case Q_DECL:
+			mips_load_1args(global_code[i]);			
+			mips_push_word("$a0");
+			break;
 		case Q_AFF:
 			mips_load_1args(global_code[i]);			
-			if(global_code[i].op1.u.offset == -4)
-				mips_push_word("$a0");
-			else
-				mips_write_stack("$a0", global_code[i].op1.u.offset);
+			mips_write_stack("$a0", global_code[i].op1.u.offset);
 			break;
 		case Q_AFFADD:
 			mips_load_2args(global_code[i]);

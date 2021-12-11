@@ -3,15 +3,11 @@ class Program {
 
     int main (){
         boolean c;
-        boolean ay;
-                a = 1;
-        b = 2;
-        c = true;
-        ay = false;
+         a= 1;
+        b = 2*a + 3;
     }
     int al (){
         int c;
         c = 2;
-        a = 0;
     }
 } 

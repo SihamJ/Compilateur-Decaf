@@ -342,7 +342,7 @@ void newname(Ht_item *item){
 	item->order = curr_context->nb_var;
     curr_context->count ++;
     ht_insert(curr_context, item);
-    if(item->id_type == ID_VAR)
+    if(item->id_type == ID_VAR || item->id_type == ID_TMP)
         curr_context->nb_var++;
 }
 

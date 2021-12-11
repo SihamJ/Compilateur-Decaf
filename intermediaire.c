@@ -4,20 +4,24 @@ quad global_code[5000];
 size_t nextquad; 
 size_t tmpCount; 
 
-quadop new_temp(){
-  quadop op;
+Ht_item* new_temp(int type){
+
   int a = tmpCount;
   int cpt = 1;
+
   while(a){
     a=a/10;
     cpt++;
   }
-  op.u.temp = malloc(cpt+3);
-  op.type = QO_TMP;
-  sprintf(op.u.temp, "$t%ld",tmpCount);
-  // TO DO: mettre op dans la table des symboles
+  
+  char *name = malloc(cpt+3);
+  sprintf(name, "t%ld",tmpCount);
+
+  Ht_item *item = create_item(name, ID_TMP, type);
+	newname(item);
+
   tmpCount++;
-  return op;
+  return item;
 }
 
 void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, HashTable* context){
@@ -27,6 +31,7 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
   global_code[nextquad].op3 = op3;
   global_code[nextquad].jump = jump;
   global_code[nextquad].context = context;
+
   if(label != NULL ){
     global_code[nextquad].label = malloc(strlen(label)+1);
     strcpy(global_code[nextquad].label, label);
@@ -50,32 +55,97 @@ list concat(list n1, list n2){
 }
 
 void print_globalcode(){
-  printf("\nCode Intermediaire:\n__________________________\n    op1   op2   op3   oper   context\n__________________________\n");
+  printf("\nCode Intermediaire:\n______________________________________________\n    op1           op2           op3          oper   \n_______________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
-    printf("%d: ",i);
+    printf("%d:   ",i);
 
-    if(global_code[i].op1.type == QO_ID )
-      printf(" %d   ", global_code[i].op1.u.offset);
-    else if(global_code[i].op1.type == QO_CST)
-      printf(" %d   ",global_code[i].op1.u.cst);
-    else
-      printf(" %s   ",global_code[i].op1.u.temp);
+    if(global_code[i].op1.type == QO_CST)
+      printf("  %d        ", global_code[i].op1.u.cst);
+    else 
+      printf(" (%d)       ",global_code[i].op1.u.offset);
 
-    if(global_code[i].op2.type == QO_ID)
-      printf(" %d   ", global_code[i].op2.u.offset);
-    else if(global_code[i].op2.type == QO_CST)
-      printf(" %d   ",global_code[i].op2.u.cst);
-    else
-      printf(" %s   ",global_code[i].op2.u.temp);
+    if(global_code[i].op2.type == QO_CST)
+      printf("  %d        ", global_code[i].op2.u.cst);
+    else 
+      printf(" (%d)       ",global_code[i].op2.u.offset);
 
-    if(global_code[i].op3.type == QO_ID)
-      printf(" %d   ", global_code[i].op3.u.offset);
-    else if(global_code[i].op3.type == QO_CST)
-      printf(" %d   ",global_code[i].op3.u.cst);
-    else
-      printf(" %s   ",global_code[i].op3.u.temp);
+    if(global_code[i].op3.type == QO_CST)
+      printf("  %d        ", global_code[i].op3.u.cst);
+    else 
+      printf(" (%d)       ",global_code[i].op3.u.offset);
 
-    printf("op[%d] \n",global_code[i].type);
+    printf("  %s \n",op_type(global_code[i].type));
   }
   printf("\n");
+}
+
+char *op_type(int type){
+  switch (type)
+        {
+		case Q_DECL:
+    return("DECL");
+			break;
+		case Q_AFF:
+    return("AFF");
+
+			break;
+		case Q_AFFADD:
+    return("+AFF");
+
+			break;
+		case Q_AFFSUB:
+    return("-AFF");
+
+			break;
+		case Q_NOT:
+    return("NOT");
+
+			break;
+        case Q_ADD:
+    return("ADD");
+
+        	break;
+        case Q_SUB:
+    return("SUB");
+
+        	break;
+        case Q_MUL:
+    return("MUL");
+
+        	break;
+        case Q_DIV:
+    return("DIV");
+
+        	break;
+        case Q_MOD:
+    return("MOD");
+
+        	break;
+		case Q_EQ:
+    return("EQ");
+
+			break;
+		case Q_NEQ:
+    return("NEQ");
+
+			break;
+		case Q_LT:
+    return("LT");
+
+			break;
+		case Q_GT:
+    return("GT");
+
+			break;
+		case Q_LEQ:
+    return("LEQ");
+
+			break;
+		case Q_GEQ:
+    return("GEQ");
+
+			break;
+        default:
+        	break;
+        }
 }

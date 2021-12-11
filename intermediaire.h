@@ -19,7 +19,7 @@ typedef enum quadop_type{
   }quadop_type;
 
 typedef enum quad_type{
-    Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AND, Q_OR, Q_NOT, Q_AFF, Q_AFFADD, Q_AFFSUB,  
+    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AND, Q_OR, Q_NOT, Q_AFF, Q_AFFADD, Q_AFFSUB 
   }quad_type;
 
 typedef enum node_type{
@@ -56,10 +56,10 @@ extern quad global_code[5000]; // code généré
 extern size_t nextquad; // n° du prochain quad
 extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
 void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, HashTable *context); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
-quadop new_temp();
+Ht_item* new_temp(int type);
 list crelist(int addr);
 void complete(list n, int addr);
 list concat(list n1, list n2);
 void print_globalcode();
-
+char *op_type(int type);
 #endif
