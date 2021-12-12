@@ -419,7 +419,7 @@ int offset(item_table *val){
 
     HashTable *temp = curr_context;
 
-    while(temp != val->table && temp){
+    while(temp != val->table && temp != glob_context && temp){
         out += 4*temp->nb_var;
         temp = temp->next;
     }

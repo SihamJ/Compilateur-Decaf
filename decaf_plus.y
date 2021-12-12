@@ -110,28 +110,55 @@ block 		:	'{' { pushctx(); } V S '}' {  popctx()  ;}
 			|	%empty		{;}
 
 var_decl 	:  	type B ';' {
-								quadop qo,q1;
-								if($1 == INT)
-									q1.u.cst = 0;
-								else if($1 == BOOL)
-									q1.u.cst = false;
-								struct decl *pt = &$2;
-								q1.type = QO_CST;
-								qo.type = QO_ID;
-								while(pt != NULL){
-									if( ht_search(curr_context, pt->name) != NULL ) 
-										yyerror("\nErreur: Variable déclarée deux fois\n");
+								if(curr_context == glob_context){
+									quadop qo,q1;
+									if($1 == INT)
+										q1.u.cst = 0;
+									else if($1 == BOOL)
+										q1.u.cst = false;
+									struct decl *pt = &$2;
+									q1.type = QO_CST;
+									qo.type = QO_GLOBAL;
+									
+									while(pt != NULL){
+										if( ht_search(glob_context, pt->name) != NULL ) 
+											yyerror("\nErreur: Variable déclarée deux fois\n");
 
-									qo.u.offset = -4;
-									gencode(qo, qo, qo, Q_DECL, NULL, -1);
-									qo.u.offset = 0;
-									gencode(qo, q1, q1, Q_AFF, NULL, -1);
-
-									Ht_item *item = create_item(pt->name, ID_VAR, $1);
-									newname(item);
-									pt = pt->suiv;
+										qo.u.global.name = malloc(strlen(pt->name + 1));
+										strcpy(qo.u.global.name, pt->name);
+										qo.u.global.size = 8;
+										gencode(qo, qo, qo, Q_DECL, NULL, -1);
+										gencode(qo, q1, q1, Q_AFF, NULL, -1);									
+										Ht_item *item = create_item(pt->name, ID_VAR, $1);
+										newname(item);
+										pt = pt->suiv;
+									}
 								}
-							 }
+								else {
+									quadop qo,q1;
+									if($1 == INT)
+										q1.u.cst = 0;
+									else if($1 == BOOL)
+										q1.u.cst = false;
+									struct decl *pt = &$2;
+									q1.type = QO_CST;
+									qo.type = QO_ID;
+									
+									while(pt != NULL){
+										if( ht_search(curr_context, pt->name) != NULL ) 
+											yyerror("\nErreur: Variable déclarée deux fois\n");
+
+										qo.u.offset = -4;
+										gencode(qo, qo, qo, Q_DECL, NULL, -1);
+										qo.u.offset = 0;
+										gencode(qo, q1, q1, Q_AFF, NULL, -1);
+
+										Ht_item *item = create_item(pt->name, ID_VAR, $1);
+										newname(item);
+										pt = pt->suiv;
+									}
+								}
+							}
 
 B 			:	id ',' B  	{ 	struct decl var;
 								var.name = malloc((strlen($1)+1)); 
@@ -156,9 +183,18 @@ statement 	:	id assign_op expr ';' {
 														yyerror("\nErreur: Type de valeur incorrecte\n");
 													if (($2 == Q_AFFADD || $2 == Q_AFFSUB) && (val->item->value == BOOL || $3.type == BOOL))
 														yyerror("\nErreur: Type de valeur incorrecte\n");
+												
 													quadop q1, q2;
-													q1.u.offset = offset(val);
-													q1.type = QO_ID;
+													if (val->table == glob_context) {
+														q1.type = QO_GLOBAL;
+														q1.u.global.name = malloc(strlen(val->item->key)+1);
+														strcpy(q1.u.global.name, val->item->key);
+														q1.u.global.size = 4;
+													}
+													else {
+														q1.u.offset = offset(val);
+														q1.type = QO_ID;
+													}
 													if($2 == Q_AFF)
 														gencode(q1,$3.result,$3.result,$2,NULL,-1);
 													else

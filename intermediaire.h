@@ -15,7 +15,7 @@ typedef struct list{
 }*list;
 
 typedef enum quadop_type{
-    QO_CST, QO_ID, QO_TMP
+    QO_CST, QO_ID, QO_TMP, QO_GLOBAL
   }quadop_type;
 
 typedef enum quad_type{
@@ -27,11 +27,15 @@ typedef enum node_type{
 }node_type;
 
 typedef struct quadop {
-  quadop_type type;     // Constante, identificateur, ou temporaire
+  quadop_type type;     // Constante, identificateur, temporaire ou globale
   union {
     int cst;
 	  char* temp;  // a supprimer
     int offset;
+    struct global{
+      char *name;
+      int size;
+    } global;  // variable global
   } u;
 } quadop;
 

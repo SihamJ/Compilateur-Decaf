@@ -42,16 +42,22 @@ void print_globalcode(){
       printf("  %s        ", get_type_oper(global_code[i].op1.type));
     if(global_code[i].op1.type == QO_CST)
       printf("  %d        ", global_code[i].op1.u.cst);
+    else if(global_code[i].op1.type == QO_GLOBAL)
+      printf("  %s        ", global_code[i].op1.u.global.name);
     else 
       printf(" (%d)       ",global_code[i].op1.u.offset);
 
     if(global_code[i].op2.type == QO_CST)
       printf("  %d        ", global_code[i].op2.u.cst);
+    else if(global_code[i].op2.type == QO_GLOBAL)
+      printf("  %s        ", global_code[i].op2.u.global.name);
     else 
       printf(" (%d)       ",global_code[i].op2.u.offset);
 
     if(global_code[i].op3.type == QO_CST)
       printf("  %d        ", global_code[i].op3.u.cst);
+    else if(global_code[i].op3.type == QO_GLOBAL)
+      printf("  %s        ", global_code[i].op3.u.global.name);
     else 
       printf(" (%d)       ",global_code[i].op3.u.offset);
 
@@ -150,4 +156,6 @@ char *get_type_oper(int type){
     return "ID";
   else if (type == QO_TMP)
     return "TMP";
+    else if (type == QO_GLOBAL)
+    return "GLOB";
 }
