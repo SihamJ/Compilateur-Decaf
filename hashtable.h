@@ -8,21 +8,21 @@
 #include "intermediaire.h"
 
 typedef enum id_type{
-    ID_VAR, ID_METHOD, ID_TMP
+    ID_VAR, ID_METHOD, ID_TMP, ID_PARAM, ID_TAB
   }id_type;
 
 typedef struct Ht_item {
     char *key;      // identificateur
-    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP)
+    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
     int value;      // type (INT / BOOL / VOIDTYPE)
 	int order;      // order d'insértion dans la TOS
+
 } Ht_item;
 
 typedef struct LinkedList {
     Ht_item *item;
     struct LinkedList *next;
 } LinkedList;
-
 
 typedef struct HashTable {
     Ht_item **items;
@@ -63,14 +63,16 @@ void popctx();
 void newname(Ht_item *item);
 item_table *lookup(char *key);
 void print_ctx();
+void print_stack();
+void free_stack();
 
 int offset(item_table *item);
 
 int table_size(HashTable *table);
 
-void pop_tmp(); // dépile les var temporaires du contexte courant
+void pop_tmp(); // dépile les var temporaires du contexte courant, appelée après chaque fin de statement d'affectation
 
 extern HashTable* curr_context;
 extern HashTable* glob_context;
-
+extern HashTable* stack;
 #endif

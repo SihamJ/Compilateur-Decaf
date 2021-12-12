@@ -2,6 +2,7 @@
 
  HashTable* curr_context;
  HashTable* glob_context;
+ HashTable* stack;
 
 unsigned long hash_function(char *str)
 {
@@ -341,10 +342,27 @@ void pushctx(){
 	curr_context = temp;
 }
 
+// pop current context and put it into the stack
 void popctx(){
-    struct HashTable *temp = curr_context;
+    HashTable *temp = curr_context;
 	curr_context = curr_context->next;
-	free_table(temp);
+    if(stack == NULL){
+        stack = temp;
+        stack->next = NULL;
+    }
+    else{
+        temp->next = stack;
+        stack = temp;
+    }
+}
+
+// called at the end of main to free the TOS stack
+void free_stack(){
+    HashTable *pt;
+    while(pt!=NULL){
+        pt = stack->next;
+        free_table(stack);
+    }
 }
 
 void newname(Ht_item *item){
@@ -373,6 +391,17 @@ void print_ctx(){
     printf("\nTABLES DES SYMBOLES:\n\n");
 	int count = 0;
     for (HashTable *i=curr_context; i; i = i->next){
+        printf("Context n° %d:",count++);
+        print_table(i);
+        printf("\n");
+    }
+    printf("\n");
+}
+
+void print_stack(){
+    printf("\nTABLES DES SYMBOLES:\n\n");
+	int count = 0;
+    for (HashTable *i=stack; i; i = i->next){
         printf("Context n° %d:",count++);
         print_table(i);
         printf("\n");

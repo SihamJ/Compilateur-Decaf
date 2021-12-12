@@ -16,12 +16,13 @@ int t = yyparse();
 
 if (t==0)
     print_globalcode();
-//print_ctx();
+print_stack();
 fout = stdout;
 //translate();
 /*
 int t=yylex();
 while(t)
 t=yylex();*/
+free_stack();
 return 0;
 }
