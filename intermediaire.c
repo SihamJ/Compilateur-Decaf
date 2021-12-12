@@ -36,10 +36,10 @@ list concat(list n1, list n2){
 }
 
 void print_globalcode(){
-  printf("\nCode Intermediaire:\n______________________________________________\n    op1           op2           op3          oper   \n_______________________________________________\n\n");
+  printf("\nCode Intermediaire:\n______________________________________________\n     type      op1           op2           op3          oper   \n_______________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
     printf("%d:   ",i);
-
+      printf("  %s        ", get_type_oper(global_code[i].op1.type));
     if(global_code[i].op1.type == QO_CST)
       printf("  %d        ", global_code[i].op1.u.cst);
     else 
@@ -141,4 +141,13 @@ void update_offsets(quadop *q1, quadop *q2){
         q1->u.offset +=4;
     if(q2->type != QO_CST)
         q2->u.offset +=4;
+}
+
+char *get_type_oper(int type){
+  if (type == QO_CST)
+    return "CST";
+  else if (type == QO_ID)
+    return "ID";
+  else if (type == QO_TMP)
+    return "TMP";
 }

@@ -49,7 +49,7 @@
 %start program
 %%
 
-program	:  class Program '{' {pushctx(); glob_context = curr_context; } P '}' { /* popctx()*/ ;}
+program	:  class Program '{' {pushctx(); glob_context = curr_context; } P '}' { print_ctx(); popctx() ;}
 
 
 P 		: MD	{;}
@@ -78,7 +78,7 @@ Param	:	Param ',' type id 	{;}
 tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{ /* Vérifier que int_literal supérieur à 0*/ ;}
 			|	type id '[' int_literal ']' ';'				{  /* Vérifier que int_literal supérieur à 0*/  ;}
 
-block 		:	'{' { pushctx(); glob_context = curr_context; } V S '}' { /* popctx()*/  ;}
+block 		:	'{' { pushctx(); glob_context = curr_context; } V S '}' { print_ctx(); popctx()  ;}
 
  V 			:	V var_decl 	{;}
 			|	%empty		{;}

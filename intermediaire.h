@@ -62,4 +62,5 @@ void print_globalcode();
 char *op_type(int type);
 void update_offset(quadop *q1);
 void update_offsets(quadop *q1, quadop *q2);
+char *get_type_oper(int type);
 #endif

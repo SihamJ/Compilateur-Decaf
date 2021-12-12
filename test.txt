@@ -1,14 +1,14 @@
 class Program {
     int a,b;
 
-    int main (){
+    void main (){
         boolean c;
         a= 1;
         b = 2*a + 3;
     }
     int al (){
-        int c;
-        c = 2;
-        a=1;
+        boolean a;
+        a=false;
+        b=2;
     }
 } 
