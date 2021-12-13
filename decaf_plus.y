@@ -128,8 +128,8 @@ var_decl 	:  	type B ';' {
 										qo.u.global.name = malloc(strlen(pt->name + 1));
 										strcpy(qo.u.global.name, pt->name);
 										qo.u.global.size = 8;
-										gencode(qo, qo, qo, Q_DECL, NULL, -1);
-										gencode(qo, q1, q1, Q_AFF, NULL, -1);									
+										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
+										gencode(qo, q1, q1, Q_AFF, global_code[nextquad].label, -1);									
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
 										newname(item);
 										pt = pt->suiv;
@@ -150,9 +150,9 @@ var_decl 	:  	type B ';' {
 											yyerror("\nErreur: Variable déclarée deux fois\n");
 
 										qo.u.offset = -4;
-										gencode(qo, qo, qo, Q_DECL, NULL, -1);
+										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
 										qo.u.offset = 0;
-										gencode(qo, q1, q1, Q_AFF, NULL, -1);
+										gencode(qo, q1, q1, Q_AFF, global_code[nextquad].label, -1);
 
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
 										newname(item);
@@ -198,29 +198,33 @@ statement 	:	id assign_op expr ';' {
 													}
 
 													if($3.type == BOOL){
+
 														quadop qo;
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($3.t, nextquad);
-														gencode(q1, qo, qo, Q_AFF, NULL, -1);
+														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1); 	
 														qo.type = QO_EMPTY;
-														gencode(qo, qo, qo, Q_GOTO, NULL, nextquad+2);
-														complete($3.f, nextquad);
-														qo.type = QO_CST;
+														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2);
+
+														qo.type = QO_CST;	
 														qo.u.cst = false;
-														gencode(q1, qo, qo, Q_AFF, NULL, -1);
+														char *label = new_label();		
+														complete($3.f, nextquad);											
+														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1);					
+
 														qo.type = QO_EMPTY;
-														gencode(qo,qo,qo, Q_GOTO, NULL, nextquad); // ajouter une op ADD_LABEL ?
+														gencode(qo, qo, qo, Q_LABEL, new_label(), -1);
 													}
 													else {
 													if($2 == Q_AFF)
-														gencode(q1,$3.result,$3.result,$2,NULL,-1);
+														gencode(q1,$3.result,$3.result,$2,global_code[nextquad].label,-1);
 
 													else if($2 == Q_AFFADD)
-														gencode(q1,q1,$3.result,Q_ADD,NULL,-1);
+														gencode(q1,q1,$3.result,Q_ADD,global_code[nextquad].label,-1);
 
 													else if($2 == Q_AFFSUB)
-														gencode(q1,q1,$3.result,Q_SUB,NULL,-1);
+														gencode(q1,q1,$3.result,Q_SUB,global_code[nextquad].label,-1);
 													}
 													pop_tmp();
 												}
@@ -272,7 +276,7 @@ expr		:	expr add_op expr %prec '+'	{
 											quadop qo;
 											qo.type = QO_TMP;
 											qo.u.offset = -4;
-											gencode(qo,qo,qo,Q_DECL,NULL,-1);
+											gencode(qo,qo,qo,Q_DECL,global_code[nextquad].label,-1);
 											qo.u.offset = 0;
 
 											if($1.result.type == QO_ID || $1.result.type == QO_TMP)
@@ -280,7 +284,7 @@ expr		:	expr add_op expr %prec '+'	{
 											if($3.result.type == QO_ID || $3.result.type == QO_TMP)
 												$3.result.u.offset += 4;
 
-											gencode(qo,$1.result,$3.result,$2,NULL,-1);
+											gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label,-1);
 											$$.result = qo;}
 			|	expr mul_op expr %prec '*'	{	if($1.type != INT || $3.type != INT)
 												yyerror("\nErreur: Arithmètique non entière");
@@ -289,7 +293,7 @@ expr		:	expr add_op expr %prec '+'	{
 											quadop qo;
 											qo.type = QO_TMP;
 											qo.u.offset = -4;
-											gencode(qo,qo,qo,Q_DECL,NULL,-1);
+											gencode(qo,qo,qo,Q_DECL,global_code[nextquad].label,-1);
 											qo.u.offset = 0;
 
 											if($1.result.type == QO_ID || $1.result.type == QO_TMP)
@@ -297,7 +301,7 @@ expr		:	expr add_op expr %prec '+'	{
 											if($3.result.type == QO_ID || $3.result.type == QO_TMP)
 												$3.result.u.offset += 4;
 
-											gencode(qo,$1.result,$3.result,$2,NULL,-1);
+											gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label,-1);
 											$$.result = qo;}
 			|	expr and M expr			{	if($1.type != BOOL || $4.type != BOOL)
 												yyerror("\nErreur: AND operator with non boolean value");
@@ -322,9 +326,9 @@ expr		:	expr add_op expr %prec '+'	{
 											quadop qo;
 											qo.type = QO_EMPTY;
 											qo.u.cst = 0;
-											gencode(qo, $1.result, $3.result, $2, NULL, -1);
+											gencode(qo, $1.result, $3.result, $2, global_code[nextquad].label, -1);
 											$$.f = crelist(nextquad);
-											gencode(qo, $1.result, $3.result, $2, NULL, -1);
+											gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1);
 											}
 			|	expr eq_op expr	%prec eq	{	if($1.type != $3.type )
 												yyerror("\nErreur: Comparaison de types différents");
@@ -333,9 +337,9 @@ expr		:	expr add_op expr %prec '+'	{
 											qo.type = QO_EMPTY;
 											qo.u.cst = 0;											
 											$$.t = crelist(nextquad);
-											gencode(qo,$1.result,$3.result,$2,NULL,-1);
+											gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label, -1);
 											$$.f = crelist(nextquad);
-											gencode(qo,$1.result,$3.result,$2,NULL,-1);
+											gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1);
 										}
 			| 	literal 				{
 											$$.result = $1.qop;
@@ -367,11 +371,11 @@ expr		:	expr add_op expr %prec '+'	{
 											qo.type = QO_TMP;
 											qo.type = QO_TMP;
 											qo.u.offset = -4;
-											gencode(qo, qo, qo, Q_DECL, NULL,-1);
+											gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label,-1);
 											qo.u.offset = 0;
 											if($2.result.type == QO_ID || $2.result.type == QO_TMP)
 												$2.result.u.offset +=4 ;											
-											gencode(qo, $2.result, $2.result, Q_SUB, NULL,-1);
+											gencode(qo, $2.result, $2.result, Q_SUB, global_code[nextquad].label,-1);
 											$$.result = qo;
 											}
 			|	'!' expr %prec NEG 		{	if($2.type != BOOL)

@@ -2,8 +2,22 @@
 
 quad global_code[5000];
 size_t nextquad; 
-size_t tmpCount; 
+size_t tmpCount;
+size_t labelCount; 
 
+char* new_label(){
+  char* label;
+  int a = labelCount;
+  int cpt = 1;
+  while(a){
+    a=a/10;
+    cpt++;
+  }
+  label = malloc(cpt+6);
+  sprintf(label, "label%ld",labelCount);
+  labelCount++;
+  return label;
+}
 
 
 void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump){
@@ -17,7 +31,8 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
     global_code[nextquad].label = malloc(strlen(label)+1);
     strcpy(global_code[nextquad].label, label);
   }
-  nextquad++;
+  if(t != Q_LABEL)
+    nextquad++;
 }
 
 list crelist(int addr){
@@ -44,10 +59,10 @@ void complete(list n, int addr){
 }
 
 void print_globalcode(){
-  printf("\nCode Intermediaire:\n______________________________________________\n     type      op1           op2           op3          oper         jump   \n_______________________________________________\n\n");
+  printf("\nCode Intermediaire:\n_____________________________________________________________________________________________________\n     type        op1           op2           op3          oper           label          jump   \n______________________________________________________________________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
     printf("%d:   ",i);
-      printf("  %s        ", get_type_oper(global_code[i].op1.type));
+      printf("  %s       ", get_type_oper(global_code[i].op1.type));
       
     if(global_code[i].op1.type == QO_CST)
       printf("  %d        ", global_code[i].op1.u.cst);
@@ -68,10 +83,15 @@ void print_globalcode(){
     else if(global_code[i].op3.type == QO_GLOBAL)
       printf("  %s        ", global_code[i].op3.u.global.name);
     else 
-      printf(" (%d)       ",global_code[i].op3.u.offset);
-
+      printf(" (%d)      ",global_code[i].op3.u.offset);
+    
     printf("  %s        ",op_type(global_code[i].type));
-    printf("  %d \n",global_code[i].jump);
+    if(global_code[i].label != NULL)
+      printf("  %s      ",global_code[i].label);
+    else
+      printf("______    ");
+
+    printf("      %d \n",global_code[i].jump);
   }
   printf("\n");
 }
@@ -141,8 +161,13 @@ char *op_type(int type){
     case Q_GOTO:
     return ("GOTO");
 			break;
-        default:
-        	break;
+
+    case Q_LABEL:
+    return ("LABEL");
+    break;
+
+    default:
+     	break;
         }
 }
 
