@@ -69,8 +69,22 @@ FD 			: FD field_decl  {;}
 field_decl	:	var_decl	{;}
 			|	tab_decl	{;}
 
-tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{ /* Vérifier que int_literal supérieur à 0*/ ;}
-			|	type id '[' int_literal ']' ';'					{  /* Vérifier que int_literal supérieur à 0*/  ;}
+tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{ 
+																	if($4 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
+																	if(ht_search(glob_context, $2) != NULL)
+																		yyerror("\nErreur: Tableau déjà déclaré avec ce nom\n");
+																	Ht_item *item = create_item($2, ID_TAB, $1);
+																	item->size = $4;
+																	newname(item);
+																	}
+
+			|	type id '[' int_literal ']' ';'					{ 	if($4 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
+																	if(ht_search(glob_context, $2) != NULL)
+																		yyerror("\nErreur: Tableau déjà déclaré avec ce nom\n");
+																	Ht_item *item = create_item($2, ID_TAB, $1);
+																	item->size = $4;
+																	newname(item);
+																}
 
 MD			:	MD method_decl		{;}
 			|	method_decl		{;}
@@ -197,7 +211,7 @@ statement 	:	id assign_op expr ';' {
 														q1.type = QO_ID;
 													}
 
-													if($3.type == BOOL){
+													if($3.type == BOOL) {
 
 														quadop qo;
 														qo.type = QO_CST;

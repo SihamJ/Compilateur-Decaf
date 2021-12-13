@@ -319,7 +319,8 @@ void print_table(HashTable *table)
         if (table->items[i])
         {
             printf("Index:%d, Key:%s, Value:%d", i, table->items[i]->key, table->items[i]->value);
-
+            if(table->items[i]->id_type == ID_TAB)
+                printf(", size: %d", table->items[i]->size);
             if (table->lists[i])
             {
                 printf(" => list => ");
@@ -327,6 +328,8 @@ void print_table(HashTable *table)
                 while (head)
                 {
                     printf("Key:%s, Value:%d", head->item->key, head->item->value);
+                    if(head->item->id_type == ID_TAB)
+                        printf("size: %d", head->item->size);
                     head = head->next;
                 }
             }
@@ -366,11 +369,15 @@ void free_stack(){
 }
 
 void newname(Ht_item *item){
-	item->order = curr_context->nb_var;
-    curr_context->count ++;
+	
+    if(curr_context != glob_context){
+        item->order = curr_context->nb_var;
+        if(item->id_type == ID_VAR || item->id_type == ID_TMP)
+            curr_context->nb_var++;
+    }
     ht_insert(curr_context, item);
-    if(item->id_type == ID_VAR || item->id_type == ID_TMP)
-        curr_context->nb_var++;
+    curr_context->count ++;
+
 }
 
 item_table *lookup(char *key){

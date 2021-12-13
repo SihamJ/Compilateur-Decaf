@@ -16,7 +16,7 @@ typedef struct Ht_item {
     int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
     int value;      // type (INT / BOOL / VOIDTYPE)
 	int order;      // order d'insértion dans la TOS
-
+    int size;       // si tableau, sinon 4
 } Ht_item;
 
 typedef struct LinkedList {
