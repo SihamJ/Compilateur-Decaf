@@ -15,11 +15,11 @@ typedef struct list{
 }*list;
 
 typedef enum quadop_type{
-    QO_CST, QO_ID, QO_TMP, QO_GLOBAL
+    QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY
   }quadop_type;
 
 typedef enum quad_type{
-    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AND, Q_OR, Q_NOT, Q_AFF, Q_AFFADD, Q_AFFSUB 
+    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB
   }quad_type;
 
 typedef enum node_type{
@@ -27,7 +27,7 @@ typedef enum node_type{
 }node_type;
 
 typedef struct quadop {
-  quadop_type type;     // Constante, identificateur, temporaire ou globale
+  quadop_type type;     // Constante, identificateur, temporaire, globale
   union {
     int cst;
 	  char* temp;  // a supprimer

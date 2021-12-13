@@ -1,16 +1,14 @@
 class Program {
     int a,b;
 
-   
-    int al (int v, boolean e){
-        int d;
+    void main (){
+        boolean c;
+        a= 1;
+        b = 2*a + 3;
     }
-    int ale (int v, boolean e){
+    int al (){
         boolean a;
         a=false;
-        b=2+3*4;
+        b=2;
     }
-     void main (){
-        a= 1;
-    }
-} 
+}

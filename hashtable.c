@@ -410,6 +410,7 @@ void print_stack(){
 }
 
 int offset(item_table *val){
+    printf("offset called with item %s\n", val->item->key);
 	int out = 0;
 
     out = 4*val->table->nb_var - 4*(val->item->order+1);

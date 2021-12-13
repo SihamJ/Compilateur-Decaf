@@ -35,11 +35,20 @@ list concat(list n1, list n2){
   return n1;
 }
 
+void complete(list n, int addr){
+  list pt = n;
+  while(pt){
+    global_code[pt->addr].jump = addr;
+    pt = pt->suiv;
+  }
+}
+
 void print_globalcode(){
-  printf("\nCode Intermediaire:\n______________________________________________\n     type      op1           op2           op3          oper   \n_______________________________________________\n\n");
+  printf("\nCode Intermediaire:\n______________________________________________\n     type      op1           op2           op3          oper         jump   \n_______________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
     printf("%d:   ",i);
       printf("  %s        ", get_type_oper(global_code[i].op1.type));
+      
     if(global_code[i].op1.type == QO_CST)
       printf("  %d        ", global_code[i].op1.u.cst);
     else if(global_code[i].op1.type == QO_GLOBAL)
@@ -61,7 +70,8 @@ void print_globalcode(){
     else 
       printf(" (%d)       ",global_code[i].op3.u.offset);
 
-    printf("  %s \n",op_type(global_code[i].type));
+    printf("  %s        ",op_type(global_code[i].type));
+    printf("  %d \n",global_code[i].jump);
   }
   printf("\n");
 }
@@ -82,10 +92,6 @@ char *op_type(int type){
 			break;
 		case Q_AFFSUB:
     return("-AFF");
-
-			break;
-		case Q_NOT:
-    return("NOT");
 
 			break;
         case Q_ADD:
@@ -130,23 +136,14 @@ char *op_type(int type){
 			break;
 		case Q_GEQ:
     return("GEQ");
+    break;
 
+    case Q_GOTO:
+    return ("GOTO");
 			break;
         default:
         	break;
         }
-}
-
-void update_offset(quadop *q1){
-        if(q1->type != QO_CST)
-        q1->u.offset +=4;
-}
-
-void update_offsets(quadop *q1, quadop *q2){
-    if(q1->type != QO_CST)
-        q1->u.offset +=4;
-    if(q2->type != QO_CST)
-        q2->u.offset +=4;
 }
 
 char *get_type_oper(int type){
@@ -158,4 +155,6 @@ char *get_type_oper(int type){
     return "TMP";
     else if (type == QO_GLOBAL)
     return "GLOB";
+  else if (type == QO_EMPTY)
+    return "NONE";
 }
