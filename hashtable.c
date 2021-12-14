@@ -441,6 +441,7 @@ void pop_tmp(){
     for (int i = 0; i < curr_context->max_size; i++){
         if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
             ht_delete(curr_context, curr_context->items[i]->key);
+			curr_context->count--;
         }
     }
     tmpCount = 0;

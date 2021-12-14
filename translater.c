@@ -32,7 +32,7 @@ void translate() {
 		switch (global_code[i].type)
         {
 		case Q_DECL:
-			mips_load_1args(global_code[i]);			
+			mips_load_immediate("$a0", 0);			
 			mips_push_word("$a0");
 			break;
 		case Q_AFF:
