@@ -273,12 +273,12 @@ void mips_syscall(int num){
 	}
 }*/
 
-/**
- * @brief Declare a table
- */
-void declare_tab(char *tab_name, int size) {
-	fprintf(fout, ".data\n%s: .word %d\n", tab_name, size);
-}
+// /**
+//  * @brief Declare a table
+//  */
+// void declare_tab(char *tab_name, int size) {
+// 	fprintf(fout, ".data\n%s: .word %d\n", tab_name, size);
+// }
 
 /**
  * @brief Save the value in the buffer to the target table at a specified offset
