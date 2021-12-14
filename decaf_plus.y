@@ -87,7 +87,7 @@ tab_decl	:	type Tab ';' 							{
 
 																qo.u.global.name = malloc(strlen(pt->name + 1));
 																strcpy(qo.u.global.name, pt->name);
-																qo.u.global.size = pt->size;
+																qo.u.global.size = pt->size * 4;
 																gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
 																glob_dec_count++;
 																Ht_item *item = create_item(pt->name, ID_TAB, $1);
