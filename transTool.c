@@ -277,7 +277,7 @@ void mips_syscall(int num){
  * @brief Declare a table
  */
 void declare_tab(char *tab_name, int size) {
-	fprintf(fout, ".data\n%s: .space %d\n", tab_name, size*4);
+	fprintf(fout, ".data\n%s: .word %d\n", tab_name, size);
 }
 
 /**
