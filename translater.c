@@ -10,7 +10,7 @@
 
 FILE *fout;
 void translate() {
-	printf("\n_________________________ MIPS START ________________________\n\n\n");
+	printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
 	/* Déclarations des variables globales dans le segment .data  ; "global_dec_count" est un compteur du nb de declarations globales*/
 	fprintf(fout, ".data\n");
@@ -19,7 +19,11 @@ void translate() {
 	}
 	/* Fin Déclarations globales */
 
-	printf("\n.globl main\n\n");
+	fprintf(fout, "\n.text\n");
+	fprintf(fout, "\n.globl main\n\n");
+
+	fprintf(fout, "j main\n\n");
+
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)
