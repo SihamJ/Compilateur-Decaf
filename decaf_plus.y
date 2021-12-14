@@ -120,13 +120,18 @@ Tab			:	id '[' int_literal ']' ',' Tab			{	if($3 <= 0) yyerror("\nErreur: Taille
 MD			:	MD method_decl		{;}
 			|	method_decl			{;}
 
-method_decl	:		type id {	if(ht_search(glob_context, $2) != NULL)
+method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
 								if(!strcmp($2,"main"))
 									yyerror("\nErreur: La méthode main doit être de type void\n");
 								Ht_item *item = create_item($2, ID_METHOD, $1);
 								newname(item);
-								pushctx(); } 
+								pushctx();
+								global_code[nextquad].label = malloc(strlen($2)+1);
+								strcpy(global_code[nextquad].label,$2);
+								if($2!=NULL)
+								printf("here\n");
+								} 
 
 								'(' Param ')'  block	{ popctx(); }
 
@@ -134,9 +139,20 @@ method_decl	:		type id {	if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
 								Ht_item *item = create_item($2, ID_METHOD, $1);
 								newname(item);
-								pushctx(); } 
+								pushctx(); 
+								quadop qo;
+								qo.type = QO_EMPTY; 
+								gencode(qo,qo,qo,Q_LABEL,$2,-1);
+								} 
 							
-								'(' Param ')'  block	{ popctx(); }
+								'(' Param ')'  block	{ if(!strcmp($2,"main")){
+																quadop qo; 
+																qo.type = QO_CST; 
+																qo.u.cst = 10; 
+																gencode(qo,qo,qo, Q_SYSCALL, "end", -1);
+																} 
+															popctx();
+														}
 
 Param		:	Param ',' type id 	{ 	if( ht_search(curr_context, $4) != NULL ) 
 											yyerror("\nErreur: Deux paramètres de méthodes de même nom\n");	
@@ -240,8 +256,7 @@ statement 	:	id assign_op expr ';' {
 														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2);
 
 														qo.type = QO_CST;	
-														qo.u.cst = false;
-														char *label = new_label();		
+														qo.u.cst = false;		
 														complete($3.f, nextquad);											
 														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1);					
 

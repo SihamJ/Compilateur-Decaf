@@ -167,6 +167,10 @@ char *op_type(int type){
     return ("LABEL");
     break;
 
+    case Q_SYSCALL:
+    return ("SYSCALL");
+    break;
+
     default:
      	break;
         }
@@ -183,4 +187,14 @@ char *get_type_oper(int type){
     return "GLOB";
   else if (type == QO_EMPTY)
     return "NONE";
+}
+
+void add_labels(){
+  char *label;
+  for(int i=0; i<nextquad; i++){
+    if(global_code[i].jump != -1 && global_code[global_code[i].jump].label == NULL){
+      label = new_label();
+      global_code[global_code[i].jump].label = label;
+    }
+  }
 }

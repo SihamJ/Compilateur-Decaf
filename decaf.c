@@ -14,8 +14,10 @@ int main(){
 curr_context = NULL;
 int t = yyparse();
 
-if (t==0)
+if (t==0){
+    add_labels();
     print_globalcode();
+}
 print_stack();
 fout = stdout;
 translate();

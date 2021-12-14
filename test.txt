@@ -2,8 +2,16 @@ class Program {
     int a,b;
     boolean c;
     int E[10];
-    void main (){
+        int al(){
+        int y;
+        y = a*2;
+    }
+    void to(){
         a = 2;
     }
-    
+    void main (){
+        a = 2;
+        c = a > 2;
+        }
+
 }

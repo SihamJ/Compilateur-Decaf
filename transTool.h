@@ -61,17 +61,21 @@ void mips_mod(char *target, char *subL, char *subR);
 
 void mips_mult(char *target, char *subL, char *subR);
 
-void mips_eq(char *target, char *eqL, char *eqR);
+void mips_eq(char *target, char *eqL, char *eqR, char *label);
 
-void mips_neq(char *target, char *neqL, char *neqR);
+void mips_neq(char *target, char *neqL, char *neqR, char *label);
 
-void mips_lt(char *target, char *geqL, char *geqR);
+void mips_lt(char *target, char *geqL, char *geqR, char *label);
 
-void mips_gt(char *target, char *geqL, char *geqR);
+void mips_gt(char *target, char *geqL, char *geqR, char *label);
 
-void mips_leq(char *target, char *geqL, char *geqR);
+void mips_leq(char *target, char *geqL, char *geqR, char *label);
 
-void mips_geq(char *target, char *geqL, char *geqR);
+void mips_geq(char *target, char *geqL, char *geqR, char *label);
+
+void mips_jump(char *label);
+
+void mips_syscall(int num);
 
 /** The abstraction of "For" and "While" should be the same.
 * (Looping the content in its block: @param block_content

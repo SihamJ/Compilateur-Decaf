@@ -19,9 +19,12 @@ void translate() {
 	}
 	/* Fin Déclarations globales */
 
-	printf("\n");
+	printf("\n.globl main\n\n");
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
+		if(global_code[i].label != NULL)
+			fprintf(fout, "\n%s:\n", global_code[i].label);
+
 		switch (global_code[i].type)
         {
 		case Q_DECL:
@@ -87,54 +90,33 @@ void translate() {
         	break;
 		case Q_EQ:
 			mips_load_2args(global_code[i]);
-			mips_eq("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_eq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_NEQ:
 			mips_load_2args(global_code[i]);
-			mips_neq("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_neq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LT:
 			mips_load_2args(global_code[i]);
-			mips_lt("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_lt("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GT:
 			mips_load_2args(global_code[i]);
-			mips_gt("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_gt("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LEQ:
 			mips_load_2args(global_code[i]);
-			mips_leq("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_leq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GEQ:
 			mips_load_2args(global_code[i]);
-			mips_geq("$v0", "$a0", "$a1");
-			if(global_code[i].op1.type == QO_ID)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
-			else
-				mips_write_tmp(global_code[i].op1.u.temp, "$v0");
+			mips_geq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GOTO:
-			// TO DO
+			mips_jump(global_code[global_code[i].jump].label);
+			break;
+		case Q_SYSCALL:
+			mips_syscall(global_code[i].op1.u.cst);
 			break;
         default:
         	break;
