@@ -18,7 +18,7 @@ if (t==0)
     print_globalcode();
 print_stack();
 fout = stdout;
-//translate();
+translate();
 /*
 int t=yylex();
 while(t)

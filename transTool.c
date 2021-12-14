@@ -6,6 +6,14 @@ extern FILE *fout;
 static int tmp_reg_count = 0;
 static int branch_count = 0;
 
+void mips_dec_global(quadop q){
+	if(q.u.global.size == 4)
+		fprintf(fout, "		%s: %s %d\n", q.u.global.name, ".word", 0);
+	else
+		fprintf(fout, "		%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
+}
+
+
 void mips_label(char *name, int n) {
 	fprintf(fout, "%s%d:\n",name, n);
 }
@@ -15,16 +23,20 @@ void mips_jump(char *label, int n) {
 }
 
 void mips_load_immediate(char *reg, int val) {
-    fprintf(fout, "li %s %d\n", reg, val);
+    fprintf(fout, "li %s, %d\n", reg, val);
+}
+
+void mips_load_word(char *reg, char *glob) {
+    fprintf(fout, "lw %s, %s\n", reg, glob);
 }
 
 void mips_load_from_addr(char *target, char *src) {
-    fprintf(fout, "la %s (%s)\n", target, src);
+    fprintf(fout, "la %s, (%s)\n", target, src);
 }
 
 
 void mips_copy_rtn_val(char *target) {
-    fprintf(fout, "la %s ($v0)\n", target);
+    fprintf(fout, "la %s, ($v0)\n", target);
 }
 
 int mips_push_word(char *src) {
@@ -34,24 +46,28 @@ int mips_push_word(char *src) {
     return sizeof(int);
 }
 
+void mips_store_word(char *reg, char *target){
+	fprintf(fout, "sw %s, %s\n",reg, target);
+}
+
 void mips_pop_word() {
     mips_instruction(MIPS_POP_TO_V0);
 }
 
 void mips_read_stack(char* target, int offset) {
-    fprintf(fout, "lw %s %d($sp)\n",target, offset);
+    fprintf(fout, "lw %s, %d($sp)\n",target, offset);
 }
 
 void mips_write_stack(char *target, int offset) {
-	fprintf(fout, "sw %s %d($sp)\n", target, offset);
+	fprintf(fout, "sw %s, %d($sp)\n", target, offset);
 }
 
 void mips_read_tmp(char *tmp, char *target) {
-	fprintf(fout, "la %s (%s)\n", target, tmp);
+	fprintf(fout, "la %s, (%s)\n", target, tmp);
 }
 
 void mips_write_tmp(char *tmp, char *target) {
-	fprintf(fout, "la %s (%s)\n", tmp, target);
+	fprintf(fout, "la %s, (%s)\n", tmp, target);
 }
 
 void mips_instruction(const char *cstInstruct) {
@@ -69,10 +85,10 @@ void mips_destroy_tmp_vals(int count) {
 }
 
 void mips_load_1args(quad q) {
-	if (q.op2.type == QO_ID)
+	if (q.op2.type == QO_ID || q.op2.type == QO_TMP)
 		mips_read_stack("$a0", q.op2.u.offset);
-	else if (q.op2.type == QO_TMP)
-		mips_read_tmp(q.op2.u.temp, "$a0");
+	else if (q.op2.type == QO_GLOBAL)
+		mips_load_word("$a0", q.op2.u.global.name);
 	else
 		mips_load_immediate("$a0", q.op2.u.cst);
 }

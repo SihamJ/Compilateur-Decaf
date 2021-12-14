@@ -1,11 +1,9 @@
 class Program {
     int a,b;
-    int k[4];
     boolean c;
+    int E[10];
     void main (){
         a = 2;
-        c = a > 3;
-        a = 1;
     }
-
+    
 }

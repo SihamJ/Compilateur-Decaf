@@ -361,10 +361,11 @@ void popctx(){
 
 // called at the end of main to free the TOS stack
 void free_stack(){
-    HashTable *pt;
+    HashTable *pt = stack;
     while(pt!=NULL){
-        pt = stack->next;
-        free_table(stack);
+        stack = stack->next;
+        free(pt);
+        pt = stack;
     }
 }
 

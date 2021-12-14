@@ -4,6 +4,7 @@ quad global_code[5000];
 size_t nextquad; 
 size_t tmpCount;
 size_t labelCount; 
+size_t glob_dec_count;
 
 char* new_label(){
   char* label;

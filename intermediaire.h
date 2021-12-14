@@ -58,14 +58,16 @@ typedef struct expr_val {
 extern quad global_code[5000]; // code généré
 extern size_t nextquad; // n° du prochain quad
 extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
+extern size_t labelCount;
+extern size_t glob_dec_count;
+
 void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
 list crelist(int addr);
 void complete(list n, int addr);
 list concat(list n1, list n2);
 void print_globalcode();
 char *op_type(int type);
-void update_offset(quadop *q1);
-void update_offsets(quadop *q1, quadop *q2);
+
 char *get_type_oper(int type);
 char* new_label();
 #endif

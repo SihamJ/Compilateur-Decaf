@@ -23,6 +23,7 @@
 	struct decl{
 		char *name;
 		struct decl *suiv;
+		int size;
 	} decl;
 }
 
@@ -31,10 +32,10 @@
 %token <stringval> id 
 %token class Program If Else For Return Continue Break comment
 
-%type <exprval> expr S
+%type <exprval> expr S G block statement
 %type <intval> int_literal assign_op type method_call M oprel eq_op add_op mul_op
 %type <literal> literal
-%type <decl> B
+%type <decl> B Tab
 %type <stringval> location
 
 %left or
@@ -55,7 +56,13 @@ program	:  class Program '{' { pushctx(); glob_context = curr_context; }
 											yyerror("\nErreur: Pas de méthode main\n");
 										 popctx() ;}
 
-M 		:	%empty 		{$$ = nextquad;}
+M 		:	%empty 		{	$$ = nextquad;}
+
+G 		:	%empty		{	$$.next = crelist(nextquad);
+							quadop qo;
+							qo.type = QO_EMPTY;
+							gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1);
+						}
 
 GLOBAL 		: MD		{;}
 			| FD 		{;}
@@ -69,25 +76,49 @@ FD 			: FD field_decl  {;}
 field_decl	:	var_decl	{;}
 			|	tab_decl	{;}
 
-tab_decl	:	type id '[' int_literal ']' ',' tab_decl ';' 	{ 
-																	if($4 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
-																	if(ht_search(glob_context, $2) != NULL)
-																		yyerror("\nErreur: Tableau déjà déclaré avec ce nom\n");
-																	Ht_item *item = create_item($2, ID_TAB, $1);
-																	item->size = $4;
-																	newname(item);
-																	}
+tab_decl	:	type Tab ';' 							{ 
+															quadop qo,q1;
+															struct decl *pt = &$2;
+															qo.type = QO_GLOBAL;
+															
+															while(pt != NULL){
+																if( ht_search(glob_context, pt->name) != NULL ) 
+																	yyerror("\nErreur: Tableau déclarée deux fois\n");
 
-			|	type id '[' int_literal ']' ';'					{ 	if($4 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
-																	if(ht_search(glob_context, $2) != NULL)
-																		yyerror("\nErreur: Tableau déjà déclaré avec ce nom\n");
-																	Ht_item *item = create_item($2, ID_TAB, $1);
-																	item->size = $4;
-																	newname(item);
-																}
+																qo.u.global.name = malloc(strlen(pt->name + 1));
+																strcpy(qo.u.global.name, pt->name);
+																qo.u.global.size = pt->size;
+																gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
+																glob_dec_count++;
+																Ht_item *item = create_item(pt->name, ID_TAB, $1);
+																item->size = pt->size;
+																newname(item);
+																pt = pt->suiv;
+															}
+														}
+
+Tab			:	id '[' int_literal ']' ',' Tab			{	if($3 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
+															struct decl var;
+															var.name = malloc((strlen($1)+1)); 
+															strcpy(var.name,$1);
+															var.size = $3;
+															var.suiv = &$6;
+															$$ = var;
+														}
+			|	id '[' int_literal ']'					{
+															struct decl *d;
+
+															if($3 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");															
+															struct decl var;
+															var.name = malloc((strlen($1)+1)); 
+															strcpy(var.name,$1);
+															var.size = $3;
+															var.suiv = NULL;
+															$$ = var;
+														}
 
 MD			:	MD method_decl		{;}
-			|	method_decl		{;}
+			|	method_decl			{;}
 
 method_decl	:		type id {	if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
@@ -126,13 +157,8 @@ block 		:	'{' { pushctx(); } V S '}' {  popctx()  ;}
 
 var_decl 	:  	type B ';' {
 								if(curr_context == glob_context){
-									quadop qo,q1;
-									if($1 == INT)
-										q1.u.cst = 0;
-									else if($1 == BOOL)
-										q1.u.cst = false;
+									quadop qo;
 									struct decl *pt = &$2;
-									q1.type = QO_CST;
 									qo.type = QO_GLOBAL;
 									
 									while(pt != NULL){
@@ -141,33 +167,24 @@ var_decl 	:  	type B ';' {
 
 										qo.u.global.name = malloc(strlen(pt->name + 1));
 										strcpy(qo.u.global.name, pt->name);
-										qo.u.global.size = 8;
+										qo.u.global.size = 4;
 										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
-										gencode(qo, q1, q1, Q_AFF, global_code[nextquad].label, -1);									
+										glob_dec_count++;
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
 										newname(item);
 										pt = pt->suiv;
 									}
 								}
 								else {
-									quadop qo,q1;
-									if($1 == INT)
-										q1.u.cst = 0;
-									else if($1 == BOOL)
-										q1.u.cst = false;
+									quadop qo;
 									struct decl *pt = &$2;
-									q1.type = QO_CST;
 									qo.type = QO_ID;
 									
 									while(pt != NULL){
 										if( ht_search(curr_context, pt->name) != NULL ) 
 											yyerror("\nErreur: Variable déclarée deux fois\n");
-
-										qo.u.offset = -4;
-										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
 										qo.u.offset = 0;
-										gencode(qo, q1, q1, Q_AFF, global_code[nextquad].label, -1);
-
+										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
 										newname(item);
 										pt = pt->suiv;
@@ -177,7 +194,8 @@ var_decl 	:  	type B ';' {
 
 B 			:	id ',' B  	{ 	struct decl var;
 								var.name = malloc((strlen($1)+1)); 
-								strcpy(var.name,$1);var.suiv = &$3;
+								strcpy(var.name,$1);
+								var.suiv = &$3;
 								$$ = var;
 								}
 			|	id			{	$$.name = malloc((strlen($1)+1)); 
@@ -243,22 +261,32 @@ statement 	:	id assign_op expr ';' {
 													pop_tmp();
 												}
 
-			|	method_call	';'					{;}
-			|	If '(' expr ')' block elseblock	{	
-													if($3.result.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
-			
-												}
+			|	method_call	';'								{;}
+
+			|	If '(' expr ')' M block G Else M block	{	
+															if($3.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
+															complete($3.t, $5);
+															complete($3.f, $9);
+															$$.next = concat($6.next, $7.next);
+															$$.next = concat($$.next,$10.next);
+														}
+			|	If '(' expr ')' M block 				{
+															if($3.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
+															complete($3.t, $5);
+															$$.next = concat($3.f, $6.next);
+														}
+												
 			|	For id '=' expr ',' expr block	{   /* compteur de boucle for déclaré implicitement et expr1 de type int*/ 	
-													if($4.result.type != INT)
+													if($4.type != INT)
 														yyerror("Erreur: le compteur de boucle doit être de type INT\n");
+													
+													
 												}
 			|	Return return_val ';'			{;}
 			|	Break ';'						{;}
 			|	Continue ';'					{;}
 			|	block							{;}
 
-elseblock	:	Else block						{;}
-			|	%empty							{;}
 
 return_val	:	expr 							{;}
 			|	%empty							{;}
@@ -319,7 +347,7 @@ expr		:	expr add_op expr %prec '+'	{
 											$$.result = qo;}
 			|	expr and M expr			{	if($1.type != BOOL || $4.type != BOOL)
 												yyerror("\nErreur: AND operator with non boolean value");
-											$$.type = BOOL; 
+											$$.type = BOOL;
 											complete($1.t, $3);
 											$$.f = concat($1.f, $4.f);
 											$$.t = $4.t; 
@@ -327,7 +355,7 @@ expr		:	expr add_op expr %prec '+'	{
 
 			|	expr or M expr			{	if($1.type != BOOL || $4.type != BOOL)
 												yyerror("\nErreur: OR operator with non boolean value");
-											$$.type = BOOL; 
+											$$.type = BOOL;
 											complete($1.f, $3);
 											$$.t = concat($1.t, $4.t);
 											$$.f = $4.f;
@@ -335,7 +363,7 @@ expr		:	expr add_op expr %prec '+'	{
 			|	expr oprel expr	%prec '<' {
 											if($1.type != INT || $3.type != INT)
 												yyerror("\nErreur: REL OP non entière");
-											$$.type = BOOL; 
+											$$.type = BOOL;
 											$$.t = crelist(nextquad);
 											quadop qo;
 											qo.type = QO_EMPTY;
