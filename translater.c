@@ -22,8 +22,6 @@ void translate() {
 	fprintf(fout, "\n.text\n");
 	fprintf(fout, "\n.globl main\n\n");
 
-	fprintf(fout, "j main\n\n");
-
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)

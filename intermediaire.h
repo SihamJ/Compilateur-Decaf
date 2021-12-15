@@ -67,7 +67,7 @@ void complete(list n, int addr);
 list concat(list n1, list n2);
 void print_globalcode();
 char *op_type(int type);
-
+char* next_label_name();
 void add_labels();
 
 char *get_type_oper(int type);

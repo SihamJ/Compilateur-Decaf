@@ -11,12 +11,18 @@ typedef enum id_type{
     ID_VAR, ID_METHOD, ID_TMP, ID_PARAM, ID_TAB
   }id_type;
 
+typedef struct param{
+        int type;   // INT or BOOL;
+        struct param* next;
+} *param;
+
 typedef struct Ht_item {
     char *key;      // identificateur
     int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
     int value;      // type (INT / BOOL / VOIDTYPE)
 	int order;      // order d'insértion dans la TOS
     int size;       // si tableau, sinon 4
+    param p;
 } Ht_item;
 
 typedef struct LinkedList {
@@ -65,6 +71,7 @@ item_table *lookup(char *key);
 void print_ctx();
 void print_stack();
 void free_stack();
+int verify_param(param p1, param p2);
 
 int offset(item_table *item);
 

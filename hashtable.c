@@ -394,7 +394,21 @@ item_table *lookup(char *key){
     return NULL;
 }
 
+int verify_param(param p1, param p2){
 
+    while(p1 != NULL && p2 != NULL){
+        if(p1->type != p2->type){
+            return 0;
+        }
+        p1=p1->next;
+        p2=p2->next;
+    }
+    if(p1 != NULL || p2 != NULL){
+        return 0;
+    }
+    return 1;
+}
+ 
 void print_ctx(){
     printf("\nTABLES DES SYMBOLES:\n\n");
 	int count = 0;

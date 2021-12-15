@@ -20,6 +20,18 @@ char* new_label(){
   return label;
 }
 
+char* next_label_name(){
+  char* label;
+  int a = labelCount;
+  int cpt = 1;
+  while(a){
+    a=a/10;
+    cpt++;
+  }
+  label = malloc(cpt+6);
+  sprintf(label, "label%ld",labelCount);
+  return label;
+}
 
 void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump){
   global_code[nextquad].type = t;

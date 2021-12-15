@@ -25,6 +25,7 @@
 		struct decl *suiv;
 		int size;
 	} decl;
+	param p;
 }
 
 %token <intval> decimal_literal hex_literal char_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
@@ -37,6 +38,7 @@
 %type <literal> literal
 %type <decl> B Tab
 %type <stringval> location
+%type <p> E Param P
 
 %left or
 %left and
@@ -85,7 +87,8 @@ tab_decl	:	type Tab ';' 							{
 															while(pt != NULL){
 																if( ht_search(glob_context, pt->name) != NULL ) 
 																	yyerror("\nErreur: Tableau déclarée deux fois\n");
-
+																if(!strcmp(pt->name, next_label_name()))
+																	labelCount++;
 																qo.u.global.name = malloc(strlen(pt->name + 1));
 																strcpy(qo.u.global.name, pt->name);
 																qo.u.global.size = pt->size * 4;
@@ -121,10 +124,12 @@ Tab			:	id '[' int_literal ']' ',' Tab			{	if($3 <= 0) yyerror("\nErreur: Taille
 MD			:	MD method_decl		{;}
 			|	method_decl			{;}
 
-method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
+method_decl	:		type id {	if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
 								if(!strcmp($2,"main"))
 									yyerror("\nErreur: La méthode main doit être de type void\n");
+								if(!strcmp($2, next_label_name()))
+									labelCount++;
 								Ht_item *item = create_item($2, ID_METHOD, $1);
 								newname(item);
 								pushctx();
@@ -133,25 +138,28 @@ method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
 
 								} 
 
-								'(' Param ')'  block	{ 	complete($7.next,nextquad);
-															quadop qo;
-															qo.type = QO_EMPTY;
-															qo.u.cst = 0;
-															gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1);
-														 	popctx(); }
+								'(' P ')'  block	{ 	item_table* var = lookup($2);
+														var->item->p = $5;
+														complete($7.next,nextquad);														
+														quadop qo;
+														qo.type = QO_EMPTY;
+														qo.u.cst = 0;
+														gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1);
+														popctx(); }
 
 			|	voidtype id {	if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
+								if(!strcmp($2, next_label_name()))
+									labelCount++;
 								Ht_item *item = create_item($2, ID_METHOD, $1);
 								newname(item);
 								pushctx(); 
-								quadop qo;
-								qo.type = QO_EMPTY; 
-								qo.u.cst = 0;
-								gencode(qo,qo,qo,Q_LABEL,$2,-1);
+								global_code[nextquad].label = malloc(strlen($2)+1);
+								strcpy(global_code[nextquad].label,$2);
 								} 
 							
-								'(' Param ')'  block	{ 
+								'(' P ')'  block	{ 		item_table* var = lookup($2);
+															var->item->p = $5;
 															complete($7.next, nextquad);
 															quadop qo;
 															qo.type = QO_EMPTY;
@@ -167,17 +175,27 @@ method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
 															popctx();
 														}
 
-Param		:	Param ',' type id 	{ 	if( ht_search(curr_context, $4) != NULL ) 
+Param		:	type id ',' Param	{ 	if( ht_search(curr_context, $2) != NULL ) 
 											yyerror("\nErreur: Deux paramètres de méthodes de même nom\n");	
-											Ht_item *item = create_item($4, ID_PARAM, $3);
-											newname(item);
+										Ht_item *item = create_item($2, ID_PARAM, $1);
+										newname(item);
+										param p = (param) malloc(sizeof(struct param));
+										p->type = $1;
+										p->next = $4;
+										$$ = p;
 										}
 			|	type id				{ 	if( ht_search(curr_context, $2) != NULL ) 
 											yyerror("\nErreur: Deux paramètres de méthodes de même nom\n");	
-											Ht_item *item = create_item($2, ID_PARAM, $1);
-											newname(item);}
-			|	%empty				{ ;}
+										Ht_item *item = create_item($2, ID_PARAM, $1);
+										newname(item);
+										$$ = (param) malloc(sizeof(struct param));
+										$$->type = $1;
+										$$->next = NULL;
+										
+										}
 
+P 			:	Param { $$ = $1;}
+			|	%empty	{ $$ = NULL;}
 
 block 		:	'{' { pushctx(); } 
 									V S '}' 
@@ -198,7 +216,8 @@ var_decl 	:  	type B ';' {
 									while(pt != NULL){
 										if( ht_search(glob_context, pt->name) != NULL ) 
 											yyerror("\nErreur: Variable déclarée deux fois\n");
-
+										if(!strcmp(pt->name, next_label_name()))
+											labelCount++;
 										qo.u.global.name = malloc(strlen(pt->name + 1));
 										strcpy(qo.u.global.name, pt->name);
 										qo.u.global.size = 4;
@@ -217,6 +236,8 @@ var_decl 	:  	type B ';' {
 									while(pt != NULL){
 										if( ht_search(curr_context, pt->name) != NULL ) 
 											yyerror("\nErreur: Variable déclarée deux fois\n");
+										if(!strcmp(pt->name, next_label_name()))
+											labelCount++;
 										qo.u.offset = 0;
 										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1);
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
@@ -337,11 +358,23 @@ method_call :	id '(' E ')' 					{
 														yyerror("Erreur: Méthode non déclarée\n");
 													$$ = val->item->value;
 													/* Vérifier les paramètres E */
-												;}
+													if(!verify_param(val->item->p, $3)){
+														yyerror("Erreur: Appel de méthode avec paramètres incorrectes\n");}
+													
+												}
+			|	id '(' ')'						{
+													item_table *val = lookup($1);
+													if(val == NULL)
+														yyerror("Erreur: Méthode non déclarée\n");
+													$$ = val->item->value;
+													/* Vérifier les paramètres E */
+													if(!verify_param(val->item->p, NULL)){
+														yyerror("Erreur: Appel de méthode avec paramètres incorrectes\n");}
+													
+												}
 
-E 			:	E ',' expr 		{;}
-			|	expr 			{;}
-			| 	%empty			{;}
+E 			:	expr ',' E 		{ param p = (param) malloc(sizeof(struct param)); p->type = $1.type; p->next = $3; $$ = p;}
+			|	expr 			{ $$ = (param) malloc(sizeof(struct param)); $$->type = $1.type; $$->next = NULL;}
 
 location	:	id	{;}
 			|	id '[' expr ']'			{ /* expr de type int */ 
