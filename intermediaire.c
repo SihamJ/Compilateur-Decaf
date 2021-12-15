@@ -179,6 +179,10 @@ char *op_type(int type){
     return ("SYSCALL");
     break;
 
+    case Q_ENDFUNC:
+    return ("END FUNC");
+    break;
+
     default:
      	break;
         }
@@ -200,7 +204,7 @@ char *get_type_oper(int type){
 void add_labels(){
   char *label;
   for(int i=0; i<nextquad; i++){
-    if(global_code[i].jump != -1 && global_code[global_code[i].jump].label == NULL){
+    if(global_code[i].jump != -1 && global_code[global_code[i].jump].type != Q_ENDFUNC && global_code[global_code[i].jump].label == NULL){
       label = new_label();
       global_code[global_code[i].jump].label = label;
     }

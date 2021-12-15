@@ -11,7 +11,13 @@ class Program {
     }
     void main (){
         a = 2;
-        c = a > 2;
+        c = true;
+        if(c){
+            a=3;
         }
+        else{
+            a=2;
+        }
+    }
 
 }

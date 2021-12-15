@@ -32,7 +32,7 @@
 %token <stringval> id 
 %token class Program If Else For Return Continue Break comment
 
-%type <exprval> expr S G block statement
+%type <exprval> expr S G block statement 
 %type <intval> int_literal assign_op type method_call M oprel eq_op add_op mul_op
 %type <literal> literal
 %type <decl> B Tab
@@ -61,6 +61,7 @@ M 		:	%empty 		{	$$ = nextquad;}
 G 		:	%empty		{	$$.next = crelist(nextquad);
 							quadop qo;
 							qo.type = QO_EMPTY;
+							qo.u.cst = 0;
 							gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1);
 						}
 
@@ -129,11 +130,15 @@ method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
 								pushctx();
 								global_code[nextquad].label = malloc(strlen($2)+1);
 								strcpy(global_code[nextquad].label,$2);
-								if($2!=NULL)
-								printf("here\n");
+
 								} 
 
-								'(' Param ')'  block	{ popctx(); }
+								'(' Param ')'  block	{ 	complete($7.next,nextquad);
+															quadop qo;
+															qo.type = QO_EMPTY;
+															qo.u.cst = 0;
+															gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1);
+														 	popctx(); }
 
 			|	voidtype id {	if(ht_search(glob_context, $2) != NULL)
 									yyerror("\nErreur: Méthode déjà déclarée avec ce nom\n");
@@ -142,15 +147,23 @@ method_decl	:		type id {	 if(ht_search(glob_context, $2) != NULL)
 								pushctx(); 
 								quadop qo;
 								qo.type = QO_EMPTY; 
+								qo.u.cst = 0;
 								gencode(qo,qo,qo,Q_LABEL,$2,-1);
 								} 
 							
-								'(' Param ')'  block	{ if(!strcmp($2,"main")){
+								'(' Param ')'  block	{ 
+															complete($7.next, nextquad);
+															quadop qo;
+															qo.type = QO_EMPTY;
+															qo.u.cst = 0;
+															gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1);
+
+															if(!strcmp($2,"main")){
 																quadop qo; 
 																qo.type = QO_CST; 
 																qo.u.cst = 10; 
 																gencode(qo,qo,qo, Q_SYSCALL, "end", -1);
-																} 
+															} 										
 															popctx();
 														}
 
@@ -166,7 +179,12 @@ Param		:	Param ',' type id 	{ 	if( ht_search(curr_context, $4) != NULL )
 			|	%empty				{ ;}
 
 
-block 		:	'{' { pushctx(); } V S '}' {  popctx()  ;}
+block 		:	'{' { pushctx(); } 
+									V S '}' 
+											{ 
+												$$.next = $4.next; 
+												popctx();
+											}
 
  V 			:	V var_decl 	{;}
 			|	%empty		{;}
@@ -221,8 +239,11 @@ B 			:	id ',' B  	{ 	struct decl var;
 type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
 
-S 			: 	S statement 	{;}
-			| 	%empty			{;}
+S 			: 	S M statement 	{	
+									complete($1.next, $2);
+									$$.next = $3.next;
+								}
+			| 	statement		{	$$.next = $1.next;	}
 
 statement 	:	id assign_op expr ';' {				
 													item_table *val = lookup($1);
@@ -253,6 +274,7 @@ statement 	:	id assign_op expr ';' {
 														complete($3.t, nextquad);
 														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1); 	
 														qo.type = QO_EMPTY;
+														qo.u.cst = 0;
 														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2);
 
 														qo.type = QO_CST;	
@@ -261,6 +283,7 @@ statement 	:	id assign_op expr ';' {
 														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1);					
 
 														qo.type = QO_EMPTY;
+														qo.u.cst = 0;
 														gencode(qo, qo, qo, Q_LABEL, new_label(), -1);
 													}
 													else {
@@ -282,13 +305,14 @@ statement 	:	id assign_op expr ';' {
 															if($3.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
 															complete($3.t, $5);
 															complete($3.f, $9);
-															$$.next = concat($6.next, $7.next);
+															$$.next = $7.next;
 															$$.next = concat($$.next,$10.next);
 														}
 			|	If '(' expr ')' M block 				{
 															if($3.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
 															complete($3.t, $5);
 															$$.next = concat($3.f, $6.next);
+															
 														}
 												
 			|	For id '=' expr ',' expr block	{   /* compteur de boucle for déclaré implicitement et expr1 de type int*/ 	
@@ -401,7 +425,18 @@ expr		:	expr add_op expr %prec '+'	{
 			| 	literal 				{
 											$$.result = $1.qop;
 											$$.type = $1.type;
+											if($1.type == BOOL){
+												quadop qo;
+												qo.type = QO_CST;
+												qo.u.cst = true;
+												$$.t = crelist(nextquad);
+												gencode($$.result, $$.result, qo, Q_GEQ, global_code[nextquad].label, -1);
+												$$.f = crelist(nextquad);
+												qo.type = QO_EMPTY;
+												qo.u.cst = 0;
+												gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1); 
 											}
+										}
 			|	location 				{
 											item_table *val = lookup($1);
 											if(!val)
@@ -418,6 +453,18 @@ expr		:	expr add_op expr %prec '+'	{
 												$$.result.type = QO_ID;
 												$$.type = val->item->value;			
 											}
+											if(val->item->value == BOOL){
+												quadop qo;
+												qo.type = QO_CST;
+												qo.u.cst = true;
+												$$.t = crelist(nextquad);
+												gencode($$.result, $$.result, qo, Q_GEQ, global_code[nextquad].label, -1);
+												$$.f = crelist(nextquad);
+												qo.type = QO_EMPTY;
+												qo.u.cst = 0;
+												gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1); 
+											}
+											
 										}
 			|	'-' expr %prec NEG 		{
 											if($2.type != INT)
