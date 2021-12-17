@@ -31,8 +31,7 @@
 
 /**
  * @brief @brief Calculate the diferance between $a0 and $a1 ($a0 - $a1), return the sum value to $v0
- * 
- */
+ */ 
 #define MIPS_INT_SUB "  sub $v0 $a0 $a1\n"
 
 #define MIPS_INT_MULT "  mult $a0 $a1\n   mflo $v0\n"
@@ -41,9 +40,32 @@
 
 #define MIPS_INT_MOD "  div $a0 $a1\n   mfhi $v0\n"
 
+/**
+* Assuming the value to print is stored in $a0
+* Called by jal, jalr $target_reg or jalr $ra $target_reg
+*/
+#define MIPS_LIB_IO_WRITE_INT "Write_INT:\n  li $v0, 1\n  syscall\n  jr $ra\n"
+
+#define MIPS_LIB_IO_WRITE_STRING "Print_String:\n  li $v0 4\n  syscall\n  jr $ra\n"
+
+/*
+* The value read will be stored in $v0
+*/
+#define MIPS_LIB_IO_READ_INT "Read_INT:\n  li $v0, 5\n  syscall\n  jr $ra\n"
+
+
+#define MIPS_MACRO ".data\n  STR_TRUE: .asciiz \"True\"\n  STR_FALSE: .asciiz \"False\"\n"
+
+/**
+* Assuming the value to print is stored in $a0
+* Called by jal, jalr $target_reg or jalr $ra $target_reg
+* Assuming having 'True' and 'False' stored as literal string in STR_TRUE and STR_FALSE
+*/
+#define MIPS_LIB_IO_WRITE_BOOL "Write_BOOL:\n  beqz $a0 Load_False\n  Load_True:\n  la $a0 STR_TRUE\n  j Print_Bool\n  Load_False:\n    la $a0 STR_FALSE\n  Print_Bool:\n    li $v0 4\n    syscall\n  jr $ra\n"
+
+#define MIPS_QUIT_PROGRAM "Quit_Program:\n  li $v0 10 \n  syscall\n"
 
 // TODO: decl, read, write tab
 // TODO: decl str
-// TODO: I/O
 
 #endif
