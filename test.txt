@@ -6,6 +6,7 @@ class Program {
     int al(int a, boolean b){
         int y;
         y = a*2;
+
     }
     void label0(){
         a = 2;
@@ -13,7 +14,7 @@ class Program {
     void main (){
         for i=2,5 {
             int i;
-            i = 6;
+            i += 6;
             if(a*2<7){
                 continue;
             }

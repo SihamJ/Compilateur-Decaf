@@ -46,17 +46,6 @@ typedef struct quad{
   param p;  // si method call
 } quad;
 
-typedef struct expr_val {
-	quadop result;
-	int type;
-  char *str; // si string_literal
-	list next;
-	list t;   // true
-	list f;   // false
-  list brk; // break
-	list cntu; // continue
-} expr_val;
-
 extern quad global_code[5000]; // code généré
 extern size_t nextquad; // n° du prochain quad
 extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
