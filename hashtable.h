@@ -1,19 +1,24 @@
-#ifndef TOS_H_
-#define TOS_H_
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+#ifndef __HASHTABLE_H__
+#define __HASHTABLE_H__
+
 #include "token.h"
 #include "intermediaire.h"
 
+/* Type de l'identificateur dans la TOS */
 typedef enum id_type{
     ID_VAR, ID_METHOD, ID_TMP, ID_PARAM, ID_TAB
   }id_type;
 
+/* Type du contexte */
+typedef enum ctx_type{
+    CTX_GLOB, CTX_METHOD, CTX_IF, CTX_FOR, CTX_BLOCK
+  }ctx_type;
+
+/* Pour stocker les paramètres d'une méthode */
 typedef struct param{
-        int type;   // INT or BOOL;
-        struct param* next;
+    int type;   // INT or BOOL or STRING;
+    quadop arg;
+    struct param* next;
 } *param;
 
 typedef struct Ht_item {
@@ -36,9 +41,12 @@ typedef struct HashTable {
     int max_size;                // Taille max de la TOS
     int count;                  // Nombre d'élément dans la table
     int nb_var;                 // Nombre de variables (not method) dans la table (facilite le calcul des offsets)
-	struct HashTable *next;     
+	struct HashTable *next;
+    ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...     
 } HashTable;
 
+/* Couple Item et sa TOS, utile dans les règles de syntaxes pour savoir si le contexte d'un identificateur retourné par lookup est global ou non, 
+    et pour le calcul des offsets */
 typedef struct item_table {
     Ht_item *item;
     HashTable *table;
@@ -72,7 +80,7 @@ void print_ctx();
 void print_stack();
 void free_stack();
 int verify_param(param p1, param p2);
-
+int is_for_a_parent();
 int offset(item_table *item);
 
 int table_size(HashTable *table);
@@ -82,4 +90,5 @@ void pop_tmp(); // dépile les var temporaires du contexte courant, appelée apr
 extern HashTable* curr_context;
 extern HashTable* glob_context;
 extern HashTable* stack;
+
 #endif

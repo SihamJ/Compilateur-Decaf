@@ -1,8 +1,10 @@
-#ifndef TRANS_TOOL_H_
-#define TRANS_TOOL_H_
+#ifndef __TRANSTOOL_H__
+#define __TRANSTOOL_H__
+
 
 #include "instructions.h"
 #include "intermediaire.h"
+
 
 void mips_dec_global(quadop q);
 void mips_store_word(char *reg, char *target);
@@ -114,4 +116,6 @@ void tab_put(char *buffer_reg, char *tab_name, int offset);
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset);
 
-#endif
+
+
+ #endif

@@ -3,6 +3,8 @@ dep=intermediaire
 dep2=hashtable
 dep3=translater
 dep4=transTool
+dep5=IOfunctions
+
 # exige 3 fichiers:
 # - $(prefixe).y (fichier bison)
 # - $(prefixe).lex (fichier flex)
@@ -14,12 +16,17 @@ dep4=transTool
 
 all: decaf
 
-decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o
+decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o $(dep5).o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-*.c : $(dep).h $(dep2).h $(dep3).h $(dep4).h
-*.y : $(dep).h $(dep2).h $(dep3).h $(dep4).h
-*.lex : $(dep).h $(dep2).h $(dep3).h $(dep4).h
+$(dep).c : $(dep).h $(dep2).h token.h
+$(dep2).c : $(dep2).h $(dep).h token.h
+$(dep3).c : $(dep3).h $(dep).h $(dep4).h 
+$(dep4).c : $(dep4).h $(dep).h
+$(dep5).c : $(dep5).h
+
+*.y : $(dep).h $(dep2).h $(dep5).h token.h
+*.lex : $(dep).h token.h 
 
 $(prefixe).tab.c: $(prefixe).y
 	bison -t -d $(prefixe).y

@@ -6,6 +6,7 @@ size_t tmpCount;
 size_t labelCount; 
 size_t glob_dec_count;
 
+
 char* new_label(){
   char* label;
   int a = labelCount;
@@ -17,6 +18,12 @@ char* new_label(){
   label = malloc(cpt+6);
   sprintf(label, "label%ld",labelCount);
   labelCount++;
+  return label;
+}
+
+char* new_endfunc_label(char *name){
+  char* label = malloc(strlen(name)+5);
+  sprintf(label, "fin_%s",name);
   return label;
 }
 
@@ -33,12 +40,21 @@ char* next_label_name(){
   return label;
 }
 
-void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump){
+
+/* HOW TO USE GENCODE : 
+
+Opération binaire:  a = b op c       =>  op1 = a ; op2 = b ; op3 = c
+Affectation:        a = b            =>  op1 = a ; op2 = b ; op3 = we don't care
+Comparaison:        a rel_op b       =>  op1 = we don't care;  op2 = a ; op3 = b ;
+
+*/
+void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
   global_code[nextquad].type = t;
   global_code[nextquad].op1 = op1;
   global_code[nextquad].op2 = op2;
   global_code[nextquad].op3 = op3;
   global_code[nextquad].jump = jump;
+  global_code[nextquad].p = p;
 
   if(label != NULL ){
     global_code[nextquad].label = malloc(strlen(label)+1);
@@ -46,7 +62,8 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
   }
   if(t != Q_LABEL)
     nextquad++;
-}
+  }
+
 
 list crelist(int addr){
   list n = (list) malloc(sizeof(struct list));
@@ -56,6 +73,8 @@ list crelist(int addr){
 }
 
 list concat(list n1, list n2){
+  if(n1==NULL)
+    return n2;
   list pt = n1;
   while(pt->suiv != NULL)
     pt = pt->suiv;
@@ -193,6 +212,10 @@ char *op_type(int type){
 
     case Q_ENDFUNC:
     return ("END FUNC");
+    break;
+
+    case Q_METHODCALL:
+    return ("METHOD CALL");
     break;
 
     default:

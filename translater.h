@@ -1,5 +1,6 @@
-#ifndef TRANSLATER_H_
-#define TRANSLATER_H_
+
+#ifndef __TRANSLATER_H__
+#define __TRANSLATER_H__
 
 #include "transTool.h"
 #include "intermediaire.h"

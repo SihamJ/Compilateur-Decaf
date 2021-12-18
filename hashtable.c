@@ -339,10 +339,11 @@ void print_table(HashTable *table)
     printf("-------------------\n");
 }
 
-void pushctx(){
+void pushctx(ctx_type type){
     HashTable *temp = create_table();
 	temp->next = curr_context;
 	curr_context = temp;
+    curr_context->type = type;
 }
 
 // pop current context and put it into the stack
@@ -431,6 +432,7 @@ void print_stack(){
     printf("\n");
 }
 
+
 int offset(item_table *val){
 	int out = 0;
 
@@ -449,7 +451,7 @@ int offset(item_table *val){
 	return out;
 }
 
-
+/* Dépile les variables temporaires du context courant, est appelée à la fin de l'évaluation d'une expression */
 void pop_tmp(){
 
     for (int i = 0; i < curr_context->max_size; i++){
@@ -480,4 +482,15 @@ Ht_item* new_temp(int type){
 
   tmpCount++;
   return item;
+}
+
+/* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
+int is_for_a_parent(){
+    HashTable* pt = curr_context;
+    while(pt->type != CTX_METHOD){
+        if(pt->type == CTX_FOR)
+            return true;
+        pt = pt->next;
+    }
+    return false;
 }

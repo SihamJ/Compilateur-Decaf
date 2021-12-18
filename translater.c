@@ -27,7 +27,7 @@ void translate() {
     fprintf(fout, "%s", MIPS_LIB_IO_READ_INT);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_STRING);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
-    fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
+    //fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)
@@ -122,6 +122,8 @@ void translate() {
 			break;
 		case Q_GOTO:
 			mips_jump(global_code[global_code[i].jump].label);
+			break;
+		case Q_METHODCALL:
 			break;
 		case Q_SYSCALL:
 			mips_syscall(global_code[i].op1.u.cst);

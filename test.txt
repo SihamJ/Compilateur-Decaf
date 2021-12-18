@@ -11,7 +11,19 @@ class Program {
         a = 2;
     }
     void main (){
-        al(a,b);
+        for i=2,5 {
+            int i;
+            i = 6;
+            if(a*2<7){
+                continue;
+            }
+            else{
+                break;
+            }
+        }
+        WriteInt(5);
+
+    
     }
 
 }

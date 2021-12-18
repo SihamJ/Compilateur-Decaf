@@ -4,6 +4,10 @@
 		"chrono": "c",
 		"array": "c",
 		"*.tcc": "c",
-		"type_traits": "c"
+		"type_traits": "c",
+		"intermediaire.h": "c",
+		"hashtable.h": "c",
+		"token.h": "c",
+		"string.h": "c"
 	}
 }

@@ -4,9 +4,9 @@
 	#include <stdbool.h>
 	#include <string.h>
 	#include "intermediaire.h"
-	#include "hashtable.h"
-	#include "decaf_plus.tab.h"
 	#include "token.h"
+	#include "decaf_plus.tab.h"
+
 %}
 
 %option noyywrap
@@ -92,6 +92,12 @@ comment 		\/\/.*{newline}
 						yylval.stringval = malloc(strlen(yytext)+1);
 						strcpy(yylval.stringval, yytext);
 						return id;
+					}
+
+{string_literal}	{
+						yylval.stringval = malloc(strlen(yytext)+1);
+						strcpy(yylval.stringval, yytext);
+						return string_literal;
 					}
 
 [[:space:]]			;

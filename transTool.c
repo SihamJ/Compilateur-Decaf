@@ -8,30 +8,30 @@ static int branch_count = 0;
 
 void mips_dec_global(quadop q){
 	if(q.u.global.size == 4)
-		fprintf(fout, "		%s: %s %d\n", q.u.global.name, ".word", 0);
+		fprintf(fout, "%8s%s: %s %d\n", q.u.global.name, "",".word", 0);
 	else
-		fprintf(fout, "		%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
+		fprintf(fout, "%8s%s: %s %d\n",q.u.global.name, "",".space", q.u.global.size);
 }
 
 void mips_label(char *name, int n) {
-	fprintf(fout, "	%s%d:\n",name, n);
+	fprintf(fout, "%8s%s%d:\n","",name, n);
 }
 
 void mips_load_immediate(char *reg, int val) {
-    fprintf(fout, "	li %s, %d\n", reg, val);
+    fprintf(fout, "%8sli %s, %d\n","", reg, val);
 }
 
 void mips_load_word(char *reg, char *glob) {
-    fprintf(fout, "	lw %s, %s\n", reg, glob);
+    fprintf(fout, "%8slw %s, %s\n","", reg, glob);
 }
 
 void mips_load_from_addr(char *target, char *src) {
-    fprintf(fout, "	la %s, (%s)\n", target, src);
+    fprintf(fout, "%8sla %s, (%s)\n","", target, src);
 }
 
 
 void mips_copy_rtn_val(char *target) {
-    fprintf(fout, "	la %s, ($v0)\n", target);
+    fprintf(fout, "%8sla %s, ($v0)\n", "",target);
 }
 
 int mips_push_word(char *src) {
@@ -42,7 +42,7 @@ int mips_push_word(char *src) {
 }
 
 void mips_store_word(char *reg, char *target){
-	fprintf(fout, "	sw %s, %s\n",reg, target);
+	fprintf(fout, "%8ssw %s, %s\n","",reg, target);
 }
 
 void mips_pop_word() {
@@ -50,27 +50,27 @@ void mips_pop_word() {
 }
 
 void mips_read_stack(char* target, int offset) {
-    fprintf(fout, "	lw %s, %d($sp)\n",target, offset);
+    fprintf(fout, "%8slw %s, %d($sp)\n","",target, offset);
 }
 
 void mips_write_stack(char *target, int offset) {
-	fprintf(fout, "	sw %s, %d($sp)\n", target, offset);
+	fprintf(fout, "%8ssw %s, %d($sp)\n", "",target, offset);
 }
 
 void mips_read_tmp(char *tmp, char *target) {
-	fprintf(fout, "	la %s, (%s)\n", target, tmp);
+	fprintf(fout, "%8sla %s, (%s)\n","", target, tmp);
 }
 
 void mips_write_tmp(char *tmp, char *target) {
-	fprintf(fout, "	la %s, (%s)\n", tmp, target);
+	fprintf(fout, "%8sla %s, (%s)\n", "",tmp, target);
 }
 
 void mips_instruction(const char *cstInstruct) {
-    fprintf(fout, "	%s", cstInstruct);
+    fprintf(fout, "%s",cstInstruct);
 }
 
 int mips_save_tmp_int(int val) {
-    fprintf(fout, "	li t%d %d\n", tmp_reg_count, val);
+    fprintf(fout, "%8sli t%d %d\n","", tmp_reg_count, val);
     tmp_reg_count++;
     return tmp_reg_count-1;
 }
@@ -185,7 +185,7 @@ void mips_eq(char *target, char *eqL, char *eqR, char *label) {
         mips_load_from_addr("$a0", eqL);
     if (strcmp("$a1", eqR))
         mips_load_from_addr("$a1", eqR);
-	fprintf(fout,"	beq $a0 $a1 %s\n", label);
+	fprintf(fout,"%8sbeq $a0 $a1 %s\n", "",label);
 }
 
 void mips_neq(char *target, char *neqL, char *neqR, char *label) {
@@ -193,7 +193,7 @@ void mips_neq(char *target, char *neqL, char *neqR, char *label) {
         mips_load_from_addr("$a0", neqL);
     if (strcmp("$a1", neqR))
         mips_load_from_addr("$a1", neqR);
-	fprintf(fout,"	bne $a0 $a1 %s\n", label);
+	fprintf(fout,"%8sbne $a0 $a1 %s\n","", label);
 }
 
 void mips_lt(char *target, char *ltL, char *ltR, char *label) {
@@ -201,7 +201,7 @@ void mips_lt(char *target, char *ltL, char *ltR, char *label) {
         mips_load_from_addr("$a0", ltL);
     if (strcmp("$a1", ltR))
         mips_load_from_addr("$a1", ltR);
-	fprintf(fout,"	blt $a0 $a1 %s\n", label);
+	fprintf(fout,"%8sblt $a0 $a1 %s\n", "",label);
 }
 
 void mips_gt(char *target, char *gtL, char *gtR, char *label) {
@@ -209,15 +209,15 @@ void mips_gt(char *target, char *gtL, char *gtR, char *label) {
         mips_load_from_addr("$a0", gtL);
     if (strcmp("$a1", gtR))
         mips_load_from_addr("$a1", gtR);
-	fprintf(fout,"	bgt $a0 $a1 %s\n", label);
+	fprintf(fout,"%8sbgt $a0 $a1 %s\n","", label);
 }
 
 void mips_leq(char *target, char *leqL, char *leqR, char *label) {
 	if (strcmp("$a0", leqL))
         mips_load_from_addr("$a0", leqL);
     if (strcmp("$a1", leqR))
-        mips_load_from_addr("$	a1", leqR);
-	fprintf(fout,"ble $a0 $a1 %s\n", label);
+        mips_load_from_addr("$a1", leqR);
+	fprintf(fout,"%8sble $a0 $a1 %s\n","", label);
 }
 
 void mips_geq(char *target, char *geqL, char *geqR, char *label) {
@@ -225,16 +225,16 @@ void mips_geq(char *target, char *geqL, char *geqR, char *label) {
         mips_load_from_addr("$a0", geqL);
     if (strcmp("$a1", geqR))
         mips_load_from_addr("$a1", geqR);
-	fprintf(fout,"	bge $a0 $a1 %s\n", label);
+	fprintf(fout,"%8sbge $a0 $a1 %s\n", "",label);
 }
 
 void mips_jump(char *label){
-	fprintf(fout,"	j %s\n", label);
+	fprintf(fout,"%8sj %s\n","",label);
 }
 
 void mips_syscall(int num){
-	fprintf(fout, "	li $v0, %d\n",num);
-	fprintf(fout,"	syscall\n");
+	fprintf(fout, "%8sli $v0, %d\n","",num);
+	fprintf(fout,"%8ssyscall\n","");
 }
 /** The abstraction of "For" and "While" should be the same.
 * (Looping the content in its block based on the value of a boolean. 
@@ -286,7 +286,7 @@ void mips_syscall(int num){
  * @param offset The offset
  */
 void tab_put(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "	sw %s %s+%d\n", buffer_reg, tab_name, offset);
+	fprintf(fout, "%8ssw %s %s+%d\n", "", buffer_reg, tab_name, offset);
 }
 
 /**
@@ -296,9 +296,10 @@ void tab_put(char *buffer_reg, char *tab_name, int offset) {
  * @param offset The offset
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "	lw %s %s+%d\n", buffer_reg, tab_name, offset);
+	fprintf(fout, "%8slw %s %s+%d\n", "", buffer_reg, tab_name, offset);
 }
 
 void mips_decl_string(char *varName, char *value) {
-	fprintf(fout, "	 %s: .asciiz \"%s\"\n", varName, value);
+	fprintf(fout, "%8s%s: .asciiz \"%s\"\n", "",varName, value);
 }
+
