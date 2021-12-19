@@ -53,6 +53,8 @@ typedef struct item_table {
 } item_table;
 
 
+
+/* HashTable functions */
 unsigned long hash_function(char *str);
 static LinkedList *allocate_list();
 static LinkedList *linkedlist_insert(LinkedList *list, Ht_item *item);
@@ -70,28 +72,41 @@ Ht_item *ht_search(HashTable *table, char *key);
 void ht_delete(HashTable *table, char *key);
 void print_table(HashTable *table);
 
+
+/* returns a new temporary variable*/
 Ht_item* new_temp(int type);
 
-void pushctx();
+void pushctx(); 
 void popctx();
+
+/* insert item in the current symbol table*/
 void newname(Ht_item *item);
+
+/* looks for a variable with the name key in the symbol tables and returns the couple ( item, symbol table) */
 item_table *lookup(char *key);
+
+/* prints the symbol table of the current context*/
 void print_ctx();
+
+/* prints all the symbol tables pushed into the stack*/
 void print_stack();
 void free_stack();
+
+/* verifies that list of parameters p1 corresponds to list p2 in number and types*/
 int verify_param(param p1, param p2);
 
-/* Vérifier si le contexte type est un parent du contexte courant*/
+/* verifies if ctx_type type is a parent of the current context*/
 int is_a_parent(ctx_type type);
 
+/* returns the offset of item in the symbol table*/
 int offset(item_table *item);
 
-int table_size(HashTable *table);
+/* pop the temporary variables from the current context, called at the end of the evaluation of an expression*/
+void pop_tmp(); 
 
-void pop_tmp(); // dépile les var temporaires du contexte courant, appelée après chaque fin de statement d'affectation
 
-extern HashTable* curr_context;
-extern HashTable* glob_context;
-extern HashTable* stack; // storing the symbol tables before popping 
+extern HashTable* curr_context; // points to the current context
+extern HashTable* glob_context; // points to the global context
+extern HashTable* stack;        // stack of symbol tables where the popped ones are stored
 
 #endif
