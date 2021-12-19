@@ -5,7 +5,7 @@ size_t nextquad;
 size_t tmpCount;
 size_t labelCount; 
 size_t glob_dec_count;
-
+size_t str_count;
 
 char* new_label(){
   char* label;
@@ -16,8 +16,22 @@ char* new_label(){
     cpt++;
   }
   label = malloc(cpt+6);
-  sprintf(label, "label%ld",labelCount);
+  sprintf(label, "str_%ld",labelCount);
   labelCount++;
+  return label;
+}
+
+char* new_str(){
+  char* label;
+  int a = str_count;
+  int cpt = 1;
+  while(a){
+    a=a/10;
+    cpt++;
+  }
+  label = malloc(cpt+6);
+  sprintf(label, "label%ld",str_count);
+  str_count++;
   return label;
 }
 

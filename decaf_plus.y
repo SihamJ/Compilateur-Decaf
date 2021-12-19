@@ -12,15 +12,9 @@
 	bool boolval;
 	char *stringval;
 
-	struct {
-		quadop qop;
-		int type;
-	} literal;
-
 	struct expr_val {
 		quadop result;	
 		int type;		// type of result operand: INT / BOOL / STRING
-		char *str; 		// if it's a string_literal
 		list next;		
 		list t;  		// true
 		list f;   		// false
@@ -45,9 +39,8 @@
 %token <stringval> id string_literal
 %token class Program If Else For Return comment Break Continue
 
-%type <expr_val> expr S G block statement method_call location return_val
+%type <expr_val> expr S G block statement method_call location return_val literal
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
-%type <literal> literal
 %type <decl> B Tab
 %type <p> E Param P
 
@@ -832,8 +825,8 @@ expr		:	expr add_op expr %prec '+'	{
 												gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
 											}
 			| 	literal 					{
-												$$.result = $1.qop;
-												$$.type = $1.type;
+												$$ = $1;
+												
 												if($1.type == BOOL){
 													quadop qo;
 													qo.type = QO_CST;
@@ -847,32 +840,7 @@ expr		:	expr add_op expr %prec '+'	{
 												}
 											}
 			|	location 					{
-												/* item_table *val = lookup($1);
-												if(!val)
-													yyerror("\nErreur: Variable non déclarée\n");
-												if(val->table == glob_context){
-													$$.result.type = QO_GLOBAL;
-													$$.result.u.global.name = malloc(strlen($1)+1);
-													strcpy($$.result.u.global.name, $1);
-													$$.result.u.global.size = 4;
-													$$.type = val->item->value;
-												}
-												else {
-													$$.result.u.offset = offset(val);
-													$$.result.type = QO_ID;
-													$$.type = val->item->value;			
-												}
-												if(val->item->value == BOOL) {
-													quadop qo;
-													qo.type = QO_CST;
-													qo.u.cst = true;
-													$$.t = crelist(nextquad);
-													gencode($$.result, $$.result, qo, Q_GEQ, global_code[nextquad].label, -1, NULL);
-													$$.f = crelist(nextquad);
-													qo.type = QO_EMPTY;
-													qo.u.cst = 0;
-													gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1, NULL); 
-												}	*/
+												
 												$$ = $1;
 											}
 			|	'-' expr %prec NEG 			{
@@ -910,29 +878,25 @@ expr		:	expr add_op expr %prec '+'	{
 			|	string_literal				{	
 												/* This is only used for Write_String( string_literal ) */
 												$$.type = STRING;
-												$$.str = malloc(sizeof($1)+1);
-												strcpy($$.str, $1);
+												$$.result.type = QO_CSTSTR;
+												$$.result.u.string_literal.label = new_str();
+												$$.result.u.string_literal.value = malloc(strlen($1)+1);
+												strcpy($$.result.u.string_literal.value, $1);
 											}
 
 literal		:	int_literal					{
-												struct quadop q;
-												q.u.cst = $1;
-												q.type = QO_CST;
-												$$.qop = q;
+												$$.result.type = QO_CST;
+												$$.result.u.cst = $1;
 												$$.type = INT;
 											}
 			|	char_literal				{
-												struct quadop q;
-												q.u.cst = $1;
-												q.type = QO_CST;
-												$$.qop = q;
+												$$.result.type = QO_CST;
+												$$.result.u.cst = $1;
 												$$.type = INT;
 											}
 			|	bool_literal				{
-												struct quadop q;
-												q.u.cst = $1;
-												q.type = QO_CST;
-												$$.qop = q;
+												$$.result.type = QO_CST;
+												$$.result.u.cst = $1;
 												$$.type = BOOL;
 											}
 

@@ -13,7 +13,7 @@ typedef struct list{
 }*list;
 
 typedef enum quadop_type{
-    QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY
+    QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR
   } quadop_type;
 
 typedef enum quad_type{
@@ -29,6 +29,10 @@ typedef struct quadop {
       char *name;
       int size;
     } global;  // variable global
+    struct string_literal{
+      char *label;
+      char *value;
+    } string_literal; // string literal pour WriteString
   } u;
 } quadop;
 
@@ -46,6 +50,7 @@ extern size_t nextquad; // n° du prochain quad
 extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table des symboles
 extern size_t labelCount; // counter of the number of auto-generated labels
 extern size_t glob_dec_count; // counter of global variables declared
+extern size_t str_count; // counter of number of string_literals to be declared in MIPS .data, used only for generating labels
 
 list crelist(int addr);
 void complete(list n, int addr);
@@ -70,6 +75,9 @@ char *get_type_oper(int type);
 
 /* generates a new_label*/
 char* new_label();
+
+/* generates a new label for string declaration*/
+char* new_str();
 
 void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, param p); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
 /* HOW TO USE GENCODE : 
