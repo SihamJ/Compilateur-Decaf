@@ -1,12 +1,15 @@
 class Program {
     int IF,b;
-    int B;
+    boolean B[10];
     boolean c;
     int E[10];
     int e;
+
     int al(int a, boolean b){
         int y;
-        y='a';
+        boolean d;
+        al(y,d);
+        y = 0xAFF;
         return y;
     }
     
@@ -18,7 +21,6 @@ class Program {
 
     void main (){
         int a ;
-        al(a*2,c);
         for i=2,3{
             if(c){
         return ;}

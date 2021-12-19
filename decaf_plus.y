@@ -170,38 +170,41 @@ method_decl	:		type id {
 
 								} 
 
-								'(' P ')'  block	{ 	/* We verify that return exists, and is of the same type*/
-															if($7.rtrn == NULL)
+									'(' P ')' 			{	
+															/* item_table is a structure that has a couple (Ht_item*, HashTable*),
+															returned by the function lookup(char *id)
+															*/
+															item_table* var = lookup($2);
+															/* 
+																item is an Ht_item, it contains the attribute p for the items of type method where we store
+																the types of parameters that the method takes.
+																P is either a list of parameters or NULL if the method does not take any parameter, see rule P below.
+															*/
+															var->item->p = $5;}
+
+								block					{
+														 	/* We verify that return exists, and is of the same type*/
+															if($8.rtrn == NULL)
 																yyerror("\nErreur: Méthode sans return\n");
-															else if(global_code[$7.rtrn->addr].op2.u.cst != $1)
+															else if(global_code[$8.rtrn->addr].op2.u.cst != $1)
 																yyerror("\nErreur: Méthode avec faux type de retour\n");
-														/* item_table is a structure that has a couple (Ht_item*, HashTable*),
-														returned by the function lookup(char *id)
-														*/
-														item_table* var = lookup($2);
-														/* 
-															item is an Ht_item, it contains the attribute p for the items of type method where we store
-															the types of parameters that the method takes.
-															P is either a list of parameters or NULL if the method does not take any parameter, see rule P below.
-														*/
-														var->item->p = $5;
-														/*
-															we get to the end of the method declaration. If there was a GOTO somewhere in the block to jump out of the
-															block, now we know where the end of the block is, it's necessarily the adress of the next quad of end function
-															because this block is at the end of a method declaration. Same thing for the return jumps.
-														*/
-														complete($7.next,nextquad);	
-														complete($7.rtrn, nextquad);
-														/* 
-														We generate a quad taht indicates the end of the method declaration, this is useful for MIPS
-														for retrieving registers
-														*/													
-														quadop qo;
-														qo.type = QO_EMPTY;
-														qo.u.cst = 0;
-														
-														gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1, NULL);
-														popctx(); }
+															/*
+																we get to the end of the method declaration. If there was a GOTO somewhere in the block to jump out of the
+																block, now we know where the end of the block is, it's necessarily the adress of the next quad of end function
+																because this block is at the end of a method declaration. Same thing for the return jumps.
+															*/
+															complete($8.next,nextquad);	
+															complete($8.rtrn, nextquad);
+															/* 
+															We generate a quad taht indicates the end of the method declaration, this is useful for MIPS
+															for retrieving registers
+															*/													
+															quadop qo;
+															qo.type = QO_EMPTY;
+															qo.u.cst = 0;
+															
+															gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1, NULL);
+															popctx(); }
 
 			/* Same as above, except the type is void method. We are forced to separete them because of Bison conflicts with types of variable declarations*/
 			|	voidtype id {	if(ht_search(glob_context, $2) != NULL)
@@ -227,6 +230,8 @@ method_decl	:		type id {
 															complete($7.rtrn, nextquad);	
 
 															if(!strcmp($2,"main")){
+																if($5 != NULL) 
+																	yyerror("\nErreur: Main ne prends pas de paramètres\n");
 																quadop qo; 
 																qo.type = QO_CST; 
 																qo.u.cst = 10; 
@@ -611,7 +616,8 @@ method_call :	id '(' E ')' 					{
 													item_table *val = lookup($1);
 													if(val == NULL)
 														yyerror("Erreur: Méthode non déclarée\n");
-
+													if(val->item->id_type != ID_METHOD)
+														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
 													/* retrieving return type */
 													 $$.type = val->item->value; 
 

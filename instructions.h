@@ -54,7 +54,7 @@
 #define MIPS_LIB_IO_READ_INT "\nRead_INT:\n\tli $v0, 5\n\tsyscall\n\tjr $ra\n"
 
 
-#define MIPS_MACRO ".data\nSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\n"
+#define MIPS_MACRO "\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\n"
 
 /**
 * Assuming the value to print is stored in $a0

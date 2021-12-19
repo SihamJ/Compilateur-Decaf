@@ -99,7 +99,7 @@ void complete(list n, int addr){
 void print_globalcode(){
   char snum[10];
   char s[10];
-  printf("\nCode Intermediaire:\n______________________________________________________________________________________________________\n          type         op1          op2         op3       oper       label        jump   \n______________________________________________________________________________________________________\n\n");
+  printf("\nCode Intermediaire:\n_______________________________________________________________________________________\n          type         op1          op2         op3       oper       label        jump   \n_______________________________________________________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
     printf("%2d",i);
     printf("%12s", get_type_oper(global_code[i].op1.type));

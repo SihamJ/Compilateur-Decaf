@@ -13,8 +13,8 @@ void translate() {
 	printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
 	/* Déclarations des variables globales dans le segment .data  ; "global_dec_count" est un compteur du nb de declarations globales*/
-	fprintf(fout, MIPS_MACRO); // Constant String used for 'write_bool'
 	fprintf(fout, ".data\n");
+	fprintf(fout, MIPS_MACRO); // Constant String used for 'write_bool'
 	for(int i=0; i<glob_dec_count;i++){
 		mips_dec_global(global_code[i].op1);
 	}
