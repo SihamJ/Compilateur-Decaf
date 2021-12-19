@@ -13,7 +13,6 @@ void mips_dec_global(quadop q){
 		fprintf(fout, "		%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
 }
 
-
 void mips_label(char *name, int n) {
 	fprintf(fout, "	%s%d:\n",name, n);
 }
@@ -298,4 +297,8 @@ void tab_put(char *buffer_reg, char *tab_name, int offset) {
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "	lw %s %s+%d\n", buffer_reg, tab_name, offset);
+}
+
+void mips_decl_string(char *varName, char *value) {
+	fprintf(fout, "	 %s: .asciiz \"%s\"\n", varName, value);
 }

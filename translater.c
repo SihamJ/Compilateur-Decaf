@@ -13,6 +13,7 @@ void translate() {
 	printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
 	/* Déclarations des variables globales dans le segment .data  ; "global_dec_count" est un compteur du nb de declarations globales*/
+	fprintf(fout, MIPS_MACRO); // Constant String used for 'write_bool'
 	fprintf(fout, ".data\n");
 	for(int i=0; i<glob_dec_count;i++){
 		mips_dec_global(global_code[i].op1);
@@ -21,7 +22,12 @@ void translate() {
 
 	fprintf(fout, "\n.text\n");
 	fprintf(fout, "\n.globl main\n\n");
-
+	/* Static Libraries */
+	fprintf(fout, "%s", MIPS_LIB_IO_WRITE_BOOL);
+    fprintf(fout, "%s", MIPS_LIB_IO_READ_INT);
+    fprintf(fout, "%s", MIPS_LIB_IO_WRITE_STRING);
+    fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
+    fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)
