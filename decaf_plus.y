@@ -34,7 +34,7 @@
 		int size;
 	} decl;
 
-	param p;  // List for storing method parameters at the declaration an method call. Also pointed at by the Symbol Table (declaration), and the Quads (method_call).
+	param p;  // List for storing method parameters at the declaration or method call. Also pointed at by the Symbol Table (declaration), and the Quads (method_call).
 
 }
 
