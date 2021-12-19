@@ -476,7 +476,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 												}
 
 			/* The method call rules are defined below not here.*/
-			|	method_call	';'								{;}
+			|	method_call	';'								{ $$=$1; }
 
 			|	If '(' expr ')' M block G Else M block	{	
 															/* Verifying types*/
@@ -658,12 +658,45 @@ E 			:	expr ',' E 						{
 													p->arg = $1.result; 
 													p->next = $3; 
 													$$ = p;
+													if($1.type == BOOL){
+														quadop qo;
+
+														qo.type = QO_CST;
+														qo.u.cst = true;
+														complete($1.t, nextquad);
+														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+
+														qo.type = QO_EMPTY;
+														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2, NULL);
+
+														qo.type = QO_CST;
+														qo.u.cst = false;
+														complete($1.f, nextquad); 
+														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+													}
 												}
 			|	expr 							{ 
 													$$ = (param) malloc(sizeof(struct param)); 
 													$$->type = $1.type; 
 													$$->arg = $1.result; 
 													$$->next = NULL;
+
+													if($1.type == BOOL){
+														quadop qo;
+
+														qo.type = QO_CST;
+														qo.u.cst = true;
+														complete($1.t, nextquad);
+														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+													
+														qo.type = QO_EMPTY;
+														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2, NULL);
+
+														qo.type = QO_CST;
+														qo.u.cst = false;
+														complete($1.f, nextquad); 
+														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+													}
 												}
 
 location	:	id				{
@@ -687,7 +720,7 @@ location	:	id				{
 										qo.type = QO_CST;
 										qo.u.cst = true;
 										$$.t = crelist(nextquad);
-										gencode($$.result, $$.result, qo, Q_GEQ, global_code[nextquad].label, -1, NULL);
+										gencode($$.result, $$.result, qo, Q_EQ, global_code[nextquad].label, -1, NULL);
 										$$.f = crelist(nextquad);
 										qo.type = QO_EMPTY;
 										qo.u.cst = 0;
@@ -715,7 +748,7 @@ location	:	id				{
 												strcpy($$.result.u.global.name, $1); 
 												quadop q1;
 												q1.type = QO_CST;
-												/* Vérification dynamique offset*/
+												/* TO DO: Vérification dynamique offset*/
 												q1.u.cst = 4*2;
 												gencode($$.result, q1, q1, Q_ACCESTAB, global_code[nextquad].label, -1, NULL);
 											}
@@ -872,7 +905,7 @@ expr		:	expr add_op expr %prec '+'	{
 												/* A method with void return type can't be used as an expression*/
 												if($1.type == VOIDTYPE)
 													yyerror("Erreur: méthode de type de retour void utilisée comme expression\n");
-												$$.result = $1.result;
+												$$ = $1;
 											}
 			|	string_literal				{	
 												/* This is only used for Write_String( string_literal ) */

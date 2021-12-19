@@ -128,6 +128,8 @@ void translate() {
 		case Q_SYSCALL:
 			mips_syscall(global_code[i].op1.u.cst);
 			break;
+		case Q_RETURN:
+			break;
         default:
         	break;
         }

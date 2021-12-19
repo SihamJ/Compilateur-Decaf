@@ -17,9 +17,9 @@ class Program {
 
     void main (){
         int a ;
-        a= 3;
+        al(a*2,c);
         for i=2,3{
-            if(a==2){
+            if(c){
         return ;}
         }
     }
