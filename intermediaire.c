@@ -16,7 +16,7 @@ char* new_label(){
     cpt++;
   }
   label = malloc(cpt+6);
-  sprintf(label, "str_%ld",labelCount);
+  sprintf(label, "label%ld",labelCount);
   labelCount++;
   return label;
 }
@@ -30,7 +30,7 @@ char* new_str(){
     cpt++;
   }
   label = malloc(cpt+6);
-  sprintf(label, "label%ld",str_count);
+  sprintf(label, "str_%ld",str_count);
   str_count++;
   return label;
 }

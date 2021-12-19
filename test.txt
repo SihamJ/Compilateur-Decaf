@@ -1,5 +1,5 @@
 class Program {
-    int a,b;
+    int IF,b;
     boolean c;
     int E[10];
  
@@ -11,7 +11,7 @@ class Program {
     
     void label0(){
         int a;
-        a=E[2];
+        IF=E[2];
         return ;
     }
 
