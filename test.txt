@@ -1,11 +1,12 @@
 class Program {
     int IF,b;
+    int B;
     boolean c;
     int E[10];
- 
+    int e;
     int al(int a, boolean b){
         int y;
-        y=2;
+        y='a';
         return y;
     }
     

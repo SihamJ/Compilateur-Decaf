@@ -9,7 +9,6 @@
 
 %union {
 	int intval;
-	bool boolval;
 	char *stringval;
 
 	struct expr_val {
@@ -34,8 +33,7 @@
 
 }
 
-%token <intval> decimal_literal hex_literal char_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
-%token <boolval> bool_literal
+%token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
 %token <stringval> id string_literal
 %token class Program If Else For Return comment Break Continue
 

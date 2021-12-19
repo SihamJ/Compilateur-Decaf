@@ -69,7 +69,7 @@ comment 		\/\/.*{newline}
 
 
 {bool_literal} 		{
-						yylval.boolval = (strcmp(yytext, "true") == 0);
+						yylval.intval = (strcmp(yytext, "true") == 0);
 						return bool_literal;
 					}
 					
@@ -79,7 +79,7 @@ comment 		\/\/.*{newline}
 					}
 
 {char_literal} 		{
-						yylval.boolval = (int) yytext[1];
+						yylval.intval = yytext[1];
 						return char_literal;
 					}
 
