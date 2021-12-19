@@ -5,7 +5,7 @@ class Program {
     
     int al(int a, boolean b){
         int y;
-        y = a*2;
+y=2;
 
     }
     void label0(){

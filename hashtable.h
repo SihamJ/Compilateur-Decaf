@@ -14,10 +14,10 @@ typedef enum ctx_type{
     CTX_GLOB, CTX_METHOD, CTX_IF, CTX_FOR, CTX_BLOCK
   }ctx_type;
 
-/* Pour stocker les paramètres d'une méthode */
+/* To store parameters of a method at declaration or call */
 typedef struct param{
-    int type;   // INT or BOOL or STRING;
-    quadop arg;
+    int type;           // INT or BOOL or STRING;
+    quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
     struct param* next;
 } *param;
 
@@ -27,7 +27,7 @@ typedef struct Ht_item {
     int value;      // type (INT / BOOL / VOIDTYPE)
 	int order;      // order d'insértion dans la TOS
     int size;       // si tableau, sinon 4
-    param p;
+    param p;        // si l'item est une méthode, param est une liste des paramètres et leur type
 } Ht_item;
 
 typedef struct LinkedList {
@@ -89,6 +89,6 @@ void pop_tmp(); // dépile les var temporaires du contexte courant, appelée apr
 
 extern HashTable* curr_context;
 extern HashTable* glob_context;
-extern HashTable* stack;
+extern HashTable* stack; // storing the symbol tables before popping 
 
 #endif

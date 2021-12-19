@@ -40,14 +40,6 @@ char* next_label_name(){
   return label;
 }
 
-
-/* HOW TO USE GENCODE : 
-
-Opération binaire:  a = b op c       =>  op1 = a ; op2 = b ; op3 = c
-Affectation:        a = b            =>  op1 = a ; op2 = b ; op3 = we don't care
-Comparaison:        a rel_op b       =>  op1 = we don't care;  op2 = a ; op3 = b ;
-
-*/
 void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
   global_code[nextquad].type = t;
   global_code[nextquad].op1 = op1;

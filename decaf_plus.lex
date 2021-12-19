@@ -72,16 +72,18 @@ comment 		\/\/.*{newline}
 						yylval.boolval = (strcmp(yytext, "true") == 0);
 						return bool_literal;
 					}
+					
+{hex_literal} 		{
+						yylval.intval = strtol(yytext+2, NULL, 16);
+						return hex_literal;
+					}
 
 {char_literal} 		{
 						yylval.boolval = (int) yytext[1];
 						return char_literal;
 					}
 
-{hex_literal} 		{
-						yylval.intval = strtol(yytext+2, NULL, 16);
-						return hex_literal;
-					}
+
 
 {decimal_literal} 	{
 						yylval.intval = strtol(yytext, NULL, 10);
