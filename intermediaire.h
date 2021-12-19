@@ -4,8 +4,9 @@
 
 #include "token.h"
 
-typedef struct param *param;
+typedef struct param *param; // defined in HashTable.h
 
+/* list for storing address of incomplete quads */
 typedef struct list{
   int addr;
   struct list* suiv;
@@ -16,7 +17,7 @@ typedef enum quadop_type{
   } quadop_type;
 
 typedef enum quad_type{
-    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_LABEL, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL
+    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_LABEL, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN
   } quad_type;
 
 typedef struct quadop {

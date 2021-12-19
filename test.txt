@@ -2,29 +2,25 @@ class Program {
     int a,b;
     boolean c;
     int E[10];
-    
+ 
     int al(int a, boolean b){
         int y;
-y=2;
-
+        y=2;
+        return y;
     }
-    void label0(){
-        a = 2;
-    }
-    void main (){
-        for i=2,5 {
-            int i;
-            i += 6;
-            if(a*2<7){
-                continue;
-            }
-            else{
-                break;
-            }
-        }
-        WriteInt(5);
-
     
+    void label0(){
+        int a;
+        a=E[2];
+        return ;
     }
 
+    void main (){
+        int a ;
+        a= 3;
+        for i=2,3{
+            if(a==2){
+        return ;}
+        }
+    }
 }

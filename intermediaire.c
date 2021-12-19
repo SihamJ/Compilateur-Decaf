@@ -210,6 +210,14 @@ char *op_type(int type){
     return ("METHOD CALL");
     break;
 
+    case Q_ACCESTAB:
+    return ("ACCES TAB");
+    break;
+
+    case Q_RETURN:
+    return ("RETURN");
+    break;
+    
     default:
      	break;
         }

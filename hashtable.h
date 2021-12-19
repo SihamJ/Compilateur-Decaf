@@ -80,7 +80,10 @@ void print_ctx();
 void print_stack();
 void free_stack();
 int verify_param(param p1, param p2);
-int is_for_a_parent();
+
+/* Vérifier si le contexte type est un parent du contexte courant*/
+int is_a_parent(ctx_type type);
+
 int offset(item_table *item);
 
 int table_size(HashTable *table);

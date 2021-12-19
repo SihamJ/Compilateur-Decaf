@@ -395,6 +395,7 @@ item_table *lookup(char *key){
     return NULL;
 }
 
+
 int verify_param(param p1, param p2){
 
     while(p1 != NULL && p2 != NULL){
@@ -485,10 +486,10 @@ Ht_item* new_temp(int type){
 }
 
 /* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
-int is_for_a_parent(){
+int is_a_parent(ctx_type type){
     HashTable* pt = curr_context;
-    while(pt->type != CTX_METHOD){
-        if(pt->type == CTX_FOR)
+    while(pt != NULL){
+        if(pt->type == type)
             return true;
         pt = pt->next;
     }
