@@ -54,7 +54,8 @@
 #define MIPS_LIB_IO_READ_INT "Read_INT:\n  li $v0, 5\n  syscall\n  jr $ra\n"
 
 
-#define MIPS_MACRO ".data\n  STR_TRUE: .asciiz \"True\"\n  STR_FALSE: .asciiz \"False\"\n"
+
+#define MIPS_MACRO ".data\n  STR_TRUE: .asciiz \"True\"\n  STR_FALSE: .asciiz \"False\"\n  STR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
 
 /**
 * Assuming the value to print is stored in $a0
@@ -62,6 +63,16 @@
 * Assuming having 'True' and 'False' stored as literal string in STR_TRUE and STR_FALSE
 */
 #define MIPS_LIB_IO_WRITE_BOOL "Write_BOOL:\n  beqz $a0 Load_False\n  Load_True:\n  la $a0 STR_TRUE\n  j Print_Bool\n  Load_False:\n    la $a0 STR_FALSE\n  Print_Bool:\n    li $v0 4\n    syscall\n  jr $ra\n"
+
+/**
+ * Assuming the index is in $a0
+ * Assuming the uppder bound of the array is in $a1
+ * Called by jal when accessing tables
+ */
+#define MIPS_DYN_CHECK "DYN_CHECK:\n  bltz $a0 Out_Of_Bound\n  bge $a0 $a1 Out_Of_Bound\n  jr $ra\n"
+
+/* Print Error and quit program */
+#define MIPS_OUT_OF_BOUND "Out_Of_Bound:\n  la $a0 STR_DYN_CHECK\n  li $v0 4\n  syscall\n  j Quit_Program\n"
 
 #define MIPS_QUIT_PROGRAM "Quit_Program:\n  li $v0 10 \n  syscall\n"
 

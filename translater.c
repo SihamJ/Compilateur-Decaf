@@ -28,6 +28,8 @@ void translate() {
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_STRING);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
     fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
+	fprintf(fout, "%s", MIPS_OUT_OF_BOUND);
+	fprintf(fout, "%s", MIPS_DYN_CHECK);
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)
