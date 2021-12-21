@@ -22,12 +22,25 @@ void translate() {
 
 	fprintf(fout, "\n.text\n");
 	fprintf(fout, "\n.globl main\n\n");
+
+
 	/* Static Libraries */
 	fprintf(fout, "%s", MIPS_LIB_IO_WRITE_BOOL);
     fprintf(fout, "%s", MIPS_LIB_IO_READ_INT);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_STRING);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
-    //fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
+    fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
+	fprintf(fout, "%s", MIPS_OUT_OF_BOUND);
+	fprintf(fout, "%s", MIPS_DYN_CHECK);
+	fprintf(fout, "%s", MIPS_BZERO);
+
+	/* Initialiser la valeur de chaque tableau */
+	for(int i=0; i<glob_dec_count;i++){
+	// Double Test if it's a Array, just to be sure
+	// To be replaced by Type
+		if (global_code[i].op1.u.global.size!=4)
+			mips_init_array(global_code[i].op1);
+	}
 
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)

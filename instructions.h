@@ -54,7 +54,8 @@
 #define MIPS_LIB_IO_READ_INT "\nRead_INT:\n\tli $v0, 5\n\tsyscall\n\tjr $ra\n"
 
 
-#define MIPS_MACRO "\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\n"
+
+#define MIPS_MACRO ".data\n\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
 
 /**
 * Assuming the value to print is stored in $a0
@@ -63,9 +64,26 @@
 */
 #define MIPS_LIB_IO_WRITE_BOOL "\nWrite_BOOL:\n\tbeqz $a0 Load_False\n\tLoad_True:\n\tla $a0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $a0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
+/**
+ * Assuming the index is in $a0
+ * Assuming the uppder bound of the array is in $a1
+ * Called by jal when accessing tables
+ */
+#define MIPS_DYN_CHECK "DYN_CHECK:\n  bltz $a0 Out_Of_Bound\n  bge $a0 $a1 Out_Of_Bound\n  jr $ra\n"
+
+/* Print Error and quit program */
+#define MIPS_OUT_OF_BOUND "Out_Of_Bound:\n  la $a0 STR_DYN_CHECK\n  li $v0 4\n  syscall\n  j Quit_Program\n"
+
 #define MIPS_QUIT_PROGRAM "\nQuit_Program:\n\tli $v0 10 \n\tsyscall\n"
 
-// TODO: decl, read, write tab
+/**
+ * @brief bzero() fuction in Mips
+ * Assuming $a0 has the target label name
+ * $a1 has the size
+ * Called by jal
+ */
+#define MIPS_BZERO "BZero:\n  subi $a1 $a1 1\n  sw $zero ($a0)\n  addu $a0 $a0 4\n  bgtz $a1 BZero\n  jr $ra\n"
+
 // TODO: decl str
 
 #endif

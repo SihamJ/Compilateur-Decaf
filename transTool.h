@@ -7,6 +7,9 @@
 
 
 void mips_dec_global(quadop q);
+
+void mips_init_array(quadop q);
+
 void mips_store_word(char *reg, char *target);
 /**
  * @brief Generate constant instructions (instructions without parameters)
