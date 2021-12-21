@@ -18,9 +18,10 @@ void mips_dec_global(quadop q){
 void mips_init_array(quadop q) {
 	// Double Test if it's a Array, just to be sure
 	// To be replaced by Type
-	if(q.u.global.size != 4) {
+	if(q.u.global.type == QO_TAB) {
 		fprintf(fout, "la $a0 %s\n", q.u.global.name);
 		fprintf(fout, "li $a1 %d\n",  q.u.global.size/4);
+		fprintf(fout, "li $a2 1\n");
 		fprintf(fout, "jal BZero\n");
 	}
 }

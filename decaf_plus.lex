@@ -60,7 +60,11 @@ comment 		\/\/.*{newline}
 "class" return class;
 
 
-"Program" return Program;
+"Program" 			{
+						yylval.stringval = malloc(strlen(yytext)+1);
+						strcpy(yylval.stringval, yytext);
+						return Program;
+					}
 
 "if" return If;
 "else" return Else;

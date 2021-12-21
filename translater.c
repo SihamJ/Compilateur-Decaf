@@ -9,8 +9,11 @@
   */
 
 FILE *fout;
+FILE *source;
+
 void translate() {
-	printf("\n# _________________________ MIPS START ________________________# \n\n\n");
+	if(fout == stdout)
+		printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
 	/* Déclarations des variables globales dans le segment .data  ; "global_dec_count" est un compteur du nb de declarations globales*/
 	fprintf(fout, ".data\n");

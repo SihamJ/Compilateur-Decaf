@@ -4,7 +4,8 @@
 	#include "hashtable.h"
 	#include "IOfunctions.h"
 	int yylex();
-	void yyerror(char*);
+	void yyerror( char* );
+	char* program_name;
 %}
 
 %union {
@@ -35,13 +36,14 @@
 }
 
 %token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
-%token <stringval> id string_literal
-%token class Program If Else For Return comment Break Continue
+%token <stringval> id string_literal Program
+%token class If Else For Return comment Break Continue
 
 %type <expr_val> expr S S2 G block statement method_call location return_val literal
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
 %type <p> E Param P
+
 
 %left or
 %left and
@@ -55,7 +57,11 @@
 %start program
 %%
 
-program	:  class Program '{' { 	;pushctx(CTX_GLOB); /* Pushing the global context*/
+program	:  class Program '{' { 	
+								/* */
+								program_name = malloc(strlen($2)+1);
+								strcpy(program_name, $2);
+								pushctx(CTX_GLOB); /* Pushing the global context*/
 								add_libs_to_tos(); /* Adding the I/O functions to the global symbol table*/
 								glob_context = curr_context; /* glob_context will point to this context throughout the execution of this program.*/
 							}
@@ -519,7 +525,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 			|	If '(' expr ')' M block G Else M block	{	
 															/* Verifying types*/
 															if($3.type != BOOL) 
-																yyerror("Erreur: Test avec expression non booléene\n");
+																yyerror("\nErreur: Test avec expression non booléene\n");
 															
 															/* If expr is true, we jump to block1, the adress of its first quad is marked by M1*/
 															complete($3.t, $5);
@@ -547,7 +553,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														}
 			|	If '(' expr ')' M block 				{
 															/* IDEM but without ELSE*/
-															if($3.type != BOOL) yyerror("Erreur: Test avec expression non booléene\n");
+															if($3.type != BOOL) yyerror("\nErreur: Test avec expression non booléene\n");
 															complete($3.t, $5);
 															$$.next = concat($3.f, $6.next);
 															$$.cntu = $6.cntu;
@@ -559,7 +565,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															/* The loop counter has its own context*/
 															pushctx(CTX_FOR);
 															/* Verifying types */
-															if($4.type != INT || $6.type != INT) yyerror("Erreur: le compteur de boucle doit être de type INT\n");
+															if($4.type != INT || $6.type != INT) yyerror("\nErreur: le compteur de boucle doit être de type INT\n");
 															/* To avoid having variables and labels holding the same name*/
 															if(!strcmp($2, next_label_name()))
 																labelCount++;
@@ -595,7 +601,6 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															*/
 															complete($10.next, nextquad);
 															complete($10.cntu, nextquad);
-															printf("before1\n");
 															/* gencode to increment the loop counter*/
 															quadop qo, q1;
 															qo.type = QO_ID;
@@ -606,7 +611,6 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															qo.u.offset = 0;
 															gencode(qo, qo, q1, Q_ADD, NULL, -1, NULL);
 															qo.type = QO_EMPTY;
-															printf("before2\n");
 															/* gencode to jump back to the Marker to test if the counter reached its max value */
 															gencode(qo, qo, qo, Q_GOTO, NULL, $8, NULL);
 
@@ -640,7 +644,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														}
 			|	Break ';'								 { 
 															if(!is_a_parent(CTX_FOR)) 
-																yyerror("\nERREUR: Break; doit être au sein d'une boucle FOR\n");
+																yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n");
 															quadop qo;
 															qo.type = QO_EMPTY;
 															/* Incomplete GOTO to jump out of the for loop*/
@@ -649,7 +653,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														 }
 			|	Continue ';'							 { 
 															if(!is_a_parent(CTX_FOR)) 
-																yyerror("\nERREUR: Continue; doit être au sein d'une boucle FOR\n");
+																yyerror("\nErreur: Continue; doit être au sein d'une boucle FOR\n");
 															quadop qo;
 															qo.type = QO_EMPTY;
 															/* Incomplete GOTO to jump to the start of the loop*/
@@ -668,7 +672,7 @@ return_val	:	expr 									{	$$ = $1;}
 method_call :	id '(' E ')' 					{
 													item_table *val = lookup($1);
 													if(val == NULL)
-														yyerror("Erreur: Méthode non déclarée\n");
+														yyerror("\nErreur: Méthode non déclarée\n");
 													if(val->item->id_type != ID_METHOD)
 														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
 													/* retrieving return type */
@@ -676,7 +680,7 @@ method_call :	id '(' E ')' 					{
 
 													/* verifiying type and number of parameters */
 													if(!verify_param(val->item->p, $3))
-														yyerror("Erreur: Appel de méthode avec paramètres incorrectes\n");
+														yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");
 
 													quadop qo;
 													qo.type = QO_EMPTY;
@@ -685,14 +689,14 @@ method_call :	id '(' E ')' 					{
 			|	id '(' ')'						{
 													item_table *val = lookup($1);
 													if(val == NULL)
-														yyerror("Erreur: Méthode non déclarée\n");
+														yyerror("\nErreur: Méthode non déclarée\n");
 
 													/* retrieving return type */
 													 $$.type = val->item->value; 
 
 													/* verifiying parameters */
 													if(!verify_param(val->item->p, NULL))
-														yyerror("Erreur: Appel de méthode avec paramètres incorrectes\n");
+														yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");
 													quadop qo;
 													qo.type = QO_EMPTY;
 													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL);
@@ -929,7 +933,7 @@ expr		:	expr add_op expr %prec '+'	{
 			|	method_call					{ 
 												/* A method with void return type can't be used as an expression*/
 												if($1.type == VOIDTYPE)
-													yyerror("Erreur: méthode de type de retour void utilisée comme expression\n");
+													yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n");
 												$$ = $1;
 											}
 			|	string_literal				{	
@@ -979,7 +983,7 @@ mul_op		:	'*'		{$$ = Q_MUL;}
 			|	'%'		{$$ = Q_MOD;}
 %%
 
-void yyerror(char *s) {
-	fprintf(stderr, "%s\n", s);
+void yyerror(char *msg) {
+	fprintf(stderr, "%s\n", msg);
 	exit(0);
 }

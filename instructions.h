@@ -55,7 +55,7 @@
 
 
 
-#define MIPS_MACRO ".data\n\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
+#define MIPS_MACRO "\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
 
 /**
 * Assuming the value to print is stored in $a0
@@ -82,7 +82,8 @@
  * $a1 has the size
  * Called by jal
  */
-#define MIPS_BZERO "BZero:\n  subi $a1 $a1 1\n  sw $zero ($a0)\n  addu $a0 $a0 4\n  bgtz $a1 BZero\n  jr $ra\n"
+
+#define MIPS_BZERO "BZero:\n  sub $a1 $a2 1\n  sw $zero ($a0)\n  addu $a0 $a0 4\n  bgtz $a1 BZero\n  jr $ra\n"
 
 // TODO: decl str
 
