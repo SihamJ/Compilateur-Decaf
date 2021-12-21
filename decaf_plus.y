@@ -63,6 +63,7 @@ program	:  class Program '{' { 	;pushctx(CTX_GLOB); /* Pushing the global contex
 				GLOBAL '}' { 
 								if( ht_search( glob_context,"main") == NULL )	/* verifying that we have a main method*/
 									yyerror("\nErreur: Pas de méthode main\n");
+								quadop qo;
 								popctx(); /* End of the program, we pop the global context.*/
 							}
 
@@ -75,7 +76,7 @@ G 		:	%empty		{	$$.next = crelist(nextquad);
 							quadop qo;
 							qo.type = QO_EMPTY;
 							qo.u.cst = 0;
-							gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
+							gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL);
 						}
 
 /* The structure of the global context follows either of the two:
@@ -110,7 +111,7 @@ tab_decl	:	type Tab ';' 							{
 																strcpy(qo.u.global.name, pt->name);
 																qo.u.global.size = pt->size * 4;
 																qo.u.global.type = QO_TAB;
-																gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1, NULL);
+																gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
 
 																/* we increment the global variables counter, useful for MIPS*/
 																glob_dec_count++;
@@ -201,13 +202,14 @@ method_decl	:		type id {
 															complete($8.next,nextquad);	
 															complete($8.rtrn, nextquad);
 															/* 
-															We generate a quad taht indicates the end of the method declaration, this is useful for MIPS
-															for retrieving registers
-															*/													
+															We generate a quad that indicates the end of the method declaration, this is useful for MIPS
+															for popping the stack and retrieving register ra. Notice that we store the number of variables to pop
+															in qo.
+															*/
+																										
 															quadop qo;
-															qo.type = QO_EMPTY;
-															qo.u.cst = 0;
-															
+															qo.type = QO_CST;
+															qo.u.cst = curr_context->count;
 															gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
 															popctx(); }
 
@@ -246,11 +248,10 @@ method_decl	:		type id {
 
 															else {													
 																quadop qo;
-																qo.type = QO_EMPTY;
-																qo.u.cst = 0;
+															qo.type = QO_CST;
+															qo.u.cst = curr_context->count;
 																gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
-															}
-																				
+															}					
 															popctx();
 														}
 
@@ -294,6 +295,16 @@ block 		:	'{' {
 						$$.brk = $4.brk;
 						$$.cntu = $4.cntu;
 						$$.rtrn = concat($$.rtrn,$4.rtrn);
+
+						/* If we declared any variables in this block, we should pop them from the stack,
+							and tell MIPS to do the same.
+						*/
+						if(curr_context->count > 0){
+							quadop qo;
+							qo.type = QO_CST;
+							qo.u.cst = curr_context->count;
+							gencode(qo, qo, qo, Q_POP, NULL, -1, NULL);
+						}
 						popctx();
 					}
 
@@ -327,7 +338,7 @@ var_decl 	:  	type B ';' {
 										qo.u.global.name = malloc(strlen(pt->name + 1));
 										strcpy(qo.u.global.name, pt->name);
 										qo.u.global.size = 4;
-										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1, NULL);
+										gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
 
 										/* we increment the global variables counter, useful for MIPS*/
 										glob_dec_count++;
@@ -354,7 +365,7 @@ var_decl 	:  	type B ';' {
 										if(!strcmp(pt->name, next_label_name()))
 											labelCount++;
 										qo.u.offset = 0;
-										gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1, NULL);
+										gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
 										Ht_item *item = create_item(pt->name, ID_VAR, $1);
 										newname(item);
 										pt = pt->suiv;
@@ -440,20 +451,20 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($3.t, nextquad);
-														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL); 	
+														gencode(q1, qo, qo, Q_AFF, NULL, -1, NULL); 	
 
 														/* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
 															We add it to $$.next
 														*/
 														qo.type = QO_EMPTY;
 														$$.next = crelist(nextquad);
-														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
+														gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 
 														/* False affectation*/
 														qo.type = QO_CST;	
 														qo.u.cst = false;		
 														complete($3.f, nextquad);											
-														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);	
+														gencode(q1, qo, qo, Q_AFF, NULL, -1, NULL);	
 													}
 												
 													else {
@@ -461,17 +472,26 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 
 														/* Normal affectation */
 														if($2 == Q_AFF)
-															gencode(q1,$3.result,$3.result,$2, global_code[nextquad].label,-1, NULL);
+															gencode(q1,$3.result,$3.result,$2, NULL,-1, NULL);
 
 														/* += is just an addition with op2 = op1*/
 														else if($2 == Q_AFFADD)
-															gencode(q1,q1,$3.result,Q_ADD, global_code[nextquad].label,-1, NULL);
+															gencode(q1,q1,$3.result,Q_ADD, NULL,-1, NULL);
 
 														/* -= is just a subtraction with op2 = op1*/
 														else if($2 == Q_AFFSUB)
-															gencode(q1,q1,$3.result,Q_SUB, global_code[nextquad].label,-1, NULL);
+															gencode(q1,q1,$3.result,Q_SUB, NULL,-1, NULL);
 													}
-													/* we pop the temporary variables from the stack at the end of the expression evaluation*/
+													/* we pop the temporary variables from the stack at the end of the expression evaluation if we have any.
+														we store the number of temporary variables to pop in qo. The counter is initialized in 
+														pop_tmp().
+													*/													
+													if(curr_context->count > 0){
+														quadop qo;
+														qo.type = QO_CST;
+														qo.u.cst = curr_context->count;
+														gencode(qo, qo, qo, Q_POP, NULL, -1, NULL);
+													}
 													pop_tmp();
 												}
 
@@ -530,12 +550,12 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															quadop qo;
 															qo.type = QO_ID;
 															qo.u.offset = 0;
-															gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1, NULL);
+															gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
 															Ht_item *item = create_item($2, ID_VAR, INT);
 															newname(item);
 															qo.type = QO_ID;
 															qo.u.offset = 0;
-															gencode(qo, $4.result, $4.result, Q_AFF, global_code[nextquad].label, -1, NULL); 
+															gencode(qo, $4.result, $4.result, Q_AFF, NULL, -1, NULL); 
 														} 
 					
 					M  									 {	
@@ -549,7 +569,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															qo.u.offset = offset(val);
 
 															/* this jump out of the for loop should be completed in a more global context (L)*/
-															gencode(qo, qo, $6.result, Q_GT, global_code[nextquad].label, -1 , NULL); } 
+															gencode(qo, qo, $6.result, Q_GT, NULL, -1 , NULL); } 
 					
 					block 								{   /* This is happening at the end of the loop block,
 																next instruction of the block is the incrementation of the loop counter 
@@ -566,11 +586,11 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 
 															/* offset of id is 0 because it's the only variable in the context at this point */
 															qo.u.offset = 0;
-															gencode(qo, qo, q1, Q_ADD, global_code[nextquad].label, -1, NULL);
+															gencode(qo, qo, q1, Q_ADD, NULL, -1, NULL);
 															qo.type = QO_EMPTY;
 															printf("before2\n");
 															/* gencode to jump back to the Marker to test if the counter reached its max value */
-															gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, $8, NULL);
+															gencode(qo, qo, qo, Q_GOTO, NULL, $8, NULL);
 
 															/* we save the incomplete GOTOs of the comparison of the loop counter, and the break instructions. 
 																They do the jump ouy of the loop, but we don't know hwere that is yet. 
@@ -581,6 +601,12 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															$$.next = crelist($8);
 															$$.next = concat($$.next, $10.brk);
 															$$.rtrn = concat($$.rtrn, $10.rtrn);
+
+															/* We pop the FOR counter context (i.e the loop counter variable only)
+															*/
+															qo.type = QO_CST;
+															qo.u.cst = curr_context->count; 		// should be equal to 1
+															gencode(qo,qo,qo, Q_POP, NULL, -1, NULL);
 															popctx(); 
 														 }
 
@@ -591,7 +617,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															q1.type = QO_CST;
 															q1.u.cst = $2.type;
 															
-															gencode($2.result, q1, q1, Q_RETURN, global_code[nextquad].label, -1, NULL);
+															gencode($2.result, q1, q1, Q_RETURN, NULL, -1, NULL);
 															
 														}
 			|	Break ';'								 { 
@@ -601,7 +627,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															qo.type = QO_EMPTY;
 															/* Incomplete GOTO to jump out of the for loop*/
 															$$.brk = crelist(nextquad);
-															gencode(qo,qo,qo,Q_GOTO,global_code[nextquad].label,-1,NULL);
+															gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL);
 														 }
 			|	Continue ';'							 { 
 															if(!is_a_parent(CTX_FOR)) 
@@ -610,7 +636,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															qo.type = QO_EMPTY;
 															/* Incomplete GOTO to jump to the start of the loop*/
 															$$.cntu = crelist(nextquad);
-															gencode(qo,qo,qo,Q_GOTO,global_code[nextquad].label,-1,NULL);
+															gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL);
 			
 														 }
 			|	block									 { $$.next = $1.next ;}
@@ -634,7 +660,7 @@ method_call :	id '(' E ')' 					{
 
 													quadop qo;
 													qo.type = QO_EMPTY;
-													gencode(qo,qo,qo, Q_METHODCALL, global_code[nextquad].label, -1, $3);
+													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, $3);
 												}
 			|	id '(' ')'						{
 													item_table *val = lookup($1);
@@ -649,7 +675,7 @@ method_call :	id '(' E ')' 					{
 														yyerror("Erreur: Appel de méthode avec paramètres incorrectes\n");
 													quadop qo;
 													qo.type = QO_EMPTY;
-													gencode(qo,qo,qo, Q_METHODCALL, global_code[nextquad].label, -1, NULL);
+													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL);
 													
 												}
 
@@ -668,15 +694,15 @@ E 			:	expr ',' E 						{
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($1.t, nextquad);
-														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+														gencode($$->arg, qo, qo, Q_AFF, NULL, -1, NULL);
 
 														qo.type = QO_EMPTY;
-														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2, NULL);
+														gencode(qo, qo, qo, Q_GOTO, NULL, nextquad+2, NULL);
 
 														qo.type = QO_CST;
 														qo.u.cst = false;
 														complete($1.f, nextquad); 
-														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+														gencode($$->arg, qo, qo, Q_AFF, NULL, -1, NULL);
 													}
 												}
 			|	expr 							{ 
@@ -691,15 +717,15 @@ E 			:	expr ',' E 						{
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($1.t, nextquad);
-														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+														gencode($$->arg, qo, qo, Q_AFF, NULL, -1, NULL);
 													
 														qo.type = QO_EMPTY;
-														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2, NULL);
+														gencode(qo, qo, qo, Q_GOTO, NULL, nextquad+2, NULL);
 
 														qo.type = QO_CST;
 														qo.u.cst = false;
 														complete($1.f, nextquad); 
-														gencode($$->arg, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);
+														gencode($$->arg, qo, qo, Q_AFF, NULL, -1, NULL);
 													}
 												}
 
@@ -724,11 +750,11 @@ location	:	id				{
 										qo.type = QO_CST;
 										qo.u.cst = true;
 										$$.t = crelist(nextquad);
-										gencode($$.result, $$.result, qo, Q_EQ, global_code[nextquad].label, -1, NULL);
+										gencode($$.result, $$.result, qo, Q_EQ, NULL, -1, NULL);
 										$$.f = crelist(nextquad);
 										qo.type = QO_EMPTY;
 										qo.u.cst = 0;
-										gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1, NULL); 
+										gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); 
 									}	
 								}
 			|	id '[' expr ']'			{ 	/* expr de type int */ 
@@ -754,7 +780,7 @@ location	:	id				{
 												q1.type = QO_CST;
 												/* TO DO: Vérification dynamique offset*/
 												q1.u.cst = 4*2;
-												gencode($$.result, q1, q1, Q_ACCESTAB, global_code[nextquad].label, -1, NULL);
+												gencode($$.result, q1, q1, Q_ACCESTAB, NULL, -1, NULL);
 											}
 												
 										}
@@ -767,7 +793,7 @@ expr		:	expr add_op expr %prec '+'	{
 												quadop qo;
 												qo.type = QO_TMP;
 												qo.u.offset = 0;
-												gencode(qo,qo,qo,Q_DECL,global_code[nextquad].label,-1, NULL);
+												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
 												qo.u.offset = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP)
@@ -775,7 +801,7 @@ expr		:	expr add_op expr %prec '+'	{
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP)
 													$3.result.u.offset += 4;
 
-												gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label,-1, NULL);
+												gencode(qo,$1.result,$3.result,$2,NULL,-1, NULL);
 												$$.result = qo;
 											}
 			|	expr mul_op expr %prec '*'	{	if($1.type != INT || $3.type != INT)
@@ -785,7 +811,7 @@ expr		:	expr add_op expr %prec '+'	{
 												quadop qo;
 												qo.type = QO_TMP;
 												qo.u.offset = 0;
-												gencode(qo,qo,qo,Q_DECL,global_code[nextquad].label,-1, NULL);
+												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
 												qo.u.offset = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP)
@@ -793,7 +819,7 @@ expr		:	expr add_op expr %prec '+'	{
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP)
 													$3.result.u.offset += 4;
 
-												gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label,-1, NULL);
+												gencode(qo,$1.result,$3.result,$2,NULL,-1, NULL);
 												$$.result = qo;
 											}
 			|	expr and M expr				{	if($1.type != BOOL || $4.type != BOOL)
@@ -819,9 +845,9 @@ expr		:	expr add_op expr %prec '+'	{
 												quadop qo;
 												qo.type = QO_EMPTY;
 												qo.u.cst = 0;
-												gencode(qo, $1.result, $3.result, $2, global_code[nextquad].label, -1, NULL);
+												gencode(qo, $1.result, $3.result, $2, NULL, -1, NULL);
 												$$.f = crelist(nextquad);
-												gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
+												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 											}
 			|	expr eq_op expr	%prec eq	{	
 												if($1.type != $3.type )
@@ -831,9 +857,9 @@ expr		:	expr add_op expr %prec '+'	{
 												qo.type = QO_EMPTY;
 												qo.u.cst = 0;											
 												$$.t = crelist(nextquad);
-												gencode(qo,$1.result,$3.result,$2,global_code[nextquad].label, -1, NULL);
+												gencode(qo,$1.result,$3.result,$2,NULL, -1, NULL);
 												$$.f = crelist(nextquad);
-												gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
+												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 											}
 			| 	literal 					{
 												$$ = $1;
@@ -843,11 +869,11 @@ expr		:	expr add_op expr %prec '+'	{
 													qo.type = QO_CST;
 													qo.u.cst = true;
 													$$.t = crelist(nextquad);
-													gencode($$.result, $$.result, qo, Q_GEQ, global_code[nextquad].label, -1, NULL);
+													gencode($$.result, $$.result, qo, Q_GEQ, NULL, -1, NULL);
 													$$.f = crelist(nextquad);
 													qo.type = QO_EMPTY;
 													qo.u.cst = 0;
-													gencode(qo,qo,qo, Q_GOTO, global_code[nextquad].label, -1, NULL); 
+													gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); 
 												}
 											}
 			|	location 					{
@@ -863,11 +889,11 @@ expr		:	expr add_op expr %prec '+'	{
 												qo.type = QO_TMP;
 												qo.type = QO_TMP;
 												qo.u.offset = 0;
-												gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label,-1, NULL);
+												gencode(qo, qo, qo, Q_DECL, NULL,-1, NULL);
 												qo.u.offset = 0;
 												if($2.result.type == QO_ID || $2.result.type == QO_TMP)
 													$2.result.u.offset +=4 ;											
-												gencode(qo, $2.result, $2.result, Q_SUB, global_code[nextquad].label,-1, NULL);
+												gencode(qo, $2.result, $2.result, Q_SUB, NULL,-1, NULL);
 												$$.result = qo;
 											}
 			|	'!' expr %prec NEG 			{	

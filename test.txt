@@ -13,7 +13,7 @@ class Program {
         return;
         for i=3,4 {
             if(x>3){
-                a=2;
+                a=2*3+5-6;
                 if(x>5){
                     continue;
                     break;

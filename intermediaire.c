@@ -236,6 +236,10 @@ char *op_type(int type){
     case Q_RETURN:
     return ("RETURN");
     break;
+
+    case Q_POP:
+    return ("POP STACK");
+    break;
     
     default:
      	break;

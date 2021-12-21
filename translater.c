@@ -136,12 +136,18 @@ void translate() {
 		case Q_GOTO:
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
+		// TO DO
 		case Q_METHODCALL:
 			break;
+		// TO DO
 		case Q_SYSCALL:
 			mips_syscall(global_code[i].op1.u.cst);
 			break;
+		// TO DO
 		case Q_RETURN:
+			break;
+		// TO DO
+		case Q_POP:
 			break;
         default:
         	break;
