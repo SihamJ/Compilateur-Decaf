@@ -18,7 +18,7 @@ if (t==0){
     add_labels();
     print_globalcode();
 }
-//print_stack();
+print_stack();
 fout = stdout;
 translate();
 

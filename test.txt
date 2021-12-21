@@ -1,29 +1,33 @@
 class Program {
-    int IF,b;
-    boolean B[10];
-    boolean c;
-    int E[10];
-    int e;
-
-    int al(int a, boolean b){
-        int y;
-        boolean d;
-        al(y,d);
-        y = 0xAFF;
-        return y;
+    int a;
+    boolean d;
+    int al(int a){
+        boolean f;
+        if(a>3){
+        f=true;}
+        return a;
     }
     
     void label0(){
-        int a;
-        IF=E[2];
-        return ;
+        int x;
+        for i=3,4 {
+            if(x>3){
+                a=2;
+                break;
+            }
+            else{
+                continue;
+            }
+            d = true;
+        }
+        return;
     }
 
     void main (){
+        int d;
         int a ;
-        for i=2,3{
-            if(c){
-        return ;}
+        al(d);
+        return;
         }
-    }
+
 }

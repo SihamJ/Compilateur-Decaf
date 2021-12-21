@@ -37,7 +37,7 @@
 %token <stringval> id string_literal
 %token class Program If Else For Return comment Break Continue
 
-%type <expr_val> expr S G block statement method_call location return_val literal
+%type <expr_val> expr S S2 G block statement method_call location return_val literal
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B Tab
 %type <p> E Param P
@@ -109,6 +109,7 @@ tab_decl	:	type Tab ';' 							{
 																qo.u.global.name = malloc(strlen(pt->name + 1));
 																strcpy(qo.u.global.name, pt->name);
 																qo.u.global.size = pt->size * 4;
+																qo.u.global.type = QO_TAB;
 																gencode(qo, qo, qo, Q_DECL, global_code[nextquad].label, -1, NULL);
 
 																/* we increment the global variables counter, useful for MIPS*/
@@ -186,6 +187,10 @@ method_decl	:		type id {
 														 	/* We verify that return exists, and is of the same type*/
 															if($8.rtrn == NULL)
 																yyerror("\nErreur: Méthode sans return\n");
+															/* In the Return rule below (~line 586), we generated a new quad for the Return and we 
+																stored its index in $$.rtrn. We also stored the Return type in op2. Now we can access 
+																this incomplete quad to verify the return type. 
+															*/
 															else if(global_code[$8.rtrn->addr].op2.u.cst != $1)
 																yyerror("\nErreur: Méthode avec faux type de retour\n");
 															/*
@@ -203,7 +208,7 @@ method_decl	:		type id {
 															qo.type = QO_EMPTY;
 															qo.u.cst = 0;
 															
-															gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1, NULL);
+															gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
 															popctx(); }
 
 			/* Same as above, except the type is void method. We are forced to separete them because of Bison conflicts with types of variable declarations*/
@@ -221,6 +226,7 @@ method_decl	:		type id {
 								'(' P ')'  block	{ 		
 															if($7.rtrn == NULL)
 																yyerror("\nErreur: Méthode sans return\n");
+
 															if(global_code[$7.rtrn->addr].op2.u.cst != $1)
 																yyerror("\nErreur: Méthode avec faux type de retour\n");
 
@@ -242,7 +248,7 @@ method_decl	:		type id {
 																quadop qo;
 																qo.type = QO_EMPTY;
 																qo.u.cst = 0;
-																gencode(qo, qo, qo, Q_ENDFUNC, global_code[nextquad].label, -1, NULL);
+																gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
 															}
 																				
 															popctx();
@@ -281,7 +287,7 @@ Param		:	type id ',' Param	{
 /* each block starts with variable declarations followed by instructions, or instructions only, or variable declarations only (though last one is useless) */
 block 		:	'{' { 
 						pushctx(CTX_BLOCK); } 
-			V S '}' 
+			V S2 '}' 
 					{ 	
 						/* we retrieve the adresses of the incomplete GOTOs if they exist*/
 						$$.next = $4.next; 
@@ -290,6 +296,9 @@ block 		:	'{' {
 						$$.rtrn = $4.rtrn;
 						popctx();
 					}
+
+S2 			:	S 	{$$=$1;}
+			|	%empty {;}
 
 			
 /* a block of variable declarations */
@@ -381,9 +390,9 @@ S 			: 	S M statement 	{
 
 									/* We retrieve the incomplete GOTOs of statement to compete it later. */
 									$$.next = $3.next;
-									$$.cntu = $3.cntu;
-									$$.brk = $3.brk;
-									$$.rtrn = $3.rtrn;
+									$$.cntu = concat($$.cntu,$3.cntu);
+									$$.brk = concat($$.brk,$3.brk);
+									$$.rtrn = concat($$.rtrn,$3.rtrn);
 								}
 			| 	statement		{	
 									/* We retrieve the incomplete GOTOs of statement to complete it later. */
@@ -435,21 +444,14 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 
 														/* To skip false affectation. Nextquad+2 is a label defined below*/
 														qo.type = QO_EMPTY;
-														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, nextquad+2, NULL);
+														$$.next = crelist(nextquad);
+														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
 
 														/* False affectation*/
 														qo.type = QO_CST;	
 														qo.u.cst = false;		
 														complete($3.f, nextquad);											
-														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);					
-
-														/* 
-															We create a label for nextquad+2 defined earlier (at this stage it is just nextquad)
-															NB: gencode with Q_LABEL does not increment nextquad.
-														*/
-														qo.type = QO_EMPTY;
-														qo.u.cst = 0;
-														gencode(qo, qo, qo, Q_LABEL, new_label(), -1, NULL);
+														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL);	
 													}
 												
 													else {
@@ -607,9 +609,8 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														 }
 			|	block									 { $$.next = $1.next ;}
 
-
 return_val	:	expr 									{	$$ = $1;}
-			|	%empty									{	$$.type = VOIDTYPE; }
+			|	%empty									{	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY;}
 
 
 method_call :	id '(' E ')' 					{
@@ -734,7 +735,7 @@ location	:	id				{
 												yyerror("\nErreur: Accès à un tableau non déclaré\n");
 
 											else if(val->item->id_type != ID_TAB )
-												yyerror("\nErreur: Accès à l'indice d'une variable qui n'est pas un tableau\n");
+												yyerror("\nErreur: Accès à l'indice d'un identificateur qui n'est pas un tableau\n");
 											/*	TO DO: vérification dynamique:
 												yyerror("\nErreur: Indice d'accès dépace la taille du tableau\n");*/
 

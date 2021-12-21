@@ -58,7 +58,10 @@ comment 		\/\/.*{newline}
 		return voidtype;}
 "," 	return ',';
 "class" return class;
+
+
 "Program" return Program;
+
 "if" return If;
 "else" return Else;
 "for" return For;

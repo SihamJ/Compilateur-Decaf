@@ -16,18 +16,23 @@ typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR
   } quadop_type;
 
+typedef enum global_type{
+    QO_SCAL, QO_TAB
+  } global_type;
+
 typedef enum quad_type{
     Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_LABEL, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN
   } quad_type;
 
 typedef struct quadop {
-  quadop_type type;     // Constante, identificateur, temporaire, globale
+  quadop_type type;     // Constante, identificateur, temporaire, globale, constante str, tableau
   union {
     int cst;
-    int offset;
+    int offset;         // si ID ou TMP
     struct global{
       char *name;
       int size;
+      global_type type;         // TABLEAU ou SCALAIRE
     } global;  // variable global
     struct string_literal{
       char *label;

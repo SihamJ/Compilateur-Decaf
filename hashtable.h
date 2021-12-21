@@ -11,7 +11,7 @@ typedef enum id_type{
 
 /* Type du contexte */
 typedef enum ctx_type{
-    CTX_GLOB, CTX_METHOD, CTX_IF, CTX_FOR, CTX_BLOCK
+    CTX_GLOB, CTX_METHOD, CTX_IF, CTX_FOR, CTX_BLOCK, CTX_PARAM
   }ctx_type;
 
 /* To store parameters of a method at declaration or call */
