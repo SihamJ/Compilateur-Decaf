@@ -442,7 +442,9 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 														complete($3.t, nextquad);
 														gencode(q1, qo, qo, Q_AFF, global_code[nextquad].label, -1, NULL); 	
 
-														/* To skip false affectation. Nextquad+2 is a label defined below*/
+														/* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
+															We add it to $$.next
+														*/
 														qo.type = QO_EMPTY;
 														$$.next = crelist(nextquad);
 														gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, -1, NULL);
