@@ -7,12 +7,13 @@ static int tmp_reg_count = 0;
 static int branch_count = 0;
 
 void mips_dec_global(quadop q){
-	if(q.u.global.size == 4)
+	if(q.u.global.type == QO_SCAL)
 		fprintf(fout, "%8s%s: %s %d\n", q.u.global.name, "",".word", 0);
-	else
+	else{
 		fprintf(fout, "\t%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
-	// Save constant value length for Dynamic Check
-	fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size/4);
+		// Save constant value length for Dynamic Check
+		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size/4);
+	}
 }
 
 void mips_init_array(quadop q) {
