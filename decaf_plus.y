@@ -54,7 +54,7 @@
 %start program
 %%
 
-program	:  class Program '{' { 	pushctx(CTX_GLOB); /* Pushing the global context*/
+program	:  class Program '{' { 	;pushctx(CTX_GLOB); /* Pushing the global context*/
 								add_libs_to_tos(); /* Adding the I/O functions to the global symbol table*/
 								glob_context = curr_context; /* glob_context will point to this context throughout the execution of this program.*/
 							}
@@ -293,7 +293,7 @@ block 		:	'{' {
 						$$.next = $4.next; 
 						$$.brk = $4.brk;
 						$$.cntu = $4.cntu;
-						$$.rtrn = $4.rtrn;
+						$$.rtrn = concat($$.rtrn,$4.rtrn);
 						popctx();
 					}
 
@@ -491,9 +491,9 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 
 															/* 
 																If expr is true, there is a GOTO after block1, and if it is false there is a GOTO after block2
-																but in both cases we still don't know where to do the jump.
+																that we don't need to mark. But in both cases we still don't know where to do the jump.
 																We store the adress of the incomplete GOTOs in statement ($$). It will be completed in the above
-																rule ( L )
+																rule ( S )
 															*/
 															$$.next = $7.next;
 															$$.next = concat($$.next, $10.next);
@@ -501,7 +501,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															/* 
 																If our IF statement is within a FOR loop, we might have "break" and "continue" instructions
 																that produce GOTOs. However, we don't know yet where the start and the end of this FOR loop is,
-																this will be resolved in the FOR loop rules for the "continue" statement, and in the L rules for
+																this will be resolved in the FOR loop rules for the "continue" statement, and in the S rules for
 																the "break" statement.
 															*/
 															$$.cntu = concat($6.cntu, $10.cntu);
@@ -514,7 +514,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															$$.next = concat($3.f, $6.next);
 															$$.cntu = $6.cntu;
 															$$.brk = $6.brk;
-															$$.rtrn = $6.rtrn;
+															$$.rtrn = concat($$.rtrn,$6.rtrn);
 														}
 												
 			|	For id 	'=' expr ',' expr				{  															
@@ -557,7 +557,7 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															*/
 															complete($10.next, nextquad);
 															complete($10.cntu, nextquad);
-
+															printf("before1\n");
 															/* gencode to increment the loop counter*/
 															quadop qo, q1;
 															qo.type = QO_ID;
@@ -568,17 +568,19 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															qo.u.offset = 0;
 															gencode(qo, qo, q1, Q_ADD, global_code[nextquad].label, -1, NULL);
 															qo.type = QO_EMPTY;
-
+															printf("before2\n");
 															/* gencode to jump back to the Marker to test if the counter reached its max value */
 															gencode(qo, qo, qo, Q_GOTO, global_code[nextquad].label, $8, NULL);
 
 															/* we save the incomplete GOTOs of the comparison of the loop counter, and the break instructions. 
-																They do the jump our of the loop, but we don't know here that is yet. 
-																It is completed in a more global context (L) above.
+																They do the jump ouy of the loop, but we don't know hwere that is yet. 
+																It is completed in a more global context (L) above. 
+																We might also have incomplete returns, we retrieve there address aswell.
 															 */
+															 
 															$$.next = crelist($8);
 															$$.next = concat($$.next, $10.brk);
-															$$.rtrn = $10.rtrn;
+															$$.rtrn = concat($$.rtrn, $10.rtrn);
 															popctx(); 
 														 }
 
@@ -588,7 +590,9 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 															quadop q1;
 															q1.type = QO_CST;
 															q1.u.cst = $2.type;
+															
 															gencode($2.result, q1, q1, Q_RETURN, global_code[nextquad].label, -1, NULL);
+															
 														}
 			|	Break ';'								 { 
 															if(!is_a_parent(CTX_FOR)) 

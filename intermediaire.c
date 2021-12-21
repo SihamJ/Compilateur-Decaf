@@ -79,8 +79,13 @@ list crelist(int addr){
 }
 
 list concat(list n1, list n2){
-  if(n1==NULL)
+  if(n1 == NULL && n2 == NULL)
+    return NULL;
+  else if(n1==NULL)
     return n2;
+  else if(n2 == NULL)
+    return n1;
+  
   list pt = n1;
   while(pt->suiv != NULL)
     pt = pt->suiv;
