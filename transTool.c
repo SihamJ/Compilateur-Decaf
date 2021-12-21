@@ -11,8 +11,18 @@ void mips_dec_global(quadop q){
 		fprintf(fout, "		%s: %s %d\n", q.u.global.name, ".word", 0);
 	else
 		fprintf(fout, "		%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
-	//Save constant value length for Dynamic Check
+	// Save constant value length for Dynamic Check
 	fprintf(fout, "		%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size/4);
+}
+
+void mips_init_array(quadop q) {
+	// Double Test if it's a Array, just to be sure
+	// To be replaced by Type
+	if(q.u.global.size != 4) {
+		fprintf(fout, "la $a0 %s\n", q.u.global.name);
+		fprintf(fout, "move $a1 %d\n",  q.u.global.size/4);
+		fprintf(fout, "jal BZero\n");
+	}
 }
 
 void mips_label(char *name, int n) {

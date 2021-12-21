@@ -76,7 +76,14 @@
 
 #define MIPS_QUIT_PROGRAM "Quit_Program:\n  li $v0 10 \n  syscall\n"
 
-// TODO: decl, read, write tab
+/**
+ * @brief bzero() fuction in Mips
+ * Assuming $a0 has the target label name
+ * $a1 has the size
+ * Called by jal
+ */
+#define MIPS_BZERO "BZero:\n  subi $a1 $a1 1\n  sw $zero ($a0)\n  addu $a0 $a0 4\n  bgtz $a1 BZero\n  jr $ra\n"
+
 // TODO: decl str
 
 #endif
