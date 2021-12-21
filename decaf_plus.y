@@ -24,6 +24,7 @@
 	} expr_val;
 
 	struct decl{
+		global_type type;
 		char *name;
 		struct decl *suiv;
 		int size;
@@ -39,7 +40,7 @@
 
 %type <expr_val> expr S S2 G block statement method_call location return_val literal
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
-%type <decl> B Tab
+%type <decl> B glob_id 
 %type <p> E Param P
 
 %left or
@@ -89,10 +90,7 @@ GLOBAL 		: MD		{;}
 FD 			: FD field_decl  {;}
 			| field_decl	 {;}
 
-field_decl	:	var_decl	{;}
-			|	tab_decl	{;}
-
-tab_decl	:	type Tab ';' 							{ 
+field_decl	:	type glob_id ';' 							{ 
 															quadop qo,q1;
 															struct decl *pt = &$2;
 															qo.type = QO_GLOBAL;
@@ -109,8 +107,8 @@ tab_decl	:	type Tab ';' 							{
 																/* declaration of the array in the quad */
 																qo.u.global.name = malloc(strlen(pt->name + 1));
 																strcpy(qo.u.global.name, pt->name);
-																qo.u.global.size = pt->size * 4;
-																qo.u.global.type = QO_TAB;
+																qo.u.global.size = pt->size;
+																qo.u.global.type = pt->type;
 																gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
 
 																/* we increment the global variables counter, useful for MIPS*/
@@ -124,23 +122,43 @@ tab_decl	:	type Tab ';' 							{
 															}
 														}
 
-Tab			:	id '[' int_literal ']' ',' Tab			{	if($3 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
+glob_id			:	id '[' int_literal ']' ',' glob_id	{	if($3 <= 0) 
+																yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
 															struct decl var;
 															var.name = malloc((strlen($1)+1)); 
 															strcpy(var.name,$1);
 															var.size = $3*4;
 															var.suiv = &$6;
+															var.type = QO_TAB;
 															$$ = var;
 														}
-			|	id '[' int_literal ']'					{
-															struct decl *d;
-
-															if($3 <= 0) yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");															
+				|	id '[' int_literal ']'					{
+															if($3 <= 0) 
+																yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");															
 															struct decl var;
 															var.name = malloc((strlen($1)+1)); 
 															strcpy(var.name,$1);
 															var.size = $3*4;
 															var.suiv = NULL;
+															var.type = QO_TAB;
+															$$ = var;
+														}
+				|	id									{	
+															struct decl var;
+															var.name = malloc(strlen($1)+1);
+															strcpy(var.name, $1);
+															var.size = 4;
+															var.suiv = NULL;
+															var.type = QO_SCAL;
+															$$ = var;
+														}
+				|	id	','	glob_id						{
+															struct decl var;
+															var.name = malloc((strlen($1)+1)); 
+															strcpy(var.name,$1);
+															var.size = 4;
+															var.suiv = &$3;
+															var.type = QO_SCAL;
 															$$ = var;
 														}
 
@@ -642,7 +660,9 @@ statement 	:	id assign_op expr ';' {				/* Affectation */
 			|	block									 { $$.next = $1.next ;}
 
 return_val	:	expr 									{	$$ = $1;}
-			|	%empty									{	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY;}
+			|	%empty									{	$$.type = VOIDTYPE; 
+															$$.result.type = QO_EMPTY;
+														}
 
 
 method_call :	id '(' E ')' 					{

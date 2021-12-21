@@ -113,6 +113,8 @@ void print_globalcode(){
       printf("%12d", global_code[i].op1.u.cst);
     else if(global_code[i].op1.type == QO_GLOBAL)
       printf("%12s", global_code[i].op1.u.global.name);
+    else if(global_code[i].op1.type == QO_EMPTY)
+      printf("%12s","0");
     else {
       sprintf(snum,"(%d)",global_code[i].op1.u.offset);
       printf("%12s",snum);
@@ -122,6 +124,8 @@ void print_globalcode(){
       printf("%12d", global_code[i].op2.u.cst);
     else if(global_code[i].op2.type == QO_GLOBAL)
       printf("%12s", global_code[i].op2.u.global.name);
+    else if(global_code[i].op1.type == QO_EMPTY)
+      printf("%12s","0");
     else {
       sprintf(snum,"(%d)",global_code[i].op2.u.offset);
       printf("%12s",snum);
@@ -131,6 +135,8 @@ void print_globalcode(){
       printf("%12d", global_code[i].op3.u.cst);
     else if(global_code[i].op3.type == QO_GLOBAL)
       printf("%12s", global_code[i].op3.u.global.name);
+    else if(global_code[i].op1.type == QO_EMPTY)
+      printf("%12s","0");
     else { 
       sprintf(snum,"(%d)",global_code[i].op3.u.offset);
       printf("%12s",snum);
