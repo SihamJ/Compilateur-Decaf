@@ -1,11 +1,13 @@
+
 class Program {
+
     int a,x;
     boolean v;
     int r[10], c[5];
     boolean d[5],e,f[8];
     boolean g,h[6],i;
 
-    int al(int a){
+    int al(int a){ 
         boolean f;
         if(a>3){
         f=true;}
@@ -30,6 +32,7 @@ class Program {
             }
             
         }
+        return;
     }
 
     void main (){

@@ -4,7 +4,7 @@
 	#include "hashtable.h"
 	#include "IOfunctions.h"
 	#include "text_formating.h"
-
+	#include "decaf_plus.tab.h"
 	int yylex();
 	void yyerror( char* );
 	void yywarning(char *);
@@ -40,7 +40,7 @@
 
 %token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
 %token <stringval> id string_literal Program
-%token class If Else For Return comment Break Continue
+%token class If Else For Return Break Continue 
 
 %type <expr_val> expr S S2 G block statement method_call location return_val literal
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
@@ -75,6 +75,7 @@ program	:  class Program '{' {
 									yyerror("\nErreur: Pas de méthode main\n");
 								quadop qo;
 								popctx(); /* End of the program, we pop the global context.*/
+								return 0;
 							}
 
 /* Marks the address of the next quad to be generated */

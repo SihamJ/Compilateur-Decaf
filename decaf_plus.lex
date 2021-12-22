@@ -23,8 +23,10 @@ hex_literal		"0x"{hex_digit}{hex_digit}*
 decimal_literal	{digit}{digit}*
 id 				{alpha}{alpha_num}*
 newline			\\n
-comment 		\/\/.*{newline}
+comment 		\/\/.*
 %%
+
+{comment}		;
 
 "=" return '=';
 "+=" return aff_add;
@@ -111,7 +113,6 @@ comment 		\/\/.*{newline}
 
 [[:space:]]			;
 
-{comment}			return comment;
 
 .					{fprintf(stderr,"erreur lexical\n");exit(0);}
 
