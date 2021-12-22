@@ -3,8 +3,11 @@
 	#include "intermediaire.h"
 	#include "hashtable.h"
 	#include "IOfunctions.h"
+	#include "text_formating.h"
+
 	int yylex();
 	void yyerror( char* );
+	void yywarning(char *);
 	char* program_name;
 %}
 
@@ -984,6 +987,13 @@ mul_op		:	'*'		{$$ = Q_MUL;}
 %%
 
 void yyerror(char *msg) {
-	fprintf(stderr, "%s\n", msg);
+	fprintf(stderr, "%s%s\n",RED, msg);
+	set_color(NORMAL);
+	exit(0);
+}
+
+void yywarning(char *msg) {
+	fprintf(stderr, "%s%s\n",YELLOW, msg);
+	set_color(NORMAL);
 	exit(0);
 }
