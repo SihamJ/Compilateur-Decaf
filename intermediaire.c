@@ -261,8 +261,11 @@ char *get_type_oper(int type){
     return "TMP";
     else if (type == QO_GLOBAL)
     return "GLOB";
+    else if (type == QO_CSTSTR)
+    return "STRING";
   else if (type == QO_EMPTY)
     return "NONE";
+
 }
 
 void add_labels(){

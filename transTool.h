@@ -119,6 +119,6 @@ void tab_put(char *buffer_reg, char *tab_name, int offset);
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset);
 
-
+void mips_pop_stack(int offset);
 
  #endif

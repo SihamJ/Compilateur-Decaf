@@ -6,7 +6,8 @@
 	#include "intermediaire.h"
 	#include "token.h"
 	#include "decaf_plus.tab.h"
-
+	#include "text_formating.h"
+	void lexerror(const char *msg);
 %}
 
 %option noyywrap
@@ -60,14 +61,6 @@ comment 		\/\/.*
 		return voidtype;}
 "," 	return ',';
 "class" return class;
-
-
-"Program" 			{
-						yylval.stringval = malloc(strlen(yytext)+1);
-						strcpy(yylval.stringval, yytext);
-						return Program;
-					}
-
 "if" return If;
 "else" return Else;
 "for" return For;
@@ -83,7 +76,7 @@ comment 		\/\/.*
 					}
 					
 {hex_literal} 		{
-						yylval.intval = strtol(yytext+2, NULL, 16);
+						yylval.intval = strtoll(yytext+2, NULL, 16);
 						return hex_literal;
 					}
 
@@ -92,10 +85,8 @@ comment 		\/\/.*
 						return char_literal;
 					}
 
-
-
 {decimal_literal} 	{
-						yylval.intval = strtol(yytext, NULL, 10);
+						yylval.intval = strtoll(yytext, NULL, 10);
 						return decimal_literal;
 					}
 
@@ -108,12 +99,17 @@ comment 		\/\/.*
 {string_literal}	{
 						yylval.stringval = malloc(strlen(yytext)+1);
 						strcpy(yylval.stringval, yytext);
-						return string_literal;
+						return string_literal;					
 					}
 
 [[:space:]]			;
 
 
-.					{fprintf(stderr,"erreur lexical\n");exit(0);}
+.					{	lexerror("caractère non reconnu");	}
 
 %%
+
+void lexerror(const char *msg){
+	fprintf(stderr,"\n%s %s%s\n\n",RED,msg,NORMAL);
+	
+}

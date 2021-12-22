@@ -1,5 +1,5 @@
 #include "translater.h"
-
+#include "text_formating.h"
  /* Translater from intermediate code to ASM */
 
  /**
@@ -52,20 +52,20 @@ void translate() {
 		switch (global_code[i].type)
         {
 		case Q_DECL:
-			mips_load_immediate("$a0", 0);			
-			mips_push_word("$a0");
+			mips_load_immediate("$t0", 0);			
+			mips_push_word("$t0");
 			break;
 		case Q_AFF:
 			mips_load_1args(global_code[i]);
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)			
-				mips_write_stack("$a0", global_code[i].op1.u.offset);
+				mips_write_stack("$t0", global_code[i].op1.u.offset);
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$a0", global_code[i].op1.u.global.name);
+				mips_store_word("$t0", global_code[i].op1.u.global.name);
 			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
 			mips_load_2args(global_code[i]);
-			mips_sum("$v0", "$a0", "$a1");
+			mips_sum("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
         		mips_write_stack("$v0",global_code[i].op1.u.offset);
@@ -75,7 +75,7 @@ void translate() {
         case Q_SUB:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
-			mips_sub("$v0", "$a0", "$a1");
+			mips_sub("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
         		mips_write_stack("$v0",global_code[i].op1.u.offset);
@@ -85,7 +85,7 @@ void translate() {
         case Q_MUL:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
-        	mips_mult("$v0", "$a0", "$a1");
+        	mips_mult("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
         		mips_write_stack("$v0",global_code[i].op1.u.offset);
@@ -95,7 +95,7 @@ void translate() {
         case Q_DIV:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
-			mips_div("$v0", "$a0", "$a1");
+			mips_div("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
         		mips_write_stack("$v0",global_code[i].op1.u.offset);
@@ -105,7 +105,7 @@ void translate() {
         case Q_MOD:
         	// These two offsets should be deduced/implied in a proper way
         	mips_load_2args(global_code[i]);
-        	mips_mod("$v0", "$a0", "$a1");
+        	mips_mod("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
         		mips_write_stack("$v0",global_code[i].op1.u.offset);
@@ -113,30 +113,50 @@ void translate() {
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
         	break;
 		case Q_EQ:
+			if(global_code[i].jump == -1){
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					exit(1);
+				}
 			mips_load_2args(global_code[i]);
-			mips_eq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_eq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_NEQ:
+			if(global_code[i].jump == -1){
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					exit(1);
+				}
 			mips_load_2args(global_code[i]);
-			mips_neq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_neq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LT:
+			if(global_code[i].jump == -1){
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					exit(1);
+				}
 			mips_load_2args(global_code[i]);
-			mips_lt("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_lt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GT:
+			if(global_code[i].jump == -1){
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					exit(1);
+				}
 			mips_load_2args(global_code[i]);
-			mips_gt("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_gt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LEQ:
 			mips_load_2args(global_code[i]);
-			mips_leq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_leq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GEQ:
 			mips_load_2args(global_code[i]);
-			mips_geq("$v0", "$a0", "$a1", global_code[global_code[i].jump].label);
+			mips_geq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GOTO:
+			if(global_code[i].jump == -1){
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					exit(1);
+				}
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
 		// TO DO
@@ -151,6 +171,7 @@ void translate() {
 			break;
 		// TO DO
 		case Q_POP:
+			mips_pop_stack(global_code[i].op1.u.cst);
 			break;
         default:
         	break;

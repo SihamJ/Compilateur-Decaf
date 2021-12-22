@@ -1,0 +1,63 @@
+.data
+	STR_TRUE: .asciiz "True"
+	STR_FALSE: .asciiz "False"
+STR_DYN_CHECK: .asciiz "Index Out Of Bound"
+
+.text
+
+.globl main
+
+
+Write_BOOL:
+	beqz $a0 Load_False
+	Load_True:
+	la $a0 STR_TRUE
+	j Print_Bool
+	Load_False:
+	la $a0 STR_FALSE
+	Print_Bool:
+	li $v0 4
+	syscall
+	jr $ra
+
+Read_INT:
+	li $v0, 5
+	syscall
+	jr $ra
+
+Print_String:
+	li $v0 4
+	syscall
+	jr $ra
+
+Write_INT:
+	li $v0, 1
+	syscall
+	jr $ra
+
+Quit_Program:
+	li $v0 10 
+	syscall
+Out_Of_Bound:
+  la $a0 STR_DYN_CHECK
+  li $v0 4
+  syscall
+  j Quit_Program
+DYN_CHECK:
+  bltz $a0 Out_Of_Bound
+  bge $a0 $a1 Out_Of_Bound
+  jr $ra
+BZero:
+  sub $a1 $a2 1
+  sw $zero ($a0)
+  addu $a0 $a0 4
+  bgtz $a1 BZero
+  jr $ra
+
+f:
+
+fin_f:
+
+end:
+        li $v0, 10
+        syscall

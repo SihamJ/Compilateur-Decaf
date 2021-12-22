@@ -6,7 +6,7 @@
 
 /* Type de l'identificateur dans la TOS */
 typedef enum id_type{
-    ID_VAR, ID_METHOD, ID_TMP, ID_PARAM, ID_TAB
+    ID_VAR, ID_METHOD, ID_TMP, ID_PARAM, ID_TAB, ID_CLASS
   }id_type;
 
 /* Type du contexte */
@@ -25,7 +25,7 @@ typedef struct Ht_item {
     char *key;      // identificateur
     int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
     int value;      // type (INT / BOOL / VOIDTYPE)
-	int order;      // order d'insértion dans la TOS
+	int order;      // ordre d'insértion dans la TOS
     int size;       // si tableau, sinon 4
     param p;        // si l'item est une méthode, param est une liste des paramètres et leur type
 } Ht_item;

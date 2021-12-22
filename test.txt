@@ -1,45 +1,41 @@
-
-class Program {
-
-    int a,x;
-    boolean v;
-    int r[10], c[5];
-    boolean d[5],e,f[8];
-    boolean g,h[6],i;
-
-    int al(int a){ 
-        boolean f;
-        if(a>3){
-        f=true;}
-        return a;
+class AccesTableauExpression {
+    int in [4];
+    int t0 [4];
+    int t1 [4];
+    void main ()
+    {
+        int i, j;
+        in[0] = 11;
+         in[1] = 12;
+          in[2] = 21;
+           in[3] = 22;
+        i = 0;
+         j = 0;
+          t0[2*j+i] = in[2*i+j];
+        i = 0;
+         j = 1;
+          t0[2*j+i] = in[2*i+j];
+        i = 1; 
+        j = 0; 
+        t0[2*j+i] = in[2*i+j];
+        i = 1; 
+        j = 1; 
+        t0[2*j+i] = in[2*i+j];
+        i = 0; 
+        j = 0; 
+        t1[2*j+i] = t0[2*i+j];
+        i = 0; 
+        j = 1; 
+        t1[2*j+i] = t0[2*i+j];
+        i = 1; 
+        j = 0; 
+        t1[2*j+i] = t0[2*i+j];
+        i = 1; 
+        j = 1; 
+        t1[2*j+i] = t0[2*i+j];
+        WriteInt (t1[0]); WriteString ("="); WriteInt (in[0]); WriteString ("\n");
+        WriteInt (t1[1]); WriteString ("="); WriteInt (in[1]); WriteString ("\n");
+        WriteInt (t1[2]); WriteString ("="); WriteInt (in[2]); WriteString ("\n");
+        WriteInt (t1[3]); WriteString ("="); WriteInt (in[3]); WriteString ("\n");
     }
-    
-    void label0(){
-        int x;
-        for i=3,4 {
-            if(x>3){
-                a=2*3+5-6;
-                if(x>5){
-                    continue;
-                    break;
-                }
-                continue;
-                break;
-            }
-            else{
-                continue;
-                break;
-            }
-            
-        }
-        return;
-    }
-
-    void main (){
-        int d;
-        int a ;
-        al(d);
-        return;
-        }
-
 }

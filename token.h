@@ -15,5 +15,4 @@
 #define VOIDTYPE 2
 #define STRING 3        // used for WriteString function
 #define CAPACITY 50000 // Size of the Hash Table
-
 #endif

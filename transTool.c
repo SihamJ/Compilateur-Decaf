@@ -18,11 +18,9 @@ void mips_dec_global(quadop q){
 
 void mips_init_array(quadop q) {
 	// Double Test if it's a Array, just to be sure
-	// To be replaced by Type
 	if(q.u.global.type == QO_TAB) {
-		fprintf(fout, "la $a0 %s\n", q.u.global.name);
-		fprintf(fout, "li $a1 %d\n",  q.u.global.size/4);
-		fprintf(fout, "li $a2 1\n");
+		fprintf(fout, "la $t0 %s\n", q.u.global.name);
+		fprintf(fout, "li $t1 %d\n",  q.u.global.size/4);
 		fprintf(fout, "jal BZero\n");
 	}
 }
@@ -49,8 +47,8 @@ void mips_copy_rtn_val(char *target) {
 }
 
 int mips_push_word(char *src) {
-	if(strcmp("$a0", src))
-    	mips_load_from_addr("$a0", src);
+	if(strcmp("$t0", src))
+    	mips_load_from_addr("$t0", src);
     mips_instruction(MIPS_PUSH);
     return sizeof(int);
 }
@@ -69,6 +67,10 @@ void mips_read_stack(char* target, int offset) {
 
 void mips_write_stack(char *target, int offset) {
 	fprintf(fout, "%8ssw %s, %d($sp)\n", "",target, offset);
+}
+
+void mips_pop_stack(int offset){
+	fprintf(fout,"%8sadd $sp $sp %d","",offset);
 }
 
 void mips_read_tmp(char *tmp, char *target) {
@@ -95,31 +97,31 @@ void mips_destroy_tmp_vals(int count) {
 
 void mips_load_1args(quad q) {
 	if (q.op2.type == QO_ID || q.op2.type == QO_TMP)
-		mips_read_stack("$a0", q.op2.u.offset);
+		mips_read_stack("$t0", q.op2.u.offset);
 	else if (q.op2.type == QO_GLOBAL)
-		mips_load_word("$a0", q.op2.u.global.name);
+		mips_load_word("$t0", q.op2.u.global.name);
 	else if (q.op2.type == QO_CST)
-		mips_load_immediate("$a0", q.op2.u.cst);
+		mips_load_immediate("$t0", q.op2.u.cst);
 }
 
 void mips_load_2args(quad q) {
 	if (q.op2.type == QO_ID || q.op2.type == QO_TMP)
-    	mips_read_stack("$a0", q.op2.u.offset);
+    	mips_read_stack("$t0", q.op2.u.offset);
 	else if (q.op2.type == QO_GLOBAL)
-		mips_load_word("$a0", q.op2.u.global.name);
+		mips_load_word("$t0", q.op2.u.global.name);
 	else if (q.op2.type == QO_CST)
-		mips_load_immediate("$a0", q.op2.u.cst);
+		mips_load_immediate("$t0", q.op2.u.cst);
 
 	if (q.op3.type == QO_ID || q.op3.type == QO_TMP)
-    	mips_read_stack("$a1", q.op3.u.offset);
+    	mips_read_stack("$t1", q.op3.u.offset);
 	else if (q.op3.type == QO_GLOBAL)
-		mips_load_word("$a1", q.op3.u.global.name);
+		mips_load_word("$t1", q.op3.u.global.name);
 	else if (q.op3.type == QO_CST)
-		mips_load_immediate("$a1", q.op3.u.cst);
+		mips_load_immediate("$t1", q.op3.u.cst);
 }
 
 /*void mips_beqz(char *target) {
-	fprintf(fout,"beqz $a0 true%d\n", branch_count);
+	fprintf(fout,"beqz $t0 true%d\n", branch_count);
 	mips_instruction(MIPS_FALSE);
 	mips_jump("false",branch_count);
 	mips_label("true",branch_count);
@@ -130,10 +132,10 @@ void mips_load_2args(quad q) {
 
 // if target != null, copy result from $v0 to target
 void mips_sum(char *target, char *addL, char *addR) {
-    if (strcmp("$a0", addL))
-        mips_load_from_addr("$a0", addL);
-    if (strcmp("$a1", addR))        
-        mips_load_from_addr("$a1", addR);
+    if (strcmp("$t0", addL))
+        mips_load_from_addr("$t0", addL);
+    if (strcmp("$t1", addR))        
+        mips_load_from_addr("$t1", addR);
 
     mips_instruction(MIPS_INT_SUM);
 
@@ -143,10 +145,10 @@ void mips_sum(char *target, char *addL, char *addR) {
 
 // if target != null, copy result from $v0 to target
 void mips_sub(char *target, char *subL, char *subR) {
-    if (strcmp("$a0", subL))
-        mips_load_from_addr("$a0", subL);
-    if (strcmp("$a1", subR))
-        mips_load_from_addr("$a1", subR);
+    if (strcmp("$t0", subL))
+        mips_load_from_addr("$t0", subL);
+    if (strcmp("$t1", subR))
+        mips_load_from_addr("$t1", subR);
 
     mips_instruction(MIPS_INT_SUB);
 
@@ -157,10 +159,10 @@ void mips_sub(char *target, char *subL, char *subR) {
 // if target != null, copy result from $v0 to target
 // long int result is not supported
 void mips_mult(char *target, char *multL, char *multR) {
-    if (strcmp("$a0", multL))
-        mips_load_from_addr("$a0", multL);
-    if (strcmp("$a1", multR))
-        mips_load_from_addr("$a1", multR);
+    if (strcmp("$t0", multL))
+        mips_load_from_addr("$t0", multL);
+    if (strcmp("$t1", multR))
+        mips_load_from_addr("$t1", multR);
 
     mips_instruction(MIPS_INT_MULT);
 
@@ -170,10 +172,10 @@ void mips_mult(char *target, char *multL, char *multR) {
 
 // if target != null, copy result from $v0 to target
 void mips_div(char *target, char *divL, char *divR) {
-    if (strcmp("$a0", divL))
-        mips_load_from_addr("$a0", divL);
-    if (strcmp("$a1", divR))
-        mips_load_from_addr("$a1", divR);
+    if (strcmp("$t0", divL))
+        mips_load_from_addr("$t0", divL);
+    if (strcmp("$t1", divR))
+        mips_load_from_addr("$t1", divR);
 
     mips_instruction(MIPS_INT_DIV);
 
@@ -183,10 +185,10 @@ void mips_div(char *target, char *divL, char *divR) {
 
 // if target != null, copy result from $v0 to target
 void mips_mod(char *target, char *modL, char *modR) {
-    if (strcmp("$a0", modL))
-        mips_load_from_addr("$a0", modL);
-    if (strcmp("$a1", modR))
-        mips_load_from_addr("$a1", modR);
+    if (strcmp("$t0", modL))
+        mips_load_from_addr("$t0", modL);
+    if (strcmp("$t1", modR))
+        mips_load_from_addr("$t1", modR);
 
     mips_instruction(MIPS_INT_MOD);
 
@@ -195,51 +197,51 @@ void mips_mod(char *target, char *modL, char *modR) {
 }
 
 void mips_eq(char *target, char *eqL, char *eqR, char *label) {
-	if (strcmp("$a0", eqL))
-        mips_load_from_addr("$a0", eqL);
-    if (strcmp("$a1", eqR))
-        mips_load_from_addr("$a1", eqR);
-	fprintf(fout,"%8sbeq $a0 $a1 %s\n", "",label);
+	if (strcmp("$t0", eqL))
+        mips_load_from_addr("$t0", eqL);
+    if (strcmp("$t1", eqR))
+        mips_load_from_addr("$t1", eqR);
+	fprintf(fout,"%8sbeq $t0 $t1 %s\n", "",label);
 }
 
 void mips_neq(char *target, char *neqL, char *neqR, char *label) {
-	if (strcmp("$a0", neqL))
-        mips_load_from_addr("$a0", neqL);
-    if (strcmp("$a1", neqR))
-        mips_load_from_addr("$a1", neqR);
-	fprintf(fout,"%8sbne $a0 $a1 %s\n","", label);
+	if (strcmp("$t0", neqL))
+        mips_load_from_addr("$t0", neqL);
+    if (strcmp("$t1", neqR))
+        mips_load_from_addr("$t1", neqR);
+	fprintf(fout,"%8sbne $t0 $t1 %s\n","", label);
 }
 
 void mips_lt(char *target, char *ltL, char *ltR, char *label) {
-	if (strcmp("$a0", ltL))
-        mips_load_from_addr("$a0", ltL);
-    if (strcmp("$a1", ltR))
-        mips_load_from_addr("$a1", ltR);
-	fprintf(fout,"%8sblt $a0 $a1 %s\n", "",label);
+	if (strcmp("$t0", ltL))
+        mips_load_from_addr("$t0", ltL);
+    if (strcmp("$t1", ltR))
+        mips_load_from_addr("$t1", ltR);
+	fprintf(fout,"%8sblt $t0 $t1 %s\n", "",label);
 }
 
 void mips_gt(char *target, char *gtL, char *gtR, char *label) {
-	if (strcmp("$a0", gtL))
-        mips_load_from_addr("$a0", gtL);
-    if (strcmp("$a1", gtR))
-        mips_load_from_addr("$a1", gtR);
-	fprintf(fout,"%8sbgt $a0 $a1 %s\n","", label);
+	if (strcmp("$t0", gtL))
+        mips_load_from_addr("$t0", gtL);
+    if (strcmp("$t1", gtR))
+        mips_load_from_addr("$t1", gtR);
+	fprintf(fout,"%8sbgt $t0 $t1 %s\n","", label);
 }
 
 void mips_leq(char *target, char *leqL, char *leqR, char *label) {
-	if (strcmp("$a0", leqL))
-        mips_load_from_addr("$a0", leqL);
-    if (strcmp("$a1", leqR))
-        mips_load_from_addr("$a1", leqR);
-	fprintf(fout,"%8sble $a0 $a1 %s\n","", label);
+	if (strcmp("$t0", leqL))
+        mips_load_from_addr("$t0", leqL);
+    if (strcmp("$t1", leqR))
+        mips_load_from_addr("$t1", leqR);
+	fprintf(fout,"%8sble $t0 $t1 %s\n","", label);
 }
 
 void mips_geq(char *target, char *geqL, char *geqR, char *label) {
-	if (strcmp("$a0", geqL))
-        mips_load_from_addr("$a0", geqL);
-    if (strcmp("$a1", geqR))
-        mips_load_from_addr("$a1", geqR);
-	fprintf(fout,"%8sbge $a0 $a1 %s\n", "",label);
+	if (strcmp("$t0", geqL))
+        mips_load_from_addr("$t0", geqL);
+    if (strcmp("$t1", geqR))
+        mips_load_from_addr("$t1", geqR);
+	fprintf(fout,"%8sbge $t0 $t1 %s\n", "",label);
 }
 
 void mips_jump(char *label){
@@ -300,21 +302,21 @@ void mips_syscall(int num){
  * @param offset The offset
  */
 void tab_put(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
-	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
-	fprintf(fout, "\tli $a0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t0");
+	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tmove $ra $t2");
 	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (!strcmp("$a0", offset_reg))
-		fprintf(fout, "\tmove $a0 offset_reg\n");
+	if (!strcmp("$t0", offset_reg))
+		fprintf(fout, "\tmove $t0 offset_reg\n");
 	
-	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
-	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
+	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t0");
+	fprintf(fout, "\tmove $ra $t2");
 
 	fprintf(fout, "\tsw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
 }
@@ -326,22 +328,22 @@ void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  * @param offset The offset
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
-	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
-	fprintf(fout, "\tli $a0 %d\n  jal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t0");
+	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tli $t0 %d\n  jal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tmove $ra $t2");
 
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (!strcmp("$a0", offset_reg))
-		fprintf(fout, "\tmove $a0 offset_reg\n");
+	if (!strcmp("$t0", offset_reg))
+		fprintf(fout, "\tmove $t0 offset_reg\n");
 
-	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
-	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
+	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t0");
+	fprintf(fout, "\tmove $ra $t2");
 
 	fprintf(fout, "\tlw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
 }

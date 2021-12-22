@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "intermediaire.h"
 #include "hashtable.h"
 #include "translater.h"
@@ -10,34 +11,35 @@ extern int yylex();
 extern int yydebug;
 extern FILE* fout;
 extern FILE* src;
+void usage(char *name);
 
-void usage(char *name){
-    fprintf(stderr, "\n%s%8sUsage: %s [-version] [-tos] [-i] [-o [<name>]] [-s <source> ]\n",YELLOW,"",name);
-    fprintf(stderr, "%8sUsage: %s [-version] [-tos] [-i] [-o [<name>]] < <source>\n\n","",name);
-    fprintf(stderr, "%s%8s-version:\n%14sMembres du groupe\n",NORMAL,"","");
-    fprintf(stderr, "%8s-tos:\n%14sAffiche la table des symboles\n","","");
-    fprintf(stderr,"%8s-i:\n%14sAffiche le code intermédiaire\n","","");
-    fprintf(stderr,"%8s-o [<name>]:\n%14sEcris le code assembleur dans le fichier <name>. \n%14sSi <name> n'est pas mentionné, crée le fichier out.asm \n%14sSi <name> = stdout, affiche le résultat dans la ligne de commande\n","","","","");
-    fprintf(stderr,"%8s-s <source>: \n%14sLis le code source à partir du fichier <source>\n","","");
-    fprintf(stderr,"%8s< <source>: \n%14sLis le code source à partir du fichier <source>\n\n","","");
-
-    exit(0);
-}
 
 int main(int argc, char* argv[]){
 
-    int output=0;
+  //  if(argc!=4)
+    //    usage(argv[0]);
+    /* Options d'exécution */
+   /* int output=0;
     int output_file=0;
     int source=0;
     int source_file=0;
     int version=0;
     int tos=0;
     int inter=0;
-    int no_parse=1;
+    int no_parse=1;*/
 
     int i = 1;
 
-    while(i<argc){
+    if((stdin=freopen(argv[1], "r", stdin))==NULL){
+        fprintf(stderr,"can't open source file\n");
+        exit(1);
+    }
+
+    if(!strcmp(argv[2],"-o")){
+        fout = fopen(argv[3],"w");
+    }
+
+    /*while(i<argc){
 
         if(!strcmp(argv[i],"-version")){
             if(version == 1)
@@ -101,13 +103,13 @@ int main(int argc, char* argv[]){
         }
         else if((stdin=freopen(argv[source_file], "r", stdin))==NULL){
             printf("\nCan't open source file\n");
-            exit(0);
+            exit(1);
         }
     }
     // no -s option and no redirection of stdin. Reading from command line.
     else if((isatty(fileno(stdin)) && !version)){
         int response;
-        printf("\nDo you want to write the source code in Command Line ?\n\n%s0-NO and Quit  %s1-YES%s\n\n",RED,GREEN,NORMAL);
+        printf("\nDo you want to write the source code in Command Line ?\n\n%s0-NO and QUIT %s1-YES%s\n\n",RED,GREEN,NORMAL);
         scanf("%d",&response);
         if(response == 0)
             usage(argv[0]);
@@ -123,18 +125,21 @@ int main(int argc, char* argv[]){
         exit(0);
     }
 
+
+    /* un fichier source à parser existe*/
+
     curr_context = NULL;
     //yydebug=1;
     int t = yyparse();
-    while(t)
-        t = yyparse();
-    if (t==0){
-        printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n","",GREEN,"",GREEN,NORMAL);
-        add_labels();    
-    }
 
+    if(t!=0)
+        exit(EXIT_FAILURE);
+    
 
-    if(version){
+   // printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n\n","",GREEN,"",GREEN,NORMAL);
+    add_labels();    
+    
+   /* if(version){
         printf("\n%8sMembres du groupes:\n","");
         printf("\n%8s\033[1mXU Chenglin  -  JANATI Siham  -  HAMMER Tom  -  WEREY Laurent\033[0m \n","");
         printf("%8s%s\033[1mSIL\033[0m          .  %s\033[1mSDSC\033[0m          .  %s\033[1mSIL\033[0m         .  %s\033[1mSIL\033[0m%s\n\n","",BLUE,PURPLE,BLUE,BLUE,NORMAL);
@@ -161,8 +166,26 @@ int main(int argc, char* argv[]){
         translate();
         if(fout != stdout)
             fclose(fout);
-    }
-
+    }*/
+    print_globalcode();
+    printf("here");
+    translate();
+    if(fout != stdout)
+            fclose(fout);
     free_stack();
-    return 0;
+    exit(EXIT_SUCCESS);
+}
+
+
+void usage(char *name){
+    fprintf(stderr, "\n%s%8sUsage: %s [-version] [-tos] [-i] [-o [<name>]] [-s <source> ]\n",YELLOW,"",name);
+    fprintf(stderr, "%8sUsage: %s [-version] [-tos] [-i] [-o [<name>]] < <source>\n\n","",name);
+    fprintf(stderr, "%s%8s-version:\n%14sMembres du groupe\n",NORMAL,"","");
+    fprintf(stderr, "%8s-tos:\n%14sAffiche la table des symboles\n","","");
+    fprintf(stderr,"%8s-i:\n%14sAffiche le code intermédiaire\n","","");
+    fprintf(stderr,"%8s-o [<name>]:\n%14sEcris le code assembleur dans le fichier <name>. \n%14sSi <name> n'est pas mentionné, crée le fichier out.asm \n%14sSi <name> = stdout, affiche le résultat dans la ligne de commande\n","","","","");
+    fprintf(stderr,"%8s-s <source>: \n%14sLis le code source à partir du fichier <source>\n","","");
+    fprintf(stderr,"%8s< <source>: \n%14sLis le code source à partir du fichier <source>\n\n","","");
+
+    exit(0);
 }
