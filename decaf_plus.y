@@ -812,17 +812,7 @@ location	:	id				{
 										$$.result.type = QO_ID;
 										$$.type = val->item->value;			
 									}
-									if(val->item->value == BOOL) {
-										quadop qo;
-										qo.type = QO_CST;
-										qo.u.cst = true;
-										$$.t = crelist(nextquad);
-										gencode($$.result, $$.result, qo, Q_EQ, NULL, -1, NULL);
-										$$.f = crelist(nextquad);
-										qo.type = QO_EMPTY;
-										qo.u.cst = 0;
-										gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); 
-									}	
+										
 								}
 			|	id '[' expr ']'			{ 	/* expr de type int */ 
 											if($3.type != INT){
