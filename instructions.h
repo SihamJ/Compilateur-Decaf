@@ -83,7 +83,7 @@
  * Called by jal
  */
 
-#define MIPS_BZERO "BZero:\n  addi $t1 $a2 -1\n  sw $zero ($t0)\n  addu $t0 $t0 4\n  bgtz $t1 BZero\n  jr $ra\n"
+#define MIPS_BZERO "BZero:\n  addi $t1 $t1 -1\n  sw $zero ($t0)\n  addu $t0 $t0 4\n  bgtz $t1 BZero\n  jr $ra\n"
 
 // TODO: decl str
 
