@@ -127,6 +127,14 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset);
 
+/**
+ * @brief Save the value in the buffer to the target table at a specified offset
+ * @param buffer_reg The buffer register holding the value to save
+ * @param tab_name The name of the target table
+ * @param offset The register containing the offset
+ */
+void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
+
 void mips_pop_stack(int offset);
 void mips_method_call(quad q);
 void mips_end_func(quad q);
