@@ -18,7 +18,6 @@ void mips_dec_global(quadop q){
 
 void mips_init_array(quadop q) {
 	// Double Test if it's a Array, just to be sure
-	// To be replaced by Type
 	if(q.u.global.type == QO_TAB) {
 		fprintf(fout, "la $a0 %s\n", q.u.global.name);
 		fprintf(fout, "li $a1 %d\n",  q.u.global.size/4);
@@ -299,7 +298,7 @@ void mips_syscall(int num){
  * @param tab_name The name of the target table
  * @param offset The offset
  */
-void tab_put(char *buffer_reg, char *tab_name, int offset) {
+void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
 	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
 	fprintf(fout, "\tli $a0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
@@ -307,7 +306,7 @@ void tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
-void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
+void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (!strcmp("$a0", offset_reg))
 		fprintf(fout, "\tmove $a0 offset_reg\n");
 	
@@ -325,7 +324,7 @@ void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  * @param tab_name The name of the table
  * @param offset The offset
  */
-void tab_get(char *buffer_reg, char *tab_name, int offset) {
+void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t0 $ra"); // In case $ra is in use
 	fprintf(fout, "\tlw $a1 %s_SIZE\n", tab_name); // Load table size to $a1
 	fprintf(fout, "\tli $a0 %d\n  jal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
@@ -334,7 +333,7 @@ void tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
-void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
+void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (!strcmp("$a0", offset_reg))
 		fprintf(fout, "\tmove $a0 offset_reg\n");
 
