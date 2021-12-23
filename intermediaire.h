@@ -38,6 +38,7 @@ typedef struct quadop {
     struct global{
       char *name;
       int size;
+      struct quadop offset_tab;                // si élément de tableau
       global_type type;         // TABLEAU ou SCALAIRE
     } global;  // variable global
     struct string_literal{

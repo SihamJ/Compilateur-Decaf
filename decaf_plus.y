@@ -834,7 +834,7 @@ location	:	id				{
 									}
 										
 								}
-			|	id '[' expr ']'			{ 	/* expr de type int */ 
+			|	id '[' expr ']'			{ 	/* expr de type not int */ 
 											if($3.type != INT){
 												yyerror("\nErreur: indice de tableau doit être de type INT\n");
 												return 1;
@@ -851,13 +851,13 @@ location	:	id				{
 												yyerror("\nErreur: Accès à l'indice d'un identificateur qui n'est pas un tableau\n");
 												return 1;
 											}
-											/*	TO DO: vérification dynamique*/
+
 											$$.type = val->item->value; 
 											$$.result.type = QO_GLOBAL;
 											$$.result.u.global.name = malloc(strlen($1)+1);
 											strcpy($$.result.u.global.name, $1); 
-											/* TO DO: Vérification dynamique offset*/
-											gencode($$.result, $3.result, $3.result, Q_ACCESTAB, NULL, -1, NULL);
+											$$.result.u.type = QO_TAB;
+											$$.result.u.global_type.offset = $3.result;
 										}
 
 expr		:	expr add_op expr %prec '+'	{
@@ -963,8 +963,10 @@ expr		:	expr add_op expr %prec '+'	{
 												}
 											}
 			|	location 					{
-												
-												$$ = $1;
+												if($1.result.type == QO_TAB)
+													gencode($$.result, $1.result, $1.result, Q_ACCESTAB, NULL, -1, NULL);
+												else 
+													$$ = $1;
 											}
 			|	'-' expr %prec NEG 			{
 												if($2.type != INT){
