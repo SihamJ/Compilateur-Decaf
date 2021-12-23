@@ -41,28 +41,28 @@
 #define MIPS_INT_MOD "\tdiv $t0 $t1\n\tmfhi $v0\n"
 
 /**
-* Assuming the value to print is stored in $t0
+* Assuming the value to print is stored in $a0
 * Called by jal, jalr $target_reg or jalr $ra $target_reg
 */
-#define MIPS_LIB_IO_WRITE_INT "\nWrite_INT:\n\tli $v0, 1\n\tsyscall\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_INT "\nWriteInt:\n\tlw $a0, 0($sp)\n\tli $v0, 1\n\tsyscall\n\tjr $ra\n"
 
-#define MIPS_LIB_IO_WRITE_STRING "\nPrint_String:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_STRING "\nWriteString:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
 /*
 * The value read will be stored in $v0
 */
-#define MIPS_LIB_IO_READ_INT "\nRead_INT:\n\tli $v0, 5\n\tsyscall\n\tjr $ra\n"
+#define MIPS_LIB_IO_READ_INT "\nReadInt:\n\tli $v0, 5\n\tsyscall\n\tjr $ra\n"
 
 
 
 #define MIPS_MACRO "\tSTR_TRUE: .asciiz \"True\"\n\tSTR_FALSE: .asciiz \"False\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
 
 /**
-* Assuming the value to print is stored in $t0
+* Assuming the value to print is stored in $a0
 * Called by jal, jalr $target_reg or jalr $ra $target_reg
 * Assuming having 'True' and 'False' stored as literal string in STR_TRUE and STR_FALSE
 */
-#define MIPS_LIB_IO_WRITE_BOOL "\nWrite_BOOL:\n\tbeqz $t0 Load_False\n\tLoad_True:\n\tla $t0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $t0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_BOOL "\nWriteBool:\n\tlw $a0, 0($sp)\n\tbeqz $a0 Load_False\n\tLoad_True:\n\tla $a0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $a0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
 /**
  * Assuming the index is in $t0

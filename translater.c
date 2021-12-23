@@ -12,6 +12,8 @@ FILE *fout;
 FILE *source;
 
 void translate() {
+	
+
 	if(fout == stdout)
 		printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
@@ -21,17 +23,20 @@ void translate() {
 	for(int i=0; i<glob_dec_count;i++){
 		mips_dec_global(global_code[i].op1);
 	}
+	printf("1\n");
+	mips_declare_strings();
+	printf("2\n");
 	/* Fin Déclarations globales */
 
 	fprintf(fout, "\n.text\n");
 	fprintf(fout, "\n.globl main\n\n");
-
+	fprintf(fout, "\nj main\n");
 
 	/* Static Libraries */
 	fprintf(fout, "%s", MIPS_LIB_IO_WRITE_BOOL);
     fprintf(fout, "%s", MIPS_LIB_IO_READ_INT);
     fprintf(fout, "%s", MIPS_LIB_IO_WRITE_STRING);
-    fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
+	fprintf(fout, "%s", MIPS_LIB_IO_WRITE_INT);
     fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
 	fprintf(fout, "%s", MIPS_OUT_OF_BOUND);
 	fprintf(fout, "%s", MIPS_DYN_CHECK);
@@ -161,6 +166,7 @@ void translate() {
 			break;
 		// TO DO
 		case Q_METHODCALL:
+			mips_method_call(global_code[i]);
 			break;
 		// TO DO
 		case Q_SYSCALL:
@@ -168,10 +174,14 @@ void translate() {
 			break;
 		// TO DO
 		case Q_RETURN:
+			mips_return(global_code[i]);
 			break;
 		// TO DO
 		case Q_POP:
 			mips_pop_stack(global_code[i].op1.u.cst);
+			break;
+		case Q_ENDFUNC:
+			mips_end_func(global_code[i]);
 			break;
         default:
         	break;

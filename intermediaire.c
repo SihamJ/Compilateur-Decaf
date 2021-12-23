@@ -6,6 +6,7 @@ size_t tmpCount;
 size_t labelCount; 
 size_t glob_dec_count;
 size_t str_count;
+string_labels str_labels[100];
 
 char* new_label(){
   char* label;
@@ -102,53 +103,55 @@ void complete(list n, int addr){
 }
 
 void print_globalcode(){
-  char snum[10];
-  char s[10];
-  printf("\nCode Intermediaire:\n_______________________________________________________________________________________\n          type         op1          op2         op3       oper       label        jump   \n_______________________________________________________________________________________\n\n");
+
+  printf("\nCode Intermediaire:\n_______________________________________________________________________________________\n            type          op1           op2          op3         oper         label          jump    \n_______________________________________________________________________________________\n\n");
   for (int i=0; i<nextquad; i++){
-    printf("%2d",i);
-    printf("%12s", get_type_oper(global_code[i].op1.type));
+    printf("%3d",i);
+    printf("%14s", get_type_oper(global_code[i].op1.type));
       
     if(global_code[i].op1.type == QO_CST)
-      printf("%12d", global_code[i].op1.u.cst);
+      printf("%14d", global_code[i].op1.u.cst);
+      else if(global_code[i].op3.type == QO_CSTSTR)
+      printf("%14s", global_code[i].op3.u.string_literal.label);
     else if(global_code[i].op1.type == QO_GLOBAL)
-      printf("%12s", global_code[i].op1.u.global.name);
+      printf("%14s", global_code[i].op1.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
-      printf("%12s","0");
-    else {
-      sprintf(snum,"(%d)",global_code[i].op1.u.offset);
-      printf("%12s",snum);
-    }
+      printf("%14s","0");
+    else 
+      printf("%12s(%d)","",global_code[i].op1.u.offset);
+    
 
     if(global_code[i].op2.type == QO_CST)
-      printf("%12d", global_code[i].op2.u.cst);
+      printf("%14d", global_code[i].op2.u.cst);
+      else if(global_code[i].op3.type == QO_CSTSTR)
+      printf("%14s", global_code[i].op3.u.string_literal.label);
     else if(global_code[i].op2.type == QO_GLOBAL)
-      printf("%12s", global_code[i].op2.u.global.name);
+      printf("%14s", global_code[i].op2.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
-      printf("%12s","0");
-    else {
-      sprintf(snum,"(%d)",global_code[i].op2.u.offset);
-      printf("%12s",snum);
-    }
+      printf("%14s","0");
+    else 
+      printf("%12s(%d)","",global_code[i].op2.u.offset);
+    
 
     if(global_code[i].op3.type == QO_CST)
-      printf("%12d", global_code[i].op3.u.cst);
+      printf("%14d", global_code[i].op3.u.cst);
+    else if(global_code[i].op3.type == QO_CSTSTR)
+      printf("%14s", global_code[i].op3.u.string_literal.label);
     else if(global_code[i].op3.type == QO_GLOBAL)
-      printf("%12s", global_code[i].op3.u.global.name);
+      printf("%14s", global_code[i].op3.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
-      printf("%12s","0");
-    else { 
-      sprintf(snum,"(%d)",global_code[i].op3.u.offset);
-      printf("%12s",snum);
-    }
+      printf("%14s","0");
+    else 
+      printf("%12s(%d)","",global_code[i].op3.u.offset);
     
-    printf("%12s",op_type(global_code[i].type));
+    
+    printf("%14s",op_type(global_code[i].type));
     if(global_code[i].label != NULL)
-      printf("%12s",global_code[i].label);
+      printf("%14s",global_code[i].label);
     else
-      printf("%12s","______");
+      printf("%14s","______");
 
-    printf("%12d\n",global_code[i].jump);
+    printf("%14d\n",global_code[i].jump);
   }
   printf("\n");
 }
@@ -263,7 +266,7 @@ char *get_type_oper(int type){
     return "GLOB";
     else if (type == QO_CSTSTR)
     return "STRING";
-  else if (type == QO_EMPTY)
+  else
     return "NONE";
 
 }

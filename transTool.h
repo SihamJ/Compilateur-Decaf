@@ -4,7 +4,7 @@
 
 #include "instructions.h"
 #include "intermediaire.h"
-
+#include "hashtable.h"
 
 void mips_dec_global(quadop q);
 
@@ -120,5 +120,9 @@ void tab_put(char *buffer_reg, char *tab_name, int offset);
 void tab_get(char *buffer_reg, char *tab_name, int offset);
 
 void mips_pop_stack(int offset);
-
- #endif
+void mips_method_call(quad q);
+void mips_end_func(quad q);
+void mips_push_args(param p);
+void mips_return(quad q);
+void mips_declare_strings();
+#endif

@@ -70,7 +70,7 @@ void mips_write_stack(char *target, int offset) {
 }
 
 void mips_pop_stack(int offset){
-	fprintf(fout,"%8sadd $sp $sp %d","",offset);
+	fprintf(fout,"%8sadd $sp $sp %d\n","",offset);
 }
 
 void mips_read_tmp(char *tmp, char *target) {
@@ -303,9 +303,9 @@ void mips_syscall(int num){
  */
 void tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
-	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t2");
+	fprintf(fout, "\tmove $ra $t2\n");
 	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
@@ -314,9 +314,9 @@ void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 		fprintf(fout, "\tmove $t0 offset_reg\n");
 	
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
-	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t2");
+	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tsw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
 }
@@ -328,10 +328,10 @@ void tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  * @param offset The offset
  */
 void tab_get(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tli $t0 %d\n  jal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t2");
+	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
@@ -341,9 +341,9 @@ void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 		fprintf(fout, "\tmove $t0 offset_reg\n");
 
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
-	fprintf(fout, "\tmove $t2 $ra"); // In case $ra is in use
+	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
-	fprintf(fout, "\tmove $ra $t2");
+	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
 }
@@ -352,3 +352,52 @@ void mips_decl_string(char *varName, char *value) {
 	fprintf(fout, "%8s%s: .asciiz \"%s\"\n", "",varName, value);
 }
 
+void mips_method_call(quad q){
+
+	fprintf(fout, "\tmove $t2 $ra\n"); // we save $ra in $t2
+
+	// push args in stack
+	mips_push_args(q.p);
+	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
+		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
+	}
+	fprintf(fout, "%8sjal %s\n","",q.op1.u.string_literal.label); //jump and link 
+
+}
+
+void mips_push_args(param p){
+	if(p != NULL){
+		if(p->arg.type == QO_ID)
+			mips_read_stack("$t0",p->arg.u.offset);
+		else if(p->arg.type == QO_GLOBAL)
+			mips_load_word("$t0", p->arg.u.global.name);
+		mips_push_word("$t0");
+		p = p->next;
+	}
+}
+
+void mips_end_func(quad q){
+	if(q.p != NULL){
+		int size = 0;
+		while(q.p!=NULL){
+			size++;
+			q.p = q.p->next;
+		}
+		mips_pop_stack(size*4);
+	}
+	fprintf(fout,"%8sj $ra\n","");
+}
+
+void mips_return(quad q){
+	if(q.op3.u.cst > 0)
+		mips_pop_stack(q.op3.u.cst);
+	fprintf(fout,"%8sj %s\n","",global_code[q.jump].label);
+}
+
+void mips_declare_strings(){
+	int i = 0;
+	while(i<str_count){
+		mips_decl_string(str_labels[i].label, str_labels[i].value);
+		i++;
+	}
+}

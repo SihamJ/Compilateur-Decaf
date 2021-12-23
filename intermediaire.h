@@ -24,6 +24,12 @@ typedef enum quad_type{
     Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_LABEL, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP
   } quad_type;
 
+/* strings to declare for write string as labels in mips*/
+typedef struct string_labels{
+  char *label;
+  char *value;
+} string_labels; 
+
 typedef struct quadop {
   quadop_type type;     // Constante, identificateur, temporaire, globale, constante str, tableau
   union {
@@ -37,7 +43,7 @@ typedef struct quadop {
     struct string_literal{
       char *label;
       char *value;
-    } string_literal; // string literal pour WriteString
+    } string_literal;  // string literal pour WriteString
   } u;
 } quadop;
 
@@ -56,6 +62,8 @@ extern size_t tmpCount; // n° de la prochaine variable temporaire dans la table
 extern size_t labelCount; // counter of the number of auto-generated labels
 extern size_t glob_dec_count; // counter of global variables declared
 extern size_t str_count; // counter of number of string_literals to be declared in MIPS .data, used only for generating labels
+extern string_labels str_labels[100];
+extern size_t str_count;
 
 list crelist(int addr);
 void complete(list n, int addr);
@@ -92,5 +100,6 @@ Affectation:        a = b            =>  op1 = a ; op2 = b ; op3 = we don't care
 Comparaison:        a rel_op b       =>  op1 = we don't care;  op2 = a ; op3 = b ;
 GOTO:               j next           =>  type = Q_GOTO, jump = next
 */
+
 
 #endif

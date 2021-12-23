@@ -63,9 +63,8 @@
 program	:  class id '{' { 	
 								pushctx(CTX_GLOB); /* Pushing the global context*/
 								/* pushing class name to global table*/
-								Ht_item *item = create_item($2, ID_CLASS, VOIDTYPE);
-								item->size = 0;
-								newname(item);
+								program_name = malloc(strlen($2)+1);
+								strcpy(program_name, $2);
 								add_libs_to_tos(); /* Adding the I/O functions to the global symbol table*/
 								glob_context = curr_context; /* glob_context will point to this context throughout the execution of this program.*/
 							}
@@ -247,8 +246,8 @@ method_decl	:		type id {
 																										
 															quadop qo;
 															qo.type = QO_CST;
-															qo.u.cst = curr_context->count;
-															gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
+															qo.u.cst = curr_context->count*4;
+															gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, $5);
 															popctx(); }
 
 			/* Same as above, except the type is void method. We are forced to separete them because of Bison conflicts with types of variable declarations*/
@@ -292,7 +291,7 @@ method_decl	:		type id {
 																quadop qo;
 															qo.type = QO_CST;
 															qo.u.cst = curr_context->count;
-																gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, NULL);
+																gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label($2), -1, $5);
 															}					
 															popctx();
 														}
@@ -348,7 +347,7 @@ block 		:	'{' {
 						if(curr_context->count > 0){
 							quadop qo;
 							qo.type = QO_CST;
-							qo.u.cst = curr_context->count;
+							qo.u.cst = curr_context->count*4;
 							gencode(qo, qo, qo, Q_POP, NULL, -1, NULL);
 						}
 						popctx();
@@ -487,6 +486,8 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($3.t, nextquad);
+														if(curr_context!=glob_context)
+															$1.result.u.offset += 4*tmpCount;
 														gencode($1.result, qo, qo, Q_AFF, NULL, -1, NULL); 	
 
 														/* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
@@ -504,8 +505,9 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 													}
 												
 													else {
+														if(curr_context!=glob_context)
+															$1.result.u.offset += 4*tmpCount;
 														/* If it's an affectation of type INT, we simply generate the corresponding quad*/
-
 														/* Normal affectation */
 														if($2 == Q_AFF)
 															gencode($1.result,$3.result,$3.result,$2, NULL,-1, NULL);
@@ -521,11 +523,11 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 													/* we pop the temporary variables from the stack at the end of the expression evaluation if we have any.
 														we store the number of temporary variables to pop in qo. The counter is initialized in 
 														pop_tmp().
-													*/													
+													*/			
 													if(curr_context->count > 0){
 														quadop qo;
 														qo.type = QO_CST;
-														qo.u.cst = curr_context->count;
+														qo.u.cst = tmpCount*4;
 														gencode(qo, qo, qo, Q_POP, NULL, -1, NULL);
 													}
 													pop_tmp();
@@ -650,7 +652,7 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 															/* We pop the FOR counter context (i.e the loop counter variable only)
 															*/
 															qo.type = QO_CST;
-															qo.u.cst = curr_context->count; 		// should be equal to 1
+															qo.u.cst = curr_context->count*4; 		// should be equal to 1
 															gencode(qo,qo,qo, Q_POP, NULL, -1, NULL);
 															popctx(); 
 														 }
@@ -658,11 +660,14 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 			|	Return return_val ';'					 {															
 															/* Incomplete GOTO to jump to end of function*/
 															$$.rtrn = crelist(nextquad);
+
 															quadop q1;
 															q1.type = QO_CST;
 															q1.u.cst = $2.type;
-															
-															gencode($2.result, q1, q1, Q_RETURN, NULL, -1, NULL);
+															quadop q2;
+															q2.type = QO_CST;
+															q2.u.cst = curr_context->count*4;
+															gencode($2.result, q1, q2, Q_RETURN, NULL, -1, NULL);
 															
 														}
 			|	Break ';'								 { 
@@ -706,6 +711,7 @@ method_call :	id '(' E ')' 					{
 														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
 														return 1;
 													}
+													
 													/* retrieving return type */
 													 $$.type = val->item->value; 
 
@@ -715,8 +721,17 @@ method_call :	id '(' E ')' 					{
 														return 1;
 													}
 
+													if(!strcmp($1,"WriteString")){
+														str_labels[str_count-1].label = malloc(strlen($3->arg.u.string_literal.label)+1);
+														strcpy(str_labels[str_count-1].label,$3->arg.u.string_literal.label);
+														str_labels[str_count-1].value = malloc(strlen($3->arg.u.string_literal.value)+1);
+														strcpy(str_labels[str_count-1].value,$3->arg.u.string_literal.value);
+													}
+
 													quadop qo;
-													qo.type = QO_EMPTY;
+													qo.type = QO_CSTSTR;
+													qo.u.string_literal.label = malloc(strlen($1)+1);
+													strcpy(qo.u.string_literal.label,$1);
 													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, $3);
 												}
 			|	id '(' ')'						{
@@ -725,7 +740,10 @@ method_call :	id '(' E ')' 					{
 														yyerror("\nErreur: Méthode non déclarée\n");
 														return 1;
 													}
-
+													if(val->item->id_type != ID_METHOD) {
+														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
+														return 1;
+													}
 													/* retrieving return type */
 													 $$.type = val->item->value; 
 
@@ -735,7 +753,9 @@ method_call :	id '(' E ')' 					{
 														return 1;
 													}
 													quadop qo;
-													qo.type = QO_EMPTY;
+													qo.type = QO_CSTSTR;
+													qo.u.string_literal.label = malloc(strlen($1)+1);
+													strcpy(qo.u.string_literal.label,$1);
 													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL);
 													
 												}
@@ -796,11 +816,11 @@ location	:	id				{
 										yyerror("\nErreur: Variable non déclarée\n");
 										return 1;
 									}
-									if(val->item->id_type == ID_TAB){
+									if(val->item->id_type == ID_TAB) {
 										yyerror("\nErreur: Accès tableau comme scalaire\n");
 										return 1;
 									}
-									if(val->table == glob_context){
+									if(val->table == glob_context) {
 										$$.result.type = QO_GLOBAL;
 										$$.result.u.global.name = malloc(strlen($1)+1);
 										strcpy($$.result.u.global.name, $1);
@@ -810,7 +830,7 @@ location	:	id				{
 									else {
 										$$.result.u.offset = offset(val);
 										$$.result.type = QO_ID;
-										$$.type = val->item->value;			
+										$$.type = val->item->value;	
 									}
 										
 								}
@@ -822,7 +842,7 @@ location	:	id				{
 
 											/* on cherche id dans la TOS*/
 											item_table *val = lookup($1);
-											if(val == NULL){
+											if(val == NULL) {
 												yyerror("\nErreur: Accès à un tableau non déclaré\n");
 												return 1;
 											}
@@ -854,7 +874,6 @@ expr		:	expr add_op expr %prec '+'	{
 												qo.type = QO_TMP;
 												qo.u.offset = 0;
 												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
-												qo.u.offset = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP)
 													$1.result.u.offset += 4;
@@ -874,7 +893,6 @@ expr		:	expr add_op expr %prec '+'	{
 												qo.type = QO_TMP;
 												qo.u.offset = 0;
 												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
-												qo.u.offset = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP)
 													$1.result.u.offset += 4;
@@ -960,10 +978,9 @@ expr		:	expr add_op expr %prec '+'	{
 												Ht_item* item = new_temp(INT);
 												quadop qo;
 												qo.type = QO_TMP;
-												qo.type = QO_TMP;
 												qo.u.offset = 0;
 												gencode(qo, qo, qo, Q_DECL, NULL,-1, NULL);
-												qo.u.offset = 0;
+
 												if($2.result.type == QO_ID || $2.result.type == QO_TMP)
 													$2.result.u.offset +=4 ;											
 												gencode(qo, $2.result, $2.result, Q_SUB, NULL,-1, NULL);
@@ -977,7 +994,7 @@ expr		:	expr add_op expr %prec '+'	{
 												$$.type = BOOL; 
 												$$.t = $2.f;
 												$$.f = $2.t;
-												}
+											}
 			|	'(' expr ')' 				{
 												$$ = $2;
 											}
@@ -994,8 +1011,8 @@ expr		:	expr add_op expr %prec '+'	{
 												$$.type = STRING;
 												$$.result.type = QO_CSTSTR;
 												$$.result.u.string_literal.label = new_str();
-												$$.result.u.string_literal.value = malloc(strlen($1)+1);
-												strcpy($$.result.u.string_literal.value, $1);
+												$$.result.u.string_literal.value = malloc(strlen($1)-2);
+												strncpy($$.result.u.string_literal.value, $1+1, strlen($1)-2);
 											}
 
 literal		:	int_literal					{

@@ -167,8 +167,8 @@ int main(int argc, char* argv[]){
         if(fout != stdout)
             fclose(fout);
     }*/
-    print_globalcode();
-    printf("here");
+    print_globalcode();	
+
     translate();
     if(fout != stdout)
             fclose(fout);

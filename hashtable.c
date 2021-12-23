@@ -437,7 +437,7 @@ void print_stack(){
 int offset(item_table *val){
 	int out = 0;
 
-    out = 4*val->table->nb_var - 4*(val->item->order+1);
+    out = 4*(val->table->nb_var - (val->item->order+1));
 
     if(val->table == curr_context)
         return out;
@@ -454,11 +454,11 @@ int offset(item_table *val){
 
 /* Dépile les variables temporaires du context courant, est appelée à la fin de l'évaluation d'une expression */
 void pop_tmp(){
-
     for (int i = 0; i < curr_context->max_size; i++){
         if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
             ht_delete(curr_context, curr_context->items[i]->key);
 			curr_context->count--;
+            
         }
     }
     tmpCount = 0;
@@ -479,8 +479,7 @@ Ht_item* new_temp(int type){
   sprintf(name, "t%ld",tmpCount);
 
   Ht_item *item = create_item(name, ID_TMP, type);
-	newname(item);
-
+    newname(item);
   tmpCount++;
   return item;
 }
