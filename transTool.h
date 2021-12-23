@@ -109,11 +109,19 @@ void declare_tab(char *tab_name, int size);
  * @param tab_name The name of the target table
  * @param offset The offset
  */
-void tab_put(char *buffer_reg, char *tab_name, int offset);
+void mips_tab_put(char *buffer_reg, char *tab_name, int offset);
+
+/**
+ * @brief Save the value in the buffer to the target table at a specified offset
+ * @param buffer_reg The buffer register holding the value to save
+ * @param tab_name The name of the target table
+ * @param offset The register containing the offset
+ */
+void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
 
 /**
  * @brief Save the value in the table at a specified offset to the target buffer
- * @param buffer_reg The target buffer to save a value 
+ * @param buffer_reg The target buffer register to save a value 
  * @param tab_name The name of the table
  * @param offset The offset
  */
@@ -125,4 +133,15 @@ void mips_end_func(quad q);
 void mips_push_args(param p);
 void mips_return(quad q);
 void mips_declare_strings();
-#endif
+
+void mips_tab_get(char *buffer_reg, char *tab_name, int offset);
+
+/**
+ * @brief Save the value in the table at a specified offset to the target buffer
+ * @param buffer_reg The target buffer register to save a value 
+ * @param tab_name The name of the table
+ * @param offset The register containing the offset
+ */
+void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
+
+ #endif

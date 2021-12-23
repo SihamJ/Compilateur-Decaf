@@ -44,9 +44,7 @@ void translate() {
 
 	/* Initialiser la valeur de chaque tableau */
 	for(int i=0; i<glob_dec_count;i++){
-	// Double Test if it's a Array, just to be sure
-	// To be replaced by Type
-		if (global_code[i].op1.u.global.size!=4)
+		if (global_code[i].op1.u.global.type==QO_TAB)
 			mips_init_array(global_code[i].op1);
 	}
 
