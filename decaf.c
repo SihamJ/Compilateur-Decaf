@@ -168,8 +168,7 @@ int main(int argc, char* argv[]){
             fclose(fout);
     }*/
     print_globalcode();	
-
-    translate();
+ fflush(stdout);    translate();
     if(fout != stdout)
             fclose(fout);
     free_stack();

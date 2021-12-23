@@ -1,11 +1,11 @@
-class AccesTableauExpression {
-    int in [4];
-    int t0 [4];
-    int t1 [4];
+class AssociativiteEqNe {
 
     void main ()
     {
-        int a;
-        t1[a*a*a] = a;
+        int x;
+        x = 17;
+        if (x == 17 != false) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=true\n");
     }
+
 }

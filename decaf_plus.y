@@ -12,7 +12,7 @@
 %}
 
 %union {
-	long intval;
+	int intval;
 	char *stringval;
 
 	struct expr_val {
@@ -27,6 +27,11 @@
 		list rtrn;		// return
 		int return_type; // if expr_val is a method
 	} expr_val;
+
+	struct literal{
+		int intval;
+		int type;
+	}literal;
 
 	struct decl{
 		global_type type;
@@ -43,11 +48,11 @@
 %token <stringval> id string_literal 
 %token class If Else For Return Break Continue 
 
-%type <expr_val> expr S S2 G block statement method_call location return_val literal
+%type <expr_val> expr S S2 G block statement method_call location return_val 
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
 %type <p> E Param P
-
+%type <literal> literal
 
 %left or
 %left and
@@ -562,8 +567,7 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 																We store the adress of the incomplete GOTOs in statement ($$). It will be completed in the above
 																rule ( S )
 															*/
-															$$.next = $7.next;
-															$$.next = concat($$.next, $10.next);
+															$$.next = concat($7.next, $10.next);
 															$$.next = concat($$.next, $6.next);
 
 															/* 
@@ -574,7 +578,7 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 															*/
 															$$.cntu = concat($6.cntu, $10.cntu);
 															$$.brk = concat($6.brk, $10.brk);
-															$$.rtrn = concat($$.rtrn,$6.rtrn);
+															$$.rtrn = concat($6.rtrn,$10.rtrn);
 														}
 			|	If '(' expr ')' M block 				{
 															/* IDEM but without ELSE*/
@@ -955,20 +959,11 @@ expr		:	expr add_op expr %prec '+'	{
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 											}
 			| 	literal 					{
-												$$ = $1;
-												
-												if($1.type == BOOL){
-													quadop qo;
-													qo.type = QO_CST;
-													qo.u.cst = true;
-													$$.t = crelist(nextquad);
-													gencode($$.result, $$.result, qo, Q_GEQ, NULL, -1, NULL);
-													$$.f = crelist(nextquad);
-													qo.type = QO_EMPTY;
-													qo.u.cst = 0;
-													gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); 
-												}
+												$$.type = $1.type;
+												$$.result.type = QO_CST;
+												$$.result.u.cst = $1.intval;
 											}
+											
 			|	location 					{
 												if($1.result.type == QO_GLOBAL && $1.result.u.global.type == QO_TAB){
 													$$.type = $1.type;
@@ -1031,18 +1026,15 @@ expr		:	expr add_op expr %prec '+'	{
 											}
 
 literal		:	int_literal					{
-												$$.result.type = QO_CST;
-												$$.result.u.cst = $1;
+												$$.intval = $1;
 												$$.type = INT;
 											}
 			|	char_literal				{
-												$$.result.type = QO_CST;
-												$$.result.u.cst = $1;
+												$$.intval = $1;
 												$$.type = INT;
 											}
 			|	bool_literal				{
-												$$.result.type = QO_CST;
-												$$.result.u.cst = $1;
+												$$.intval= $1;
 												$$.type = BOOL;
 											}
 

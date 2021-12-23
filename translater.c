@@ -13,7 +13,7 @@ FILE *source;
 
 void translate() {
 	
-
+	
 	if(fout == stdout)
 		printf("\n# _________________________ MIPS START ________________________# \n\n\n");
 	
@@ -169,19 +169,15 @@ void translate() {
 		//	mips_tab_get_IdxByReg("$v0", global_code[i].op1.u.global.name, "$a0");
 			break;
 
-		// TO DO
 		case Q_METHODCALL:
 			mips_method_call(global_code[i]);
 			break;
-		// TO DO
 		case Q_SYSCALL:
 			mips_syscall(global_code[i].op1.u.cst);
 			break;
-		// TO DO
-		case Q_RETURN:
+/*		case Q_RETURN:
 			mips_return(global_code[i]);
-			break;
-		// TO DO
+			break;*/
 		case Q_POP:
 			mips_pop_stack(global_code[i].op1.u.cst);
 			break;
@@ -192,5 +188,5 @@ void translate() {
         	break;
         }
     }
-	printf("\n");
+	printf("\n2");
 }

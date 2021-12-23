@@ -2,12 +2,9 @@
 	STR_TRUE: .asciiz "True"
 	STR_FALSE: .asciiz "False"
 STR_DYN_CHECK: .asciiz "Index Out Of Bound"
-	in: .space 16
-	in_SIZE: .word 4
-	t0: .space 16
-	t0_SIZE: .word 4
-	t1: .space 16
-	t1_SIZE: .word 4
+        str_0: .asciiz "true"
+        str_1: .asciiz "false"
+        str_2: .asciiz "=true\n"
 
 .text
 
@@ -63,41 +60,10 @@ BZero:
   addu $t0 $t0 4
   bgtz $t1 BZero
   jr $ra
-la $t0 in
-li $t1 4
-jal BZero
-la $t0 t0
-li $t1 4
-jal BZero
-la $t0 t1
-li $t1 4
-jal BZero
 
 main:
         li $t0, 0
 	sub $sp $sp 4
 	sw $t0 ($sp)
-        li $t0, 0
-	sub $sp $sp 4
-	sw $t0 ($sp)
-        lw $t0, 4($sp)
-        lw $t1, 4($sp)
-	mult $t0 $t1
-	mflo $v0
-        sw $v0, 0($sp)
-        li $t0, 0
-	sub $sp $sp 4
-	sw $t0 ($sp)
-        lw $t0, 4($sp)
-        lw $t1, 8($sp)
-	mult $t0 $t1
-	mflo $v0
-        sw $v0, 0($sp)
-        lw $t0, 8($sp)
-        sw $t0, 
-        add $sp $sp 8
-        add $sp $sp 4
-
-end:
-        li $v0, 10
-        syscall
+        li $t0, 17
+        sw $t0, 0($sp)
