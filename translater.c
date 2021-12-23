@@ -162,6 +162,11 @@ void translate() {
 				}
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
+		case Q_ACCESTAB:
+			mips_load_1args(global_code[i]);
+			mips_tab_get_IdxByReg("$v0", global_code[i].op1.u.global.name, "$a0");
+			break;
+
 		// TO DO
 		case Q_METHODCALL:
 			mips_method_call(global_code[i]);
