@@ -16,7 +16,8 @@
 	char *stringval;
 
 	struct expr_val {
-		quadop result;	
+		quadop result;
+		quadop offset;	// for accessing or writing in arrays	
 		int type;		// type of result operand: INT / BOOL / STRING
 		list next;		
 		list t;  		// true
@@ -106,7 +107,6 @@ field_decl	:	type glob_id ';' 							{
 															quadop qo,q1;
 															struct decl *pt = &$2;
 															qo.type = QO_GLOBAL;
-															
 															/* glob_id is a list of all arrays and global variables declared of same type, see rule below*/
 															while(pt != NULL){
 
@@ -471,7 +471,21 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 														return 1;
 													}
 
-													quadop q1;
+													quadop qo,q1;
+
+													/* If location is an element in an array, we need to retrieve the offset from 
+														the attribute 'quadop offset' and store it in q1. If not, we use q1 as an empty quadop
+														in the AFF below.
+													*/
+													if($1.result.type = QO_TAB)
+														q1 = $1.offset;
+													else{
+														q1.type = QO_EMPTY;
+													}
+															
+													/* we have to update the offsets after generating new tmp*/
+													if(curr_context!=glob_context)
+														$1.result.u.offset += 4*tmpCount;
 
 													if($3.type == BOOL) {
 														/*
@@ -480,15 +494,13 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 															them with the address of the 2 quads we generated. The true attribute of expr is completed with the adress
 															of the true affectation, and the false attribute is completed with the address of the false affectation.
 														*/
-														quadop qo;
 
 														/* True affectation */
 														qo.type = QO_CST;
 														qo.u.cst = true;
 														complete($3.t, nextquad);
-														if(curr_context!=glob_context)
-															$1.result.u.offset += 4*tmpCount;
-														gencode($1.result, qo, qo, Q_AFF, NULL, -1, NULL); 	
+														
+														gencode($1.result, qo, q1, Q_AFF, NULL, -1, NULL); 	
 
 														/* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
 															We add it to $$.next
@@ -501,30 +513,21 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 														qo.type = QO_CST;	
 														qo.u.cst = false;		
 														complete($3.f, nextquad);											
-														gencode($1.result, qo, qo, Q_AFF, NULL, -1, NULL);	
+														gencode($1.result, qo, q1, Q_AFF, NULL, -1, NULL);	
 													}
 												
 													else {
-														if(curr_context!=glob_context)
-															$1.result.u.offset += 4*tmpCount;
 														/* If it's an affectation of type INT, we simply generate the corresponding quad*/
-														/* Normal affectation */
-														if($2 == Q_AFF)
-															gencode($1.result,$3.result,$3.result,$2, NULL,-1, NULL);
-
-														/* += is just an addition with op2 = op1*/
-														else if($2 == Q_AFFADD)
-															gencode($1.result,$1.result,$3.result,Q_ADD, NULL,-1, NULL);
-
-														/* -= is just a subtraction with op2 = op1*/
-														else if($2 == Q_AFFSUB)
-															gencode($1.result,$1.result,$3.result,Q_SUB, NULL,-1, NULL);
+														/* in the translater, we have to differentiate between = += and -=
+															If $1 is an array, the offset is q1. If not, q1 is empty.
+														 */
+														gencode($1.result,$3.result,q1,$2, NULL,-1, NULL);
 													}
 													/* we pop the temporary variables from the stack at the end of the expression evaluation if we have any.
 														we store the number of temporary variables to pop in qo. The counter is initialized in 
 														pop_tmp().
 													*/			
-													if(curr_context->count > 0){
+													if(tmpCount > 0){
 														quadop qo;
 														qo.type = QO_CST;
 														qo.u.cst = tmpCount*4;
@@ -822,6 +825,7 @@ location	:	id				{
 									}
 									if(val->table == glob_context) {
 										$$.result.type = QO_GLOBAL;
+										$$.result.u.global.type = QO_SCAL;
 										$$.result.u.global.name = malloc(strlen($1)+1);
 										strcpy($$.result.u.global.name, $1);
 										$$.result.u.global.size = 4;
@@ -847,17 +851,17 @@ location	:	id				{
 												return 1;
 											}
 
-											if(val->item->id_type != ID_TAB ) {
+											 if(val->item->id_type != ID_TAB ) {
 												yyerror("\nErreur: Accès à l'indice d'un identificateur qui n'est pas un tableau\n");
 												return 1;
 											}
 
 											$$.type = val->item->value; 
 											$$.result.type = QO_GLOBAL;
+											$$.result.u.global.type = QO_TAB;
 											$$.result.u.global.name = malloc(strlen($1)+1);
 											strcpy($$.result.u.global.name, $1); 
-											$$.result.u.type = QO_TAB;
-											$$.result.u.global_type.offset = $3.result;
+											$$.offset = $3.result;
 										}
 
 expr		:	expr add_op expr %prec '+'	{
@@ -963,8 +967,17 @@ expr		:	expr add_op expr %prec '+'	{
 												}
 											}
 			|	location 					{
-												if($1.result.type == QO_TAB)
-													gencode($$.result, $1.result, $1.result, Q_ACCESTAB, NULL, -1, NULL);
+												if($1.result.type == QO_GLOBAL && $1.result.u.global.type == QO_TAB){
+													$$.type = $1.type;
+													Ht_item* item = new_temp(INT);
+													quadop qo;
+													qo.type = QO_TMP;
+													qo.u.offset = 0;
+													gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
+													$1.offset.u.offset += 4;
+													gencode(qo, $1.result, $1.offset, Q_ACCESTAB, NULL, -1, NULL);
+													$$.result = qo;
+												}
 												else 
 													$$ = $1;
 											}

@@ -1,11 +1,12 @@
-class AssociativiteAddSub {
+class AccesTableauExpression {
+    int in [4];
+    int t0 [4];
+    int t1 [4];
 
     void main ()
     {
-        int r;
-        r = 57 - 99 + 42;
-        WriteInt (r);
-        WriteString ("=0\n");
-    }
+        int a;
 
+        a = t1[2*3];
+    }
 }

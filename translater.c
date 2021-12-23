@@ -23,9 +23,7 @@ void translate() {
 	for(int i=0; i<glob_dec_count;i++){
 		mips_dec_global(global_code[i].op1);
 	}
-	printf("1\n");
 	mips_declare_strings();
-	printf("2\n");
 	/* Fin Déclarations globales */
 
 	fprintf(fout, "\n.text\n");
@@ -64,6 +62,10 @@ void translate() {
 				mips_write_stack("$t0", global_code[i].op1.u.offset);
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$t0", global_code[i].op1.u.global.name);
+			break;
+		case Q_AFFADD:
+			break;
+		case Q_AFFSUB:
 			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
@@ -163,8 +165,8 @@ void translate() {
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
 		case Q_ACCESTAB:
-			mips_load_1args(global_code[i]);
-			mips_tab_get_IdxByReg("$v0", global_code[i].op1.u.global.name, "$a0");
+		//	mips_load_1args(global_code[i]);
+		//	mips_tab_get_IdxByReg("$v0", global_code[i].op1.u.global.name, "$a0");
 			break;
 
 		// TO DO
