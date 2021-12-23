@@ -6,7 +6,6 @@ class AccesTableauExpression {
     void main ()
     {
         int a;
-
-        a = t1[2*3];
+        t1[a*a*a] = a;
     }
 }

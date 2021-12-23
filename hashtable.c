@@ -467,18 +467,7 @@ void pop_tmp(){
 
 Ht_item* new_temp(int type){
 
-  int a = tmpCount;
-  int cpt = 1;
-
-  while(a){
-    a=a/10;
-    cpt++;
-  }
-  
-  char *name = malloc(cpt+3);
-  sprintf(name, "t%ld",tmpCount);
-
-  Ht_item *item = create_item(name, ID_TMP, type);
+  Ht_item *item = create_item("0", ID_TMP, type);
     newname(item);
   tmpCount++;
   return item;

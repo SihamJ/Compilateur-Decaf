@@ -1,0 +1,103 @@
+.data
+	STR_TRUE: .asciiz "True"
+	STR_FALSE: .asciiz "False"
+STR_DYN_CHECK: .asciiz "Index Out Of Bound"
+	in: .space 16
+	in_SIZE: .word 4
+	t0: .space 16
+	t0_SIZE: .word 4
+	t1: .space 16
+	t1_SIZE: .word 4
+
+.text
+
+.globl main
+
+
+j main
+
+WriteBool:
+	lw $a0, 0($sp)
+	beqz $a0 Load_False
+	Load_True:
+	la $a0 STR_TRUE
+	j Print_Bool
+	Load_False:
+	la $a0 STR_FALSE
+	Print_Bool:
+	li $v0 4
+	syscall
+	jr $ra
+
+ReadInt:
+	li $v0, 5
+	syscall
+	jr $ra
+
+WriteString:
+	li $v0 4
+	syscall
+	jr $ra
+
+WriteInt:
+	lw $a0, 0($sp)
+	li $v0, 1
+	syscall
+	jr $ra
+
+Quit_Program:
+	li $v0 10 
+	syscall
+Out_Of_Bound:
+  la $t0 STR_DYN_CHECK
+  li $v0 4
+  syscall
+  j Quit_Program
+DYN_CHECK:
+  bltz $t0 Out_Of_Bound
+  bge $t0 $t1 Out_Of_Bound
+  jr $ra
+BZero:
+  addi $t1 $t1 -1
+  sw $zero ($t0)
+  addu $t0 $t0 4
+  bgtz $t1 BZero
+  jr $ra
+la $t0 in
+li $t1 4
+jal BZero
+la $t0 t0
+li $t1 4
+jal BZero
+la $t0 t1
+li $t1 4
+jal BZero
+
+main:
+        li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+        li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+        lw $t0, 4($sp)
+        lw $t1, 4($sp)
+	mult $t0 $t1
+	mflo $v0
+        sw $v0, 0($sp)
+        li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+        lw $t0, 4($sp)
+        lw $t1, 8($sp)
+	mult $t0 $t1
+	mflo $v0
+        sw $v0, 0($sp)
+        lw $t0, 8($sp)
+        sw $t0, 
+        add $sp $sp 8
+        add $sp $sp 4
+
+end:
+        li $v0, 10
+        syscall

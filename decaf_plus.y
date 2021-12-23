@@ -76,6 +76,7 @@ program	:  class id '{' {
 									yyerror("\nErreur: Pas de méthode main\n");
 									return 1;
 								}
+
 								quadop qo;
 								popctx(); /* End of the program, we pop the global context.*/
 								return 0;
@@ -135,6 +136,7 @@ field_decl	:	type glob_id ';' 							{
 																Ht_item *item = create_item(pt->name, type, $1);
 																item->size = pt->size;
 																newname(item);
+																printf("%s: %d\n",item->key,item->id_type);
 																pt = pt->suiv;
 															}
 														}
@@ -148,6 +150,7 @@ glob_id			:	id '[' int_literal ']' ',' glob_id	{	if($3 <= 0)
 															var.suiv = &$6;
 															var.type = QO_TAB;
 															$$ = var;
+															
 														}
 				|	id '[' int_literal ']'					{
 															if($3 <= 0) 
@@ -477,7 +480,7 @@ statement 	:	location assign_op expr ';' {		/* Affectation */
 														the attribute 'quadop offset' and store it in q1. If not, we use q1 as an empty quadop
 														in the AFF below.
 													*/
-													if($1.result.type = QO_TAB)
+													if($1.result.type == QO_TAB)
 														q1 = $1.offset;
 													else{
 														q1.type = QO_EMPTY;
@@ -850,7 +853,7 @@ location	:	id				{
 												yyerror("\nErreur: Accès à un tableau non déclaré\n");
 												return 1;
 											}
-
+											printf("%s: %d\n",$1,val->item->id_type);
 											 if(val->item->id_type != ID_TAB ) {
 												yyerror("\nErreur: Accès à l'indice d'un identificateur qui n'est pas un tableau\n");
 												return 1;

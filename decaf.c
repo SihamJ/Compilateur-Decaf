@@ -129,7 +129,7 @@ int main(int argc, char* argv[]){
     /* un fichier source à parser existe*/
 
     curr_context = NULL;
-    //yydebug=1;
+ //   yydebug=1;
     int t = yyparse();
 
     if(t!=0)
