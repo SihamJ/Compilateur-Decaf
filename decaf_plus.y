@@ -856,11 +856,8 @@ location	:	id				{
 											$$.result.type = QO_GLOBAL;
 											$$.result.u.global.name = malloc(strlen($1)+1);
 											strcpy($$.result.u.global.name, $1); 
-											quadop q1;
-											q1.type = QO_CST;
 											/* TO DO: Vérification dynamique offset*/
-											q1.u.cst = 4*2;
-											gencode($$.result, q1, q1, Q_ACCESTAB, NULL, -1, NULL);
+											gencode($$.result, $3.result, $3.result, Q_ACCESTAB, NULL, -1, NULL);
 										}
 
 expr		:	expr add_op expr %prec '+'	{

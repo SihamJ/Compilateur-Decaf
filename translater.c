@@ -181,6 +181,8 @@ void translate() {
 		case Q_ENDFUNC:
 			mips_end_func(global_code[i]);
 			break;
+		case Q_ACCESTAB:
+			break;
         default:
         	break;
         }
