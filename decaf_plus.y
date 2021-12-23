@@ -948,7 +948,11 @@ expr		:	expr add_op expr %prec '+'	{
 													yyerror("\nErreur: Comparaison de types différents");
 													return 1;
 												}
-												
+												if($1.type == BOOL){
+													complete($1.t, nextquad);
+													complete($1.f, nextquad);
+													
+												}
 												$$.type = BOOL; 
 												quadop qo;
 												qo.type = QO_EMPTY;
