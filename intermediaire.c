@@ -280,3 +280,10 @@ void add_labels(){
     }
   }
 }
+
+void update_offsets(quadop *op1, int offset){
+
+    if(op1!=NULL && (op1->type == QO_ID || op1->type == QO_TMP)){
+        op1->u.offset +=offset;
+    }
+}

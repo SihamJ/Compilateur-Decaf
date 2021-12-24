@@ -101,5 +101,6 @@ Comparaison:        a rel_op b       =>  op1 = we don't care;  op2 = a ; op3 = b
 GOTO:               j next           =>  type = Q_GOTO, jump = next
 */
 
+void update_offsets(quadop *op1, int offset);
 
 #endif

@@ -167,8 +167,10 @@ int main(int argc, char* argv[]){
         if(fout != stdout)
             fclose(fout);
     }*/
+    printf("here\n");
     print_globalcode();	
- fflush(stdout);    translate();
+    fflush(stdout);    
+    translate();
     if(fout != stdout)
             fclose(fout);
     free_stack();

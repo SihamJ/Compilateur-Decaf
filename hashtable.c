@@ -118,7 +118,6 @@ HashTable *create_table()
     HashTable *table = (HashTable *)malloc(sizeof(HashTable));
     table->max_size = CAPACITY;
     table->count = 0;
-    table->nb_var = 0;
     table->items = (Ht_item **)calloc(table->max_size, sizeof(Ht_item *));
     for (int i = 0; i < table->max_size; i++)
         table->items[i] = NULL;
@@ -246,8 +245,6 @@ void ht_delete(HashTable *table, char *key)
         {
             // No collision chain. Remove the item
             // and set table index to NULL
-            if(item->id_type == ID_TMP || item->id_type == ID_VAR)
-                table->nb_var--;
             table->items[index] = NULL;
             free_item(item);
             table->count--;
@@ -260,8 +257,6 @@ void ht_delete(HashTable *table, char *key)
             {
                 // Remove this item and set the head of the list
                 // as the new item
-                if(item->id_type == ID_TMP || item->id_type == ID_VAR)
-                    table->nb_var--;
                 free_item(item);
                 table->count--;
                 LinkedList *node = head;
@@ -282,8 +277,6 @@ void ht_delete(HashTable *table, char *key)
             {
                 if (strcmp(curr->item->key, key) == 0)
                 {
-                    if(item->id_type == ID_TMP || item->id_type == ID_VAR)
-                            table->nb_var--;
                     if (prev == NULL)
                     {                       
                         // First element of the chain. Remove the chain
@@ -371,15 +364,9 @@ void free_stack(){
 }
 
 void newname(Ht_item *item){
-	
-    if(curr_context != glob_context){
-        item->order = curr_context->nb_var;
-        if(item->id_type == ID_VAR || item->id_type == ID_TMP)
-            curr_context->nb_var++;
-    }
+    item->order = curr_context->count;
     ht_insert(curr_context, item);
     curr_context->count ++;
-
 }
 
 item_table *lookup(char *key){
@@ -435,17 +422,24 @@ void print_stack(){
 
 
 int offset(item_table *val){
+
+    /* for debugging*/
+    if(val->table == glob_context){
+        fprintf(stderr, "\nErreur: You can't retrieve offset of a global variable!\n");
+        exit(1);
+    }
+    
 	int out = 0;
 
-    out = 4*(val->table->nb_var - (val->item->order+1));
+    out = 4*(val->table->count - (val->item->order+1));
 
     if(val->table == curr_context)
         return out;
 
     HashTable *temp = curr_context;
 
-    while(temp != val->table && temp != glob_context && temp){
-        out += 4*temp->nb_var;
+    while(temp != val->table && temp != glob_context){
+        out += 4*temp->count;
         temp = temp->next;
     }
 
@@ -467,10 +461,20 @@ void pop_tmp(){
 
 Ht_item* new_temp(int type){
 
-  Ht_item *item = create_item("0", ID_TMP, type);
+    char* label;
+    int a = tmpCount;
+    int cpt = 1;
+    while(a){
+        a=a/10;
+        cpt++;
+    }
+    label = malloc(cpt+1);
+    sprintf(label, "%ld",tmpCount);
+
+    Ht_item *item = create_item(label, ID_TMP, type);
     newname(item);
-  tmpCount++;
-  return item;
+    tmpCount++;
+    return item;
 }
 
 /* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
