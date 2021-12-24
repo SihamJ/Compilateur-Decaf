@@ -828,7 +828,7 @@ E 			:	expr ',' E 						{
 			|	expr 							{ 
 													$$.p = (param) malloc(sizeof(struct param)); 
 													$$.p->type = $1.type; 
-													$$.p->arg = $1.result; 
+													$$.p->arg = $1.result;
 													$$.p->next = NULL;
 													if($1.type == BOOL){
 														$$.t = $1.t;
@@ -837,7 +837,7 @@ E 			:	expr ',' E 						{
 													
 												}
 
-	location	:	id				{
+location	:	id				{
 										
 										$$.type = ID_VAR;
 										$$.stringval = malloc(strlen($1)+1);
@@ -1127,8 +1127,10 @@ expr		:	expr add_op expr %prec '+'	{
 													val = lookup($2.stringval);
 													$2.result.u.offset = offset(val);
 												}
-												
-												gencode(qo, $2.result, $2.result, Q_SUB, NULL,-1, NULL);
+												quadop q1;
+												q1.type = QO_CST;
+												q1.u.cst = 0;
+												gencode(qo, q1, $2.result, Q_SUB, NULL,-1, NULL);
 												$$.result = qo;
 											}
 			|	'!' expr %prec NEG 			{	

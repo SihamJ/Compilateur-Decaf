@@ -428,7 +428,7 @@ int offset(item_table *val){
         fprintf(stderr, "\nErreur: You can't retrieve offset of a global variable!\n");
         exit(1);
     }
-    
+
 	int out = 0;
 
     out = 4*(val->table->count - (val->item->order+1));
@@ -450,9 +450,7 @@ int offset(item_table *val){
 void pop_tmp(){
     for (int i = 0; i < curr_context->max_size; i++){
         if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
-            ht_delete(curr_context, curr_context->items[i]->key);
-			curr_context->count--;
-            
+            ht_delete(curr_context, curr_context->items[i]->key);            
         }
     }
     tmpCount = 0;
