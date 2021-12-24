@@ -948,55 +948,19 @@ expr		:	expr add_op expr %prec '+'	{
 													yyerror("\nErreur: Comparaison de types différents");
 													return 1;
 												}
-
 												if($1.type == BOOL){
-													complete($1.t, nextquad+1);
-													complete($1.f, nextquad+1);
+													complete($1.t, nextquad);
+													complete($1.f, nextquad);
+													
 												}
-												if($3.type == BOOL){
-													complete($3.t, nextquad+1);
-													complete($3.f, nextquad+1);
-												}
-
-												quadop qo;
-												Ht_item* item = new_temp(INT);
-												qo.type = QO_TMP;
-												qo.u.offset = 0;
-												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
-
-												if($1.result.type == QO_ID || $1.result.type == QO_TMP)
-													$1.result.u.offset += 4;
-												if($3.result.type == QO_ID || $3.result.type == QO_TMP)
-													$3.result.u.offset += 4;
-
-
 												$$.type = BOOL; 
-												qo.type = QO_EMPTY;									
-												gencode(qo,$1.result,$3.result,$2,NULL, nextquad+2, NULL);
-
-												quadop q1;
-												q1.type = QO_EMPTY;
-												$$.t = crelist(nextquad);		
-												gencode(q1,q1,q1, Q_GOTO, NULL,nextquad+3, NULL);
-
-												q1.type = QO_CST;
-												q1.u.cst = 1;
-												gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
-												
-												q1.type = QO_EMPTY;
-												$$.t = crelist(nextquad);		
-												gencode(q1,q1,q1, Q_GOTO, NULL, -1, NULL);
-
-												q1.type = QO_CST;
-												q1.u.cst = 0;
-												gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
-
-												$$.result = qo;
-
-												q1.type = QO_EMPTY;
+												quadop qo;
+												qo.type = QO_EMPTY;
+												qo.u.cst = 0;											
+												$$.t = crelist(nextquad);
+												gencode(qo,$1.result,$3.result,$2,NULL, -1, NULL);
 												$$.f = crelist(nextquad);
-												gencode(q1, q1, q1, Q_GOTO, NULL, -1, NULL);
-												
+												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 											}
 			| 	literal 					{
 												$$.type = $1.type;

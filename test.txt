@@ -4,7 +4,7 @@ class AssociativiteEqNe {
     {
         int x;
         x = 17;
-        if (x <= 17 != (x > 18)) {WriteString ("true");} else {WriteString ("false");}
+        if (x == 17 != false == true) {WriteString ("true");} else {WriteString ("false");}
         WriteString ("=true\n");
     }
 
