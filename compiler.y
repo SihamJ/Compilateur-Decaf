@@ -61,34 +61,22 @@
 %start program
 %%
 
-program	:  class id '{' { 	
-								pushctx(CTX_GLOB); /* Pushing the global context*/
-								program_name = malloc(strlen($2)+1); /* saving class name in a global variable*/
-								strcpy(program_name, $2);
+program	:  class id '{' { 		pushctx(CTX_GLOB); /* Pushing the global context*/
+								program_name = malloc(strlen($2)+1); 
+								strcpy(program_name, $2);	/* saving class name in a global variable*/
 								add_libs_to_tos(); /* Adding the I/O functions to the global symbol table*/
 								glob_context = curr_context; /* glob_context will point to this context throughout the execution of this program.*/
 							}
 
 						
-				GLOBAL '}' { 
-								if( ht_search( glob_context,"main") == NULL ){	/* verifying that we have a main method*/
-									yyerror("\nErreur: Pas de méthode main\n");
-									return 1;
-								}
-
-								quadop qo;
-								popctx(); 
-								return 0;
+				GLOBAL '}' { 	/* verifying that we have a main method*/
+								if( ht_search( glob_context,"main") == NULL ){	yyerror("\nErreur: Pas de méthode main\n"); return 1; }
+								quadop qo; popctx();return 0;
 							}
 
 M 		:	%empty 		{	$$ = nextquad; }
 
-G 		:	%empty		{	$$ = crelist(nextquad);
-							quadop qo;
-							qo.type = QO_EMPTY;
-							qo.u.cst = 0;
-							gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL);
-						}
+G 		:	%empty		{	$$ = crelist(nextquad); quadop qo; qo.type = QO_EMPTY; gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); }
 
 Max		:	%empty		{;}
 
@@ -98,11 +86,9 @@ GLOBAL 		: MD		{;}
 FD 			: FD field_decl  {;}
 			| field_decl	 {;}
 
-field_decl	:	type glob_id ';' 		{ 
-											/* we push the global variables into the TOS
+field_decl	:	type glob_id ';' 		{ 	/* we push the global variables into the TOS
 											returns NULL if successful, otherwise returns an error msg*/
-											char *msg;
-											if((msg = field_declare(&$2, $1)) != NULL) { yyerror(msg); return 1;}
+											char *msg; if((msg = field_declare(&$2, $1)) != NULL) { yyerror(msg); return 1;}
 										}
 														
 
@@ -144,10 +130,8 @@ method_decl	:		type id 	{
 									if(!verify_returns($8.rtrn, $1)) { yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 
 									complete($8.next,nextquad);	complete($8.rtrn, nextquad);
-
 									char *msg; 
 									if( (msg = end_func($2, curr_context->count, $5)) != NULL){ yyerror(msg); return 1; }	
-
 									popctx(); 
 								}
 													
@@ -165,13 +149,11 @@ method_decl	:		type id 	{
 
 									item_table* var = lookup($2);
 									var->item->p = $5;
-
 									complete($7.next, nextquad); complete($7.rtrn, nextquad);	
 
 									// next quad is here in END_FUNCTION. we also verify that P is NULL for main
 									char *msg;
 									if( (msg = end_func($2, curr_context->count, $5)) != NULL) { yyerror(msg); return 1; }	
-
 									popctx();
 								}
 
@@ -218,6 +200,7 @@ var_decl 	:  	type B ';' {
 B 			:	id ',' B  	{ 	declaration var;
 								var.name = malloc((strlen($1)+1));   strcpy(var.name,$1);
 								var.suiv = &$3; $$ = var; }
+
 			|	id			{	$$.name = malloc((strlen($1)+1));   strcpy($$.name,$1); 
 								$$.suiv = NULL; }
 
@@ -226,7 +209,7 @@ type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
 
 
-S 			: 	S M statement 	{	 complete($1.next, $2); 						
+S 			: 	S M statement 	{	complete($1.next, $2); 						
 									$$.cntu = concat($$.cntu,$3.cntu); 	$$.next = $3.next; 		
 									$$.brk = concat($$.brk,$3.brk); 	$$.rtrn = concat($$.rtrn,$3.rtrn); }
 
@@ -275,7 +258,7 @@ statement 	:	location assign_op expr ';' {
 												gen_q_pop(curr_context->count*4); 
 											}
 												
-			|	For id '=' expr ',' expr Max{  	/* verifying types, declaration of ID, and affectation*/
+		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
 												char* msg;
 												if( (msg = for_declare($2, $4, $6)) != NULL) { yyerror(msg); return 1;}
 												$7 = get_max($2, $6);
@@ -284,11 +267,8 @@ statement 	:	location assign_op expr ';' {
 						
 					block 						{   complete($11.next, nextquad); complete($11.cntu, nextquad);
 													$$.next = crelist($9); $$.next = concat($$.next, $11.brk);
-													$$.rtrn = $11.rtrn;
-													gen_increment_and_loopback($2, $9);
-
-													complete($$.next, nextquad);
-													gen_q_pop(curr_context->count*4); 
+													$$.rtrn = $11.rtrn; gen_increment_and_loopback($2, $9);
+													complete($$.next, nextquad); gen_q_pop(curr_context->count*4); 
 													popctx(); }
 
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
@@ -297,13 +277,11 @@ statement 	:	location assign_op expr ';' {
 												gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL); }
 
 			|	Break ';'					{ 	if(!is_a_parent(CTX_FOR)) { yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n"); return 1; }
-												quadop qo; qo.type = QO_EMPTY;
-												$$.brk = crelist(nextquad);
+												quadop qo; qo.type = QO_EMPTY; $$.brk = crelist(nextquad);
 												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); }
 
 			|	Continue ';'				{  if(!is_a_parent(CTX_FOR)) { yyerror("\nErreur: Continue; doit être au sein d'une boucle FOR\n");return 1;}
-												quadop qo; qo.type = QO_EMPTY;
-												$$.cntu = crelist(nextquad);  
+												quadop qo; qo.type = QO_EMPTY; $$.cntu = crelist(nextquad);  
 												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); }
 
 			|	block						{ 	$$.brk = $1.brk; $$.next = $1.next; $$.cntu = $1.cntu; $$.rtrn = $1.rtrn;}
@@ -312,84 +290,39 @@ return_val	:	expr 						{ 	$$ = $1; }
 			|	%empty						{ 	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY; }
 
 
-method_call :	id '(' E ')' 				{	item_table *val = lookup($1);
-												if(val == NULL) { yyerror("\nErreur: Méthode non déclarée\n"); return 1; }
-												if(val->item->id_type != ID_METHOD) { yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n"); return 1;}
-												if(!verify_param(val->item->p, $3.p)) { yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");return 1;}
+method_call :	id '(' E ')' 				{	char *msg;
+												if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
 
 												if(!strcmp($1,"WriteString")) {
 													get_write_string_args($3.p->arg.u.string_literal.label, $3.p->arg.u.string_literal.value); }
 
-												$$.return_type = val->item->value; 
+												gen_method_call($1, &$3, &$$); }
 
-												// we store in qo the label of the method to call and in q1 the return value
-												quadop qo,q2; q2.type = QO_EMPTY; qo.type = QO_CSTSTR;
-												qo.u.string_literal.label = malloc(strlen($1)+1);
-												strcpy(qo.u.string_literal.label,$1);
-												quadop q1; if($$.return_type != VOIDTYPE) { q1.type = QO_CST; q1.u.cst = $$.return_type; } else { q1.type = QO_EMPTY;}
-												complete($3.t,nextquad); complete($3.f,nextquad);
-												gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, $3.p);
-												$$.result = q1; }
+			|	id '(' ')'					{	char *msg;
+												if((msg = verify_and_get_type_call($1, NULL, &$$)) != NULL) { yyerror(msg); return 1; }
 
-			|	id '(' ')'					{
-												item_table *val = lookup($1);
-												if(val == NULL) { yyerror("\nErreur: Méthode non déclarée\n"); return 1; }
-												if(val->item->id_type != ID_METHOD) { yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n"); return 1;}
-												if(!verify_param(val->item->p, NULL)) { yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n"); return 1;}
-												$$.return_type = val->item->value;
-
-												// we store in qo the label of the method to call
-												quadop qo;
-												qo.type = QO_CSTSTR;
-												qo.u.string_literal.label = malloc(strlen($1)+1);
-												strcpy(qo.u.string_literal.label,$1);
-												gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL); }
+												gen_method_call($1, NULL, &$$); }
 
 /*
 	 E is a list of parameters of a method call 
 */
-E 			:	expr ',' E 						{ 
-													param p = (param) malloc(sizeof(struct param)); 
-													p->type = $1.type; 
-													p->arg = $1.result;
-													p->next = $3.p; 
-													$$.p = p;
-													if($1.type == BOOL){
-														$$.t = concat($$.t,$1.t);
-														$$.f = concat($$.f,$1.f);
-													}
+E 			:	expr ',' E 						{ 	param p = (param) malloc(sizeof(struct param)); p->type = $1.type; p->arg = $1.result;
+													p->next = $3.p; $$.p = p;
+													if($1.type == BOOL) { $$.t = concat($$.t,$1.t); $$.f = concat($$.f,$1.f);}
 												}
-			|	expr 							{ 
-													$$.p = (param) malloc(sizeof(struct param)); 
-													$$.p->type = $1.type; 
-													$$.p->arg = $1.result;
-													$$.p->next = NULL;
-													if($1.type == BOOL){
-														$$.t = $1.t;
-														$$.f = $1.f;
-													}
-													
+			|	expr 							{ 	$$.p = (param) malloc(sizeof(struct param)); $$.p->type = $1.type; 
+													$$.p->arg = $1.result; $$.p->next = NULL;
+													if($1.type == BOOL) { $$.t = $1.t; $$.f = $1.f; }	
 												}
 
-location	:	id				{
-										
-										$$.type = ID_VAR;
-										$$.stringval = malloc(strlen($1)+1);
-										strcpy($$.stringval, $1);
-											
-									}
-			|	id '[' expr ']'		{ 	
-										$$.type = ID_TAB;
-										$$.stringval = malloc(strlen($1)+1);
-										strcpy($$.stringval, $1);
-										$$.index = $3.result;
-								}
+location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcpy($$.stringval, $1); }
+
+			|	id '[' expr ']'		{ 	$$.type = ID_TAB; $$.stringval = malloc(strlen($1)+1);
+										strcpy($$.stringval, $1); $$.index = $3.result; }
+
 
 expr		:	expr add_op expr %prec '+'	{
-												if($1.type != INT || $3.type != INT){
-													yyerror("\nErreur: Arithmètique non entière");
-													return 1;
-												}
+												if($1.type != INT || $3.type != INT){ yyerror("\nErreur: Arithmètique non entière"); return 1; }
 												$$.type = INT; 
 												Ht_item* item = new_temp(INT);
 												quadop qo;
@@ -445,34 +378,19 @@ expr		:	expr add_op expr %prec '+'	{
 												gencode(qo,$1.result,$3.result,$2,NULL,-1, NULL);
 												$$.result = qo;
 											}
-			|	expr and M expr				{
-												if($1.type != BOOL || $4.type != BOOL){
-													yyerror("\nErreur: AND operator with non boolean value");
-													return 1;
-												}			
-												$$.type = BOOL;
-												complete($1.t, $3);
-												$$.f = concat($1.f, $4.f);
-												$$.t = $4.t; 
 
+			|	expr and M expr				{	if($1.type != BOOL || $4.type != BOOL){ yyerror("\nErreur: AND operator with non boolean value"); return 1; }			
+												$$.type = BOOL; complete($1.t, $3);
+												$$.f = concat($1.f, $4.f); $$.t = $4.t; 
 											}
 
-			|	expr or M expr				{	if($1.type != BOOL || $4.type != BOOL){
-													yyerror("\nErreur: OR operator with non boolean value");
-													return 1;
-												}
-												$$.type = BOOL;
-												complete($1.f, $3);
-												$$.t = concat($1.t, $4.t);
-												$$.f = $4.f;
+			|	expr or M expr				{	if($1.type != BOOL || $4.type != BOOL){ yyerror("\nErreur: OR operator with non boolean value"); return 1; }
+												$$.type = BOOL; complete($1.f, $3);
+												$$.t = concat($1.t, $4.t); $$.f = $4.f;
 											}
-			|	expr oprel expr	%prec '<' 	{
-												
-												if($1.type != INT || $3.type != INT){
-													yyerror("\nErreur: REL OP non entière");
-													return 1;
-												}
+			|	expr oprel expr	%prec '<' 	{	if($1.type != INT || $3.type != INT){ yyerror("\nErreur: REL OP non entière"); return 1; }
 												$$.type = BOOL;
+
 												quadop qo;
 												qo.type = QO_EMPTY;
 												qo.u.cst = 0;
@@ -494,11 +412,9 @@ expr		:	expr add_op expr %prec '+'	{
 
 											}
 			|	expr eq_op expr	%prec eq	{	
-												if($1.type != $3.type ){
-													yyerror("\nErreur: Comparaison de types différents");
-													return 1;
-												}
+												if($1.type != $3.type ){ yyerror("\nErreur: Comparaison de types différents"); return 1; }
 												$$.type = BOOL; 
+												
 												quadop qo;
 												qo.type = QO_EMPTY;
 												qo.u.cst = 0;
@@ -518,16 +434,7 @@ expr		:	expr add_op expr %prec '+'	{
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 
 											}
-			| 	literal 					{
-												
-												
-
-												
-													$$.result.type = QO_CST;
-													$$.type = $1.type;
-													$$.result.u.cst = $1.intval;
-												
-											}
+			| 	literal 					{	$$.result.type = QO_CST; $$.type = $1.type; $$.result.u.cst = $1.intval; }
 											
 			|	location 					{
 												item_table *val = lookup($1.stringval);
@@ -589,11 +496,9 @@ expr		:	expr add_op expr %prec '+'	{
 													}
 												}
 			|	'-' expr %prec NEG 			{
-												if($2.type != INT){
-													yyerror("\nErreur: Arithmètique non entière");
-													return 1;
-												}
+												if($2.type != INT){ yyerror("\nErreur: Arithmètique non entière"); return 1; }
 												$$.type = INT;
+
 												Ht_item* item = new_temp(INT);
 												quadop qo;
 												qo.type = QO_TMP;
@@ -615,44 +520,27 @@ expr		:	expr add_op expr %prec '+'	{
 												$$.result = qo;
 											}
 			|	'!' expr %prec NEG 			{	
-												if($2.type != BOOL){
-													yyerror("\nErreur: NOT operator with non boolean value");
-													return 1;
-												}
-												$$.type = BOOL; 
-												$$.t = $2.f;
-												$$.f = $2.t;
+												if($2.type != BOOL){ yyerror("\nErreur: NOT operator with non boolean value"); return 1; }
+												$$.type = BOOL; $$.t = $2.f; $$.f = $2.t;
 											}
-			|	'(' expr ')' 				{
-												$$ = $2;
+			|	'(' expr ')' 				{	$$ = $2; }
+
+			|	method_call					{ 	if($1.return_type == VOIDTYPE){ yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n"); return 1;}
+												$$.result = $1.result; $$.type = $1.return_type;
 											}
-			|	method_call					{ 
-												/* A method with void return type can't be used as an expression*/
-												if($1.return_type == VOIDTYPE){ yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n"); return 1;}
-												$$.result = $1.result;
-												$$.type = $1.return_type;
-											}
-			|	string_literal				{	
-												/* This is only used for Write_String( string_literal ) */
-												$$.type = STRING;
-												$$.result.type = QO_CSTSTR;
+
+			|	string_literal				{	$$.type = STRING; $$.result.type = QO_CSTSTR;
 												$$.result.u.string_literal.label = new_str();
 												$$.result.u.string_literal.value = malloc(strlen($1)-2);
 												strncpy($$.result.u.string_literal.value, $1+1, strlen($1)-2);
 											}
 
-literal		:	int_literal					{
-												$$.intval = $1;
-												$$.type = INT;
-											}
-			|	char_literal				{
-												$$.intval = $1;
-												$$.type = INT;
-											}
-			|	bool_literal				{
-												$$.intval= $1;
-												$$.type = BOOL;
-											}
+
+literal		:	int_literal					{	$$.intval = $1; $$.type = INT;	}
+
+			|	char_literal				{	$$.intval = $1;	$$.type = INT;	}
+
+			|	bool_literal				{	$$.intval= $1;	$$.type = BOOL;	}
 
 int_literal	: 	decimal_literal {$$ = $1;}
 			| 	hex_literal	{$$ = $1;}
@@ -679,7 +567,6 @@ mul_op		:	'*'		{$$ = Q_MUL;}
 void yyerror(char *msg) {
 	fprintf(stderr, "%s%s\n",RED, msg);
 	set_color(NORMAL);
-	
 }
 
 void yywarning(char *msg) {

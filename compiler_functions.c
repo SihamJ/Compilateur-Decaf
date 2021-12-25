@@ -1,6 +1,10 @@
 
 #include "compiler_functions.h"
 
+/** @brief Functions used in the syntax rules "compiler.y" 
+ * For code refactoring.
+**/
+
 
 char* add_to_tos(int type, char *name ){
     /* verifying that ID does not already exist in the global context*/
@@ -28,9 +32,8 @@ char* add_to_tos(int type, char *name ){
     return NULL;
 }
 
-/* verifies that all the return types in the return list is of the same type as type*/ 
+
 int verify_returns(list rtrn, int type){
-  
   while(rtrn){
     if(global_code[rtrn->addr].op2.u.cst != type)
       return 0;
@@ -38,7 +41,6 @@ int verify_returns(list rtrn, int type){
   }
   return 1;
 }
-
 
 char* end_func(char *name, int ctx_count, param p){
 
@@ -352,6 +354,39 @@ int verify_param(param p1, param p2){
     return 1;
 }
 
-expr_val get_method_call_args(){
+char* verify_and_get_type_call(char *id, param p, method_call *m){
+
+  item_table *val = lookup(id);
+
+  if(val == NULL) 
+    return "\nErreur: Méthode non déclarée\n"; 
+  if(val->item->id_type != ID_METHOD) 
+    return "\nErreur: l'ID utilisé n'est pas celui d'une méthode\n";
+  if(!verify_param(val->item->p, p)) 
+    return "\nErreur: Appel de méthode avec paramètres incorrectes\n";
+
+  m->return_type = val->item->value; 
+  return NULL;
+}
+
+void gen_method_call(char *id, expr_val *E, method_call *m){
+  quadop qo,q2; 
+  q2.type = QO_EMPTY; 
+  qo.type = QO_CSTSTR;
+  qo.u.string_literal.label = malloc(strlen(id)+1);
+  strcpy(qo.u.string_literal.label,id);
+  quadop q1; 
+
+  if(m->return_type != VOIDTYPE) { q1.type = QO_CST; q1.u.cst = m->return_type; } else { q1.type = QO_EMPTY;}
+
+  if(E != NULL){
+    complete(E->t,nextquad); complete(E->f,nextquad);
+    gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
+  } else {
+    gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
+  }
+  
+  m->result = q1; 
 
 }
+
