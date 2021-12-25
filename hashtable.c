@@ -485,3 +485,22 @@ int is_a_parent(ctx_type type){
     }
     return false;
 }
+
+
+param link_prev(param p){
+    param res;
+    param pt1,pt2, pt3;
+    pt1 = p->next;
+    pt2 = p;
+    p->prev = NULL;
+
+    /* linking prev for the first time*/
+    while(pt1 != NULL){
+        pt1->prev = pt2;
+        pt2 = pt1;
+        pt1 = pt1->next;
+    }
+    
+    return pt2;
+
+}

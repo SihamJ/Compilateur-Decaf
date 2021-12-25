@@ -354,43 +354,54 @@ void mips_decl_string(char *varName, char *value) {
 
 void mips_method_call(quad q){
 
-	fprintf(fout, "\tmove $t2 $ra\n"); // we save $ra in $t2
-
 	// push args in stack
-	mips_push_args(q.p);
+	if(q.p!=NULL)
+		mips_push_args(q.p);
+
 	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
+	fprintf(fout, "\tmove $t2 $ra\n"); // we save $ra in $t2
 	fprintf(fout, "%8sjal %s\n","",q.op1.u.string_literal.label); //jump and link 
 
 }
 
 void mips_push_args(param p){
-	if(p != NULL){
+	p = link_prev(p);
+	while(p->next != NULL)
+		p=p->next;
+
+	while(p!=NULL){
 		if(p->arg.type == QO_ID)
 			mips_read_stack("$t0",p->arg.u.offset);
 		else if(p->arg.type == QO_GLOBAL)
 			mips_load_word("$t0", p->arg.u.global.name);
+		else if(p->arg.type == QO_CST)
+			mips_load_immediate("$t0", p->arg.u.cst);
 		mips_push_word("$t0");
-		p = p->next;
+		p = p->prev;
 	}
 }
 
 void mips_end_func(quad q){
-	if(q.p != NULL){
-		int size = 0;
-		while(q.p!=NULL){
-			size++;
-			q.p = q.p->next;
-		}
-		mips_pop_stack(size*4);
-	}
-	fprintf(fout,"%8sj $ra\n","");
+
+	if(q.op1.u.cst>0)
+		mips_pop_stack(q.op1.u.cst);
+
+	fprintf(fout,"%8sjr $ra\n","");
 }
 
 void mips_return(quad q){
-	if(q.op3.u.cst > 0)
-		mips_pop_stack(q.op3.u.cst);
+
+	/* if there is a return value, we store it in $v0*/
+	if(q.op1.type != QO_EMPTY){
+		if(q.op2.type == QO_CST)
+			mips_load_immediate("$v0", q.op1.u.cst);
+		else if(q.op2.type == QO_ID)
+			mips_read_stack("$v0", q.op1.u.offset);
+	}
+
+	/* we jump to the end of the function label*/
 	fprintf(fout,"%8sj %s\n","",global_code[q.jump].label);
 }
 

@@ -111,8 +111,8 @@ void print_globalcode(){
       
     if(global_code[i].op1.type == QO_CST)
       printf("%14d", global_code[i].op1.u.cst);
-      else if(global_code[i].op3.type == QO_CSTSTR)
-      printf("%14s", global_code[i].op3.u.string_literal.label);
+      else if(global_code[i].op1.type == QO_CSTSTR)
+      printf("%14s", global_code[i].op1.u.string_literal.label);
     else if(global_code[i].op1.type == QO_GLOBAL)
       printf("%14s", global_code[i].op1.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
@@ -123,11 +123,11 @@ void print_globalcode(){
 
     if(global_code[i].op2.type == QO_CST)
       printf("%14d", global_code[i].op2.u.cst);
-      else if(global_code[i].op3.type == QO_CSTSTR)
-      printf("%14s", global_code[i].op3.u.string_literal.label);
+      else if(global_code[i].op2.type == QO_CSTSTR)
+      printf("%14s", global_code[i].op2.u.string_literal.label);
     else if(global_code[i].op2.type == QO_GLOBAL)
       printf("%14s", global_code[i].op2.u.global.name);
-    else if(global_code[i].op1.type == QO_EMPTY)
+    else if(global_code[i].op2.type == QO_EMPTY)
       printf("%14s","0");
     else 
       printf("%12s(%d)","",global_code[i].op2.u.offset);
@@ -139,7 +139,7 @@ void print_globalcode(){
       printf("%14s", global_code[i].op3.u.string_literal.label);
     else if(global_code[i].op3.type == QO_GLOBAL)
       printf("%14s", global_code[i].op3.u.global.name);
-    else if(global_code[i].op1.type == QO_EMPTY)
+    else if(global_code[i].op3.type == QO_EMPTY)
       printf("%14s","0");
     else 
       printf("%12s(%d)","",global_code[i].op3.u.offset);
@@ -281,9 +281,7 @@ void add_labels(){
   }
 }
 
-void update_offsets(quadop *op1, int offset){
 
-    if(op1!=NULL && (op1->type == QO_ID || op1->type == QO_TMP)){
-        op1->u.offset +=offset;
-    }
-}
+
+
+

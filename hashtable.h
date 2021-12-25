@@ -14,13 +14,6 @@ typedef enum ctx_type{
     CTX_GLOB, CTX_METHOD, CTX_IF, CTX_FOR, CTX_BLOCK, CTX_PARAM
   }ctx_type;
 
-/* To store parameters of a method at declaration or call */
-typedef struct param{
-    int type;           // INT or BOOL or STRING;
-    quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
-    struct param* next;
-} *param;
-
 typedef struct Ht_item {
     char *key;      // identificateur
     int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
@@ -50,8 +43,6 @@ typedef struct item_table {
     Ht_item *item;
     HashTable *table;
 } item_table;
-
-
 
 /* HashTable functions */
 unsigned long hash_function(char *str);
@@ -103,6 +94,7 @@ int offset(item_table *item);
 /* pop the temporary variables from the current context, called at the end of the evaluation of an expression*/
 void pop_tmp(); 
 
+param link_prev(param p);
 
 extern HashTable* curr_context; // points to the current context
 extern HashTable* glob_context; // points to the global context

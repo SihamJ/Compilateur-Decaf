@@ -5,7 +5,7 @@
 	#include <string.h>
 	#include "intermediaire.h"
 	#include "token.h"
-	#include "decaf_plus.tab.h"
+	#include "compiler.tab.h"
 	#include "text_formating.h"
 	void lexerror(const char *msg);
 %}
@@ -13,7 +13,7 @@
 %option noyywrap
 
 alpha			[a-zA-Z_]
-char			[^'"]
+char			[!#-&(-\[\]-_a-~]|[[:space:]]|{newline}|\\t|\\\'|\\\"|\\\\
 digit 			[0-9]
 hex_digit 		({digit}|[a-fA-F])
 alpha_num 		({alpha}|{digit})
@@ -72,11 +72,16 @@ comment 		\/\/.*
 
 {bool_literal} 		{
 						yylval.intval = (strcmp(yytext, "true") == 0);
+						
 						return bool_literal;
 					}
 					
 {hex_literal} 		{
 						yylval.intval = strtoll(yytext+2, NULL, 16);
+						if(yylval.intval < -2147483648 || yylval.intval > 2147483647 ){
+							lexerror("Dépassement Héxadécimal");
+							return 1;
+						}
 						return hex_literal;
 					}
 
@@ -87,6 +92,12 @@ comment 		\/\/.*
 
 {decimal_literal} 	{
 						yylval.intval = strtoll(yytext, NULL, 10);
+
+						if(yylval.intval < -2147483648 || yylval.intval > 2147483647){
+							lexerror("Dépassement Décimal");
+							return 1;
+						}
+						
 						return decimal_literal;
 					}
 
@@ -102,14 +113,13 @@ comment 		\/\/.*
 						return string_literal;					
 					}
 
-[[:space:]]			;
+[[:space:]]				;
 
 
-.					{	lexerror("caractère non reconnu");	}
+.					{	lexerror("Erreur lexicale: caractère non reconnu"); return 1;	}
 
 %%
 
 void lexerror(const char *msg){
 	fprintf(stderr,"\n%s %s%s\n\n",RED,msg,NORMAL);
-	
 }

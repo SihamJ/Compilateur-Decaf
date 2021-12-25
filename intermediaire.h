@@ -4,14 +4,6 @@
 
 #include "token.h"
 
-typedef struct param *param; // defined in HashTable.h
-
-/* list for storing address of incomplete quads */
-typedef struct list{
-  int addr;
-  struct list* suiv;
-}*list;
-
 typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR
   } quadop_type;
@@ -47,6 +39,14 @@ typedef struct quadop {
   } u;
 } quadop;
 
+/* To store parameters of a method at declaration or call */
+typedef struct param{
+    int type;           // INT or BOOL or STRING;
+    quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
+    struct param* next;
+    struct param* prev;
+} *param;
+
 typedef struct quad{
   int addr;
   quad_type type;
@@ -55,6 +55,44 @@ typedef struct quad{
   int jump; // index du label dans le tableau des quad où effectuer le GOTO, -1 si pas de jump à effectuer
   param p;  // si method call
 } quad;
+
+/* list for storing address of incomplete quads */
+typedef struct list{
+  int addr;
+  struct list* suiv;
+}*list;
+
+typedef struct expr_val {
+    quadop result;
+    char *stringval;
+    int type;		// type of result operand: INT / BOOL / STRING
+    list next;		
+    list t;  		// true
+    list f;   		// false
+    list brk; 		// break
+    list cntu; 		// continue
+    list rtrn;		// return
+    int return_type; // if expr_val is a method
+    param p;
+    } expr_val;
+
+typedef struct literal{
+		int intval;
+		int type;
+}literal;
+
+typedef struct location {
+		char *stringval;
+		quadop index;	// in case it is an array, we need the index
+		int type;		// scalaire ou TAB
+	} location;
+  
+typedef struct declaration{
+    global_type type;
+    char *name;
+    struct declaration *suiv;
+    int size;
+} declaration;
 
 extern quad global_code[5000]; // code généré
 extern size_t nextquad; // n° du prochain quad
@@ -102,5 +140,7 @@ GOTO:               j next           =>  type = Q_GOTO, jump = next
 */
 
 void update_offsets(quadop *op1, int offset);
+
+
 
 #endif

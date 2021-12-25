@@ -119,7 +119,7 @@ void translate() {
         	break;
 		case Q_EQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete EQ\n\n%s",RED,NORMAL);
 					exit(1);
 				}
 			mips_load_2args(global_code[i]);
@@ -127,7 +127,7 @@ void translate() {
 			break;
 		case Q_NEQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete NEQ\n\n%s",RED,NORMAL);
 					exit(1);
 				}
 			mips_load_2args(global_code[i]);
@@ -135,7 +135,7 @@ void translate() {
 			break;
 		case Q_LT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete LT\n\n%s",RED,NORMAL);
 					exit(1);
 				}
 			mips_load_2args(global_code[i]);
@@ -143,23 +143,31 @@ void translate() {
 			break;
 		case Q_GT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GT\n\n%s",RED,NORMAL);
 					exit(1);
 				}
 			mips_load_2args(global_code[i]);
 			mips_gt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LEQ:
+			if(global_code[i].jump == -1){
+				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete LEQ\n\n%s",RED,NORMAL);
+				exit(1);
+			}
 			mips_load_2args(global_code[i]);
 			mips_leq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GEQ:
+		if(global_code[i].jump == -1){
+				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GEQ\n\n%s",RED,NORMAL);
+				exit(1);
+			}
 			mips_load_2args(global_code[i]);
 			mips_geq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GOTO:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTOs\n\n%s",RED,NORMAL);
+					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTO\n\n%s",RED,NORMAL);
 					exit(1);
 				}
 			mips_jump(global_code[global_code[i].jump].label);
@@ -175,9 +183,13 @@ void translate() {
 		case Q_SYSCALL:
 			mips_syscall(global_code[i].op1.u.cst);
 			break;
-/*		case Q_RETURN:
+		case Q_RETURN:
+			if(global_code[i].jump == -1){
+				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete RETURN\n\n%s",RED,NORMAL);
+				exit(1);
+			}
 			mips_return(global_code[i]);
-			break;*/
+			break;
 		case Q_POP:
 			mips_pop_stack(global_code[i].op1.u.cst);
 			break;
@@ -188,5 +200,5 @@ void translate() {
         	break;
         }
     }
-	printf("\n2");
+	printf("\n");
 }
