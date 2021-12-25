@@ -95,10 +95,10 @@ list concat(list n1, list n2){
 }
 
 void complete(list n, int addr){
-  list pt = n;
-  while(pt){
-    global_code[pt->addr].jump = addr;
-    pt = pt->suiv;
+  while(n){
+    if(global_code[n->addr].jump == -1)
+        global_code[n->addr].jump = addr;
+    n = n->suiv;
   }
 }
 
@@ -116,7 +116,7 @@ void print_globalcode(){
     else if(global_code[i].op1.type == QO_GLOBAL)
       printf("%14s", global_code[i].op1.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
-      printf("%14s","0");
+      printf("%14s","");
     else 
       printf("%12s(%d)","",global_code[i].op1.u.offset);
     
@@ -128,7 +128,7 @@ void print_globalcode(){
     else if(global_code[i].op2.type == QO_GLOBAL)
       printf("%14s", global_code[i].op2.u.global.name);
     else if(global_code[i].op2.type == QO_EMPTY)
-      printf("%14s","0");
+      printf("%14s","-");
     else 
       printf("%12s(%d)","",global_code[i].op2.u.offset);
     
@@ -140,7 +140,7 @@ void print_globalcode(){
     else if(global_code[i].op3.type == QO_GLOBAL)
       printf("%14s", global_code[i].op3.u.global.name);
     else if(global_code[i].op3.type == QO_EMPTY)
-      printf("%14s","0");
+      printf("%14s","-");
     else 
       printf("%12s(%d)","",global_code[i].op3.u.offset);
     

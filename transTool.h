@@ -50,9 +50,9 @@ void mips_read_tmp(char *tmp, char *target);
 
 void mips_write_tmp(char *tmp, char *target);
 
-void mips_load_1args(quad q);
+void mips_load_1args(quadop op);
 
-void mips_load_2args(quad q);
+void mips_load_2args( quadop op1, quadop op2);
 
 void mips_beqz(char *target);
 

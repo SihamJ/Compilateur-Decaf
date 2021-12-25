@@ -8,7 +8,7 @@ static int branch_count = 0;
 
 void mips_dec_global(quadop q){
 	if(q.u.global.type == QO_SCAL)
-		fprintf(fout, "%8s%s: %s %d\n", q.u.global.name, "",".word", 0);
+		fprintf(fout, "\t%s: %s %d\n", q.u.global.name,".word", 0);
 	else{
 		fprintf(fout, "\t%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
 		// Save constant value length for Dynamic Check
@@ -19,9 +19,9 @@ void mips_dec_global(quadop q){
 void mips_init_array(quadop q) {
 	// Double Test if it's a Array, just to be sure
 	if(q.u.global.type == QO_TAB) {
-		fprintf(fout, "la $t0 %s\n", q.u.global.name);
-		fprintf(fout, "li $t1 %d\n",  q.u.global.size/4);
-		fprintf(fout, "jal BZero\n");
+		fprintf(fout, "\tla $t0 %s\n", q.u.global.name);
+		fprintf(fout, "\tli $t1 %d\n",  q.u.global.size/4);
+		fprintf(fout, "\tjal BZero\n");
 	}
 }
 
@@ -30,20 +30,20 @@ void mips_label(char *name, int n) {
 }
 
 void mips_load_immediate(char *reg, int val) {
-    fprintf(fout, "%8sli %s, %d\n","", reg, val);
+    fprintf(fout, "\tli %s, %d\n", reg, val);
 }
 
 void mips_load_word(char *reg, char *glob) {
-    fprintf(fout, "%8slw %s, %s\n","", reg, glob);
+    fprintf(fout, "\tlw %s, %s\n", reg, glob);
 }
 
 void mips_load_from_addr(char *target, char *src) {
-    fprintf(fout, "%8sla %s, (%s)\n","", target, src);
+    fprintf(fout, "\tla %s, (%s)\n", target, src);
 }
 
 
 void mips_copy_rtn_val(char *target) {
-    fprintf(fout, "%8sla %s, ($v0)\n", "",target);
+    fprintf(fout, "\tla %s, ($v0)\n", target);
 }
 
 int mips_push_word(char *src) {
@@ -54,7 +54,7 @@ int mips_push_word(char *src) {
 }
 
 void mips_store_word(char *reg, char *target){
-	fprintf(fout, "%8ssw %s, %s\n","",reg, target);
+	fprintf(fout, "\tsw %s, %s\n",reg, target);
 }
 
 void mips_pop_word() {
@@ -62,23 +62,23 @@ void mips_pop_word() {
 }
 
 void mips_read_stack(char* target, int offset) {
-    fprintf(fout, "%8slw %s, %d($sp)\n","",target, offset);
+    fprintf(fout, "\tlw %s, %d($sp)\n",target, offset);
 }
 
 void mips_write_stack(char *target, int offset) {
-	fprintf(fout, "%8ssw %s, %d($sp)\n", "",target, offset);
+	fprintf(fout, "\tsw %s, %d($sp)\n", target, offset);
 }
 
 void mips_pop_stack(int offset){
-	fprintf(fout,"%8sadd $sp $sp %d\n","",offset);
+	fprintf(fout,"\tadd $sp $sp %d\n",offset);
 }
 
 void mips_read_tmp(char *tmp, char *target) {
-	fprintf(fout, "%8sla %s, (%s)\n","", target, tmp);
+	fprintf(fout, "\tla %s, (%s)\n", target, tmp);
 }
 
 void mips_write_tmp(char *tmp, char *target) {
-	fprintf(fout, "%8sla %s, (%s)\n", "",tmp, target);
+	fprintf(fout, "\tla %s, (%s)\n", tmp, target);
 }
 
 void mips_instruction(const char *cstInstruct) {
@@ -86,7 +86,7 @@ void mips_instruction(const char *cstInstruct) {
 }
 
 int mips_save_tmp_int(int val) {
-    fprintf(fout, "%8sli t%d %d\n","", tmp_reg_count, val);
+    fprintf(fout, "li t%d %d\n", tmp_reg_count, val);
     tmp_reg_count++;
     return tmp_reg_count-1;
 }
@@ -95,29 +95,29 @@ void mips_destroy_tmp_vals(int count) {
     tmp_reg_count-=count;
 }
 
-void mips_load_1args(quad q) {
-	if (q.op2.type == QO_ID || q.op2.type == QO_TMP)
-		mips_read_stack("$t0", q.op2.u.offset);
-	else if (q.op2.type == QO_GLOBAL)
-		mips_load_word("$t0", q.op2.u.global.name);
-	else if (q.op2.type == QO_CST)
-		mips_load_immediate("$t0", q.op2.u.cst);
+void mips_load_1args(quadop op) {
+	if (op.type == QO_ID || op.type == QO_TMP)
+		mips_read_stack("$t0", op.u.offset);
+	else if (op.type == QO_GLOBAL)
+		mips_load_word("$t0", op.u.global.name);
+	else if (op.type == QO_CST)
+		mips_load_immediate("$t0", op.u.cst);
 }
 
-void mips_load_2args(quad q) {
-	if (q.op2.type == QO_ID || q.op2.type == QO_TMP)
-    	mips_read_stack("$t0", q.op2.u.offset);
-	else if (q.op2.type == QO_GLOBAL)
-		mips_load_word("$t0", q.op2.u.global.name);
-	else if (q.op2.type == QO_CST)
-		mips_load_immediate("$t0", q.op2.u.cst);
+void mips_load_2args( quadop op1, quadop op2) {
+	if (op1.type == QO_ID || op1.type == QO_TMP)
+    	mips_read_stack("$t0", op1.u.offset);
+	else if (op1.type == QO_GLOBAL)
+		mips_load_word("$t0", op1.u.global.name);
+	else if (op1.type == QO_CST)
+		mips_load_immediate("$t0", op1.u.cst);
 
-	if (q.op3.type == QO_ID || q.op3.type == QO_TMP)
-    	mips_read_stack("$t1", q.op3.u.offset);
-	else if (q.op3.type == QO_GLOBAL)
-		mips_load_word("$t1", q.op3.u.global.name);
-	else if (q.op3.type == QO_CST)
-		mips_load_immediate("$t1", q.op3.u.cst);
+	if (op2.type == QO_ID || op2.type == QO_TMP)
+    	mips_read_stack("$t1", op2.u.offset);
+	else if (op2.type == QO_GLOBAL)
+		mips_load_word("$t1", op2.u.global.name);
+	else if (op2.type == QO_CST)
+		mips_load_immediate("$t1", op2.u.cst);
 }
 
 /*void mips_beqz(char *target) {
@@ -249,8 +249,8 @@ void mips_jump(char *label){
 }
 
 void mips_syscall(int num){
-	fprintf(fout, "%8sli $v0, %d\n","",num);
-	fprintf(fout,"%8ssyscall\n","");
+	fprintf(fout, "\tli $v0, %d\n",num);
+	fprintf(fout,"\tsyscall\n");
 }
 /** The abstraction of "For" and "While" should be the same.
 * (Looping the content in its block based on the value of a boolean. 
@@ -306,7 +306,7 @@ void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
-	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
+	fprintf(fout, "%8ssw %s %s+%d\n","", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
@@ -318,7 +318,7 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
-	fprintf(fout, "\tsw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
+	fprintf(fout, "%8ssw %s %s(%s)\n","", buffer_reg, tab_name, offset_reg);
 }
 
 /**
@@ -330,7 +330,7 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
-	fprintf(fout, "\tli $t0 %d\n  jal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
@@ -349,27 +349,25 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 }
 
 void mips_decl_string(char *varName, char *value) {
-	fprintf(fout, "%8s%s: .asciiz \"%s\"\n", "",varName, value);
+	fprintf(fout, "\t%s: .asciiz \"%s\"\n",varName, value);
 }
 
 void mips_method_call(quad q){
 
 	// push args in stack
-	if(q.p!=NULL)
+	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString"))
 		mips_push_args(q.p);
 
 	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
 	fprintf(fout, "\tmove $t2 $ra\n"); // we save $ra in $t2
-	fprintf(fout, "%8sjal %s\n","",q.op1.u.string_literal.label); //jump and link 
+	fprintf(fout, "\tjal %s\n",q.op1.u.string_literal.label); //jump and link 
 
 }
 
 void mips_push_args(param p){
-	p = link_prev(p);
-	while(p->next != NULL)
-		p=p->next;
+	p = reverse_list(p);
 
 	while(p!=NULL){
 		if(p->arg.type == QO_ID)
@@ -379,7 +377,7 @@ void mips_push_args(param p){
 		else if(p->arg.type == QO_CST)
 			mips_load_immediate("$t0", p->arg.u.cst);
 		mips_push_word("$t0");
-		p = p->prev;
+		p = p->next;
 	}
 }
 

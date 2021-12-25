@@ -197,7 +197,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
 
 // if op1 is an element in array, we have the index in op3. otherwise, op3 is empty.
 // this is done by get_location()
-void bool_affectation(quadop op1, quadop op3, expr_val statement, expr_val expr){
+void bool_affectation(quadop op1, quadop op3, expr_val s, expr_val expr){
   /*
     If the affectation is of bOOL type, we have to create two quads. One is for false affectation (0) and
     the other one for true (1). The rules on expr already generate incomplete GOTOs. At this stage we complete
@@ -217,7 +217,7 @@ void bool_affectation(quadop op1, quadop op3, expr_val statement, expr_val expr)
     We add it to $$.next
   */
   op2.type = QO_EMPTY;
-  statement.next = crelist(nextquad);
+  s.next = crelist(nextquad);
   gencode(op2, op2, op2, Q_GOTO, NULL, -1, NULL);
 
   /* False affectation*/
@@ -226,6 +226,7 @@ void bool_affectation(quadop op1, quadop op3, expr_val statement, expr_val expr)
   complete(expr.f, nextquad);											
   gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL);	
 }
+
 
 char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 
@@ -251,9 +252,37 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
   
   qo.type = QO_ID;
   qo.u.offset = 0;
-  gencode(qo, expr1.result, expr2.result, Q_AFF, NULL, -1, NULL); 
-
+  gencode(qo, expr1.result, expr1.result, Q_AFF, NULL, -1, NULL); 
   return NULL;
+}
+
+// we store the max value of the for loop counter in a new ID. 
+// In this context, giving it a name won't be a problem as long as it's different from the 
+// name of the loop counter.
+expr_val get_max(char *counter_name, expr_val expr){
+  
+  quadop qo;
+  qo.type = QO_ID;
+  qo.u.offset = 0;
+  gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
+
+  char *name = malloc(strlen(counter_name)+5);
+  snprintf(name, strlen(counter_name)+5, "%s%s",counter_name, "_max");
+  Ht_item *item = create_item(name, ID_VAR, INT);
+  newname(item);
+
+  if(expr.result.type == QO_ID){
+    item_table* val = lookup(expr.stringval);
+    expr.result.u.offset = offset(val);
+  }
+  gencode(qo, expr.result, expr.result, Q_AFF, NULL, -1, NULL); 
+
+  expr_val max;
+  max.result = qo;
+  max.stringval = malloc(strlen(item->key)+1);
+  strcpy(max.stringval, item->key);
+
+  return max;
 }
 
 void gen_q_pop(int count){
@@ -263,25 +292,66 @@ void gen_q_pop(int count){
   gencode(q, q, q, Q_POP, NULL, -1, NULL);
 }
 
-void gen_test_counter(char *counter_name, quadop q){
+void gen_test_counter(char *counter_name, expr_val max){
   item_table* val = lookup(counter_name);
-  quadop qo;
+  quadop qo,q1,q2;
+  q1.type = QO_EMPTY;
   qo.type = QO_ID;
   qo.u.offset = offset(val);
-  gencode(qo, qo, q, Q_GT, NULL, -1 , NULL);  
+
+  val = lookup(max.stringval);
+  max.result.u.offset = offset(val);
+  gencode(q1, qo, max.result, Q_GT, NULL, -1 , NULL);  
 }
 
-void gen_increment_and_loopback(int jump){
+void gen_increment_and_loopback(char* counter_name, int jump){
   /* gencode to increment the loop counter*/
+  item_table* val = lookup(counter_name);
   quadop qo, q1;
   qo.type = QO_ID;
   q1.type = QO_CST;
   q1.u.cst = 1;
-
   /* offset of id is 0 because it's the only variable in the context at this point */
-  qo.u.offset = 0;
+  qo.u.offset = offset(val);
   gencode(qo, qo, q1, Q_ADD, NULL, -1, NULL);
+
   qo.type = QO_EMPTY;
   /* gencode to jump back to the Marker to test if the counter reached its max value */
   gencode(qo, qo, qo, Q_GOTO, NULL, jump, NULL);
+}
+
+void get_write_string_args(char *label, char*value){
+  str_labels[str_count-1].label = malloc(strlen(label)+1);
+  strcpy(str_labels[str_count-1].label,label);
+  str_labels[str_count-1].value = malloc(strlen(value)+1);
+  strcpy(str_labels[str_count-1].value,value);
+}
+
+/* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
+int is_a_parent(ctx_type type){
+    HashTable* pt = curr_context;
+    while(pt != NULL){
+        if(pt->type == type)
+            return true;
+        pt = pt->next;
+    }
+    return false;
+}
+
+int verify_param(param p1, param p2){
+    while(p1 != NULL && p2 != NULL){
+        if(p1->type != p2->type){
+            return 0;
+        }
+        p1=p1->next;
+        p2=p2->next;
+    }
+    if(p1 != NULL || p2 != NULL){
+        return 0;
+    }
+    return 1;
+}
+
+expr_val get_method_call_args(){
+
 }

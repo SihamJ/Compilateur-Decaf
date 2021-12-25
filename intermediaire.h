@@ -44,7 +44,6 @@ typedef struct param{
     int type;           // INT or BOOL or STRING;
     quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
     struct param* next;
-    struct param* prev;
 } *param;
 
 typedef struct quad{
@@ -66,15 +65,26 @@ typedef struct expr_val {
     quadop result;
     char *stringval;
     int type;		// type of result operand: INT / BOOL / STRING
-    list next;		
     list t;  		// true
     list f;   		// false
+    list next;		
     list brk; 		// break
     list cntu; 		// continue
     list rtrn;		// return
-    int return_type; // if expr_val is a method
     param p;
     } expr_val;
+
+typedef struct block {
+  list next;		
+  list brk; 		// break
+  list cntu; 		// continue
+  list rtrn;		// return
+} block;
+
+typedef struct method_call {
+  quadop result;
+  int return_type; // if expr_val is a method, INT / BOOL / VOID
+} method_call;
 
 typedef struct literal{
 		int intval;

@@ -20,11 +20,17 @@
 
 	expr_val expr;
 
-	literal liter;
+	block b;
+
+	method_call m;
+
+	list next;
+
+	literal l;
 
 	declaration decl;
 
-	location loca;
+	location loc;
 
 	param p;  // List for storing method parameters at the declaration or method call. Also pointed at by the Symbol Table (declaration), and the Quads (method_call).
 
@@ -34,12 +40,14 @@
 %token <stringval> id string_literal 
 %token class If Else For Return Break Continue 
 
-%type <expr> expr S S2 G block statement method_call  return_val E
-%type <loca> location
+%type <expr> expr return_val E statement block S2 S Max
+<next> G
+<m> method_call
+%type <loc> location
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
 %type <p> Param P
-%type <liter> literal
+%type <l> literal
 
 %left or
 %left and
@@ -55,8 +63,7 @@
 
 program	:  class id '{' { 	
 								pushctx(CTX_GLOB); /* Pushing the global context*/
-								/* pushing class name to global table*/
-								program_name = malloc(strlen($2)+1);
+								program_name = malloc(strlen($2)+1); /* saving class name in a global variable*/
 								strcpy(program_name, $2);
 								add_libs_to_tos(); /* Adding the I/O functions to the global symbol table*/
 								glob_context = curr_context; /* glob_context will point to this context throughout the execution of this program.*/
@@ -70,25 +77,21 @@ program	:  class id '{' {
 								}
 
 								quadop qo;
-								popctx(); /* End of the program, we pop the global context.*/
+								popctx(); 
 								return 0;
 							}
 
-/* Marks the address of the next quad to be generated */
 M 		:	%empty 		{	$$ = nextquad; }
 
-
-/* GOTO adress of next quad to be generated. Similar to the marker with an added jump.*/
-G 		:	%empty		{	$$.next = crelist(nextquad);
+G 		:	%empty		{	$$ = crelist(nextquad);
 							quadop qo;
 							qo.type = QO_EMPTY;
 							qo.u.cst = 0;
 							gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL);
 						}
 
-/* The structure of the global context follows either of the two:
-	MD: only contains method declarations
-or	FD MD: starts with global variable declarations followed by method declarations  */
+Max		:	%empty		{;}
+
 GLOBAL 		: MD		{;}
 			| FD MD 	{;}
 
@@ -97,21 +100,16 @@ FD 			: FD field_decl  {;}
 
 field_decl	:	type glob_id ';' 		{ 
 											/* we push the global variables into the TOS
-												returns NULL if successful, otherwise returns an error msg*/
+											returns NULL if successful, otherwise returns an error msg*/
 											char *msg;
-											if((msg = field_declare(&$2, $1)) != NULL) {
-												yyerror(msg);
-												return 1;
-											}
+											if((msg = field_declare(&$2, $1)) != NULL) { yyerror(msg); return 1;}
 										}
 														
 
-glob_id			:	id '[' int_literal ']' ',' glob_id	{	if($3 <= 0) 
-																yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");
+glob_id			:	id '[' int_literal ']' ',' glob_id	{	if($3 <= 0) { yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n"); return 1;}
 															$$ = get_declarations($1, NULL, QO_TAB, $3*4);
 														}
-				|	id '[' int_literal ']'				{	if($3 <= 0) 
-																yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");	
+				|	id '[' int_literal ']'				{	if($3 <= 0) { yyerror("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n"); return 1;}
 															$$ = get_declarations($1, NULL, QO_TAB, $3*4);
 														}
 				|	id									{	$$ = get_declarations($1, NULL, QO_SCAL, 4); }
@@ -121,367 +119,231 @@ MD			:	MD method_decl		{;}
 			|	method_decl			{;}
 
 method_decl	:		type id 	{	
-
-								/* We add id to the TOS and push a new context for the parameters
-									Returns NULL if successful, otherwise returns an error msg.
-								*/
+								/* We add id to the TOS and push a new context for the parameters.
+									Returns NULL if successful, otherwise returns an error msg. */
 								char *msg;
 								if((msg = add_to_tos($1, $2)) != NULL){
-									yyerror(msg);
-									return 1;
-								}}
+									yyerror(msg); return 1;}
+								}
 
-									'(' P ')' 			{	
-															/* item_table is a structure that has a couple (Ht_item*, HashTable*),
-															returned by the function lookup(char *id)
-															*/
-															item_table* var = lookup($2);
-															/* 
-																item is an Ht_item, it contains the attribute p for the items of type method where we store
-																the types of parameters that the method takes.
-																P is either a list of parameters or NULL if the method does not take any parameter, see rule P below.
-															*/
-															var->item->p = $5;}
+					'(' P ')' 	{	
+									/* item_table is a structure that has a couple (Ht_item*, HashTable*),
+									returned by the function lookup(char *id) */
+									item_table* var = lookup($2);
 
-								block					{
-														 	// We verify that return exists, and is of the same type
-															if($8.rtrn == NULL)
-																yyerror("\nErreur: Méthode sans return\n");
+									/* item is an Ht_item, it contains the attribute p for the items of type method where we store
+									the types of parameters that the method takes.
+									P is either a list of parameters or NULL if the method does not take any parameter */
+									var->item->p = $5;}
 
-															// verifying return types
-															if(!verify_returns($8.rtrn, $1)){
-																yyerror("\nErreur: Méthode avec faux type de retour\n");
-																return 1;
-															}
+					block		{
+									// We verify that return exists
+									if($8.rtrn == NULL) { yyerror("\nErreur: Méthode sans return\n"); return 1; }
 
-															complete($8.next,nextquad);	
-															complete($8.rtrn, nextquad);
-		
-															char *msg;
-															if( (msg = end_func($2, curr_context->count, $5)) != NULL){
-																yyerror(msg);
-																return 1;
-															}	
+									// verifying return types
+									if(!verify_returns($8.rtrn, $1)) { yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 
-															popctx(); 
-														}
+									complete($8.next,nextquad);	complete($8.rtrn, nextquad);
+
+									char *msg; 
+									if( (msg = end_func($2, curr_context->count, $5)) != NULL){ yyerror(msg); return 1; }	
+
+									popctx(); 
+								}
 													
 
-			/* Same as above, except the type is void method. We are forced to separete them because of Bison conflicts with types of variable declarations*/
-			|	voidtype id {
-								/* We add id to the TOS and push a new context for the parameters
-									Returns NULL if successful, otherwise returns an error msg.
-								*/
-								char *msg;
-								if((msg = add_to_tos($1, $2)) != NULL){
-									yyerror(msg);
-									return 1;
-								}
-								
+			/* Same as above, except the type is void. We are forced to separate them because of conflicts*/
+			|	voidtype id		{
+									/* We add id to the TOS and push a new context for the parameters
+										Returns NULL if successful, otherwise returns an error msg.*/
+									char *msg;
+									if((msg = add_to_tos($1, $2)) != NULL){ yyerror(msg); return 1; }
 								} 
 							
-								'(' P ')'  block	{ 		
+			'(' P ')'  block	{ 		
+									if(!verify_returns($7.rtrn, $1)){ yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 
-															/* At this stage, we */
-															if(!verify_returns($7.rtrn, $1)){
-																yyerror("\nErreur: Méthode avec faux type de retour\n");
-																return 1;
-															}
+									item_table* var = lookup($2);
+									var->item->p = $5;
 
-															item_table* var = lookup($2);
-															var->item->p = $5;
+									complete($7.next, nextquad); complete($7.rtrn, nextquad);	
 
-															complete($7.next, nextquad);
-															complete($7.rtrn, nextquad);	
+									// next quad is here in END_FUNCTION. we also verify that P is NULL for main
+									char *msg;
+									if( (msg = end_func($2, curr_context->count, $5)) != NULL) { yyerror(msg); return 1; }	
 
-															// next quad is here in END_FUNCTION:
-															// we also verify that P is NULL for main
-															char *msg;
-															if( (msg = end_func($2, curr_context->count, $5)) != NULL){
-																yyerror(msg);
-																return 1;
-															}	
+									popctx();
+								}
 
-															popctx();
-														}
-
-/* Param is a non empty list of method parameters*/
 P 			:	Param 	{ $$ = $1;}
 			|	%empty	{ $$ = NULL;}
-
 
 /* Param is a list that retrieves the the names of declared parameters and their types */
 Param		:	type id ',' Param	{ 	
 										/* we verify that we don't declare two parameters with the same ID*/
-										if( ht_search(curr_context, $2) != NULL ) {
-											yyerror("\nErreur: Deux paramètres de méthodes de même nom\n");
-											return 1;
-										}
+										if( ht_search(curr_context, $2) != NULL ) { yyerror("\nErreur: Deux paramètres de méthodes de même nom\n"); return 1;}
+
 										/* we store the parameter in the symbol table*/
 										$$ = push_param($2, $1, $4);
 									}
 										
 			|	type id				{	/* Idem*/
-									 	if( ht_search(curr_context, $2) != NULL ) {
-											yyerror("\nErreur: Deux paramètres de méthodes de même nom\n");
-											return 1;
-										}
+									 	if( ht_search(curr_context, $2) != NULL ) { yyerror("\nErreur: Deux paramètres de méthodes de même nom\n"); return 1;}
 										$$ = push_param($2, $1, NULL);
 									}
 
-/* each block starts with variable declarations followed by instructions, or instructions only, or variable declarations only (though last one is useless) */
 block 		:	'{' {  pushctx(CTX_BLOCK); } 
 
 			V S2 '}' { 	
 						/* we retrieve the adresses of the incomplete GOTOs if they exist*/
-						$$.next = $4.next; $$.brk = $4.brk;
-						$$.cntu = $4.cntu; $$.rtrn = concat($$.rtrn,$4.rtrn);
-
+						$$ = $4;
 						// If we declared any variables in this block, we should pop them from the stack and generate a Q_POP quad
-						if(curr_context->count > 0){
-							gen_q_pop(curr_context->count * 4);
-						}
+						if(curr_context->count > 0) gen_q_pop(curr_context->count * 4);
 						popctx();
 					}
 
-S2 			:	S 	{$$=$1;}
-			|	%empty {;}
+S2 			:	S 		{	$$ = $1;}
+			|	%empty 	{	; }
 
 V 			:	V var_decl	{;}
 			|	%empty;
 
 var_decl 	:  	type B ';' {
-									/* we push the B list of variables in the TOS
-										returns NULL if successful, otherwise returns an error msg */
-									char *msg;
-									if ( (msg = var_declare(&$2, $1)) != NULL ){
-										yyerror(msg);
-										return 1;
-									}
+								/* we push the B list of variables in the TOS
+								returns NULL if successful, otherwise returns an error msg */
+								char *msg;
+								if ( (msg = var_declare(&$2, $1)) != NULL ) { yyerror(msg); return 1; }
 							}
-/* 
-	We are forced to split this section from the previous section so we can declare multiple variables of same type in one line.
-	We can't have a recursive grammar with "type" because it is not repeated.
-	At this stage, we retrieve only the IDs et store them in the B list.
-*/
+
 B 			:	id ',' B  	{ 	declaration var;
-								var.name = malloc((strlen($1)+1)); 
-								strcpy(var.name,$1);
-								var.suiv = &$3;
-								$$ = var;
-								}
-			|	id			{	$$.name = malloc((strlen($1)+1)); 
-								strcpy($$.name,$1); 
-								$$.suiv = NULL;}
+								var.name = malloc((strlen($1)+1));   strcpy(var.name,$1);
+								var.suiv = &$3; $$ = var; }
+			|	id			{	$$.name = malloc((strlen($1)+1));   strcpy($$.name,$1); 
+								$$.suiv = NULL; }
 
 
 type		:	integer {$$=$1;}
 			|	boolean {$$=$1;}
 
 
-S 			: 	S M statement 	{	
-									complete($1.next, $2); 						
+S 			: 	S M statement 	{	 complete($1.next, $2); 						
 									$$.cntu = concat($$.cntu,$3.cntu); 	$$.next = $3.next; 		
-									$$.brk = concat($$.brk,$3.brk); 	$$.rtrn = concat($$.rtrn,$3.rtrn);
-								}
-			| 	statement		{	
-									$$.next = $1.next;	$$.cntu = $1.cntu; $$.brk = $1.brk; $$.rtrn = $1.rtrn;
-								}
+									$$.brk = concat($$.brk,$3.brk); 	$$.rtrn = concat($$.rtrn,$3.rtrn); }
+
+			| 	statement		{	$$.brk = $1.brk; $$.next = $1.next; $$.cntu = $1.cntu; $$.rtrn = $1.rtrn; }
 
 statement 	:	location assign_op expr ';' {		
-													item_table* val = lookup($1.stringval);
+												item_table* val = lookup($1.stringval);
 
-													/* Verifying types. returns NULL if successful, error msg otherwise*/
-													char *msg;
-													if( (msg = verify_aff_types($1.type, $3.type, $2, val->item)) != NULL) {
-														yyerror(msg);
-														return 1; }
+												/* Verifying types. returns NULL if successful, error msg otherwise*/
+												char *msg;
+												if( (msg = verify_aff_types($1.type, $3.type, $2, val->item)) != NULL) { yyerror(msg); return 1; }
 
-													quadop qo,q1,q2;
+												quadop qo,q1,q2;
 
-													// si location est un indice de tableau, q1 contient l'indice
-													// qo contient le type (tableau ou scalaire)
-													get_location(&qo, &q1, val, $1);
+												// if location is an element in array, q1 contains the index
+												// qo contains the type of location (element in array or not)
+												get_location(&qo, &q1, val, $1);
 
-													// bool affectation is different from int
-													if($3.type == BOOL) 
-														bool_affectation(qo, q1, $$, $3);	
-													
-													// in the mips translater, we have to differentiate between | = | += | -= |  
-													else 
-														gencode(qo,$3.result,q1,$2, NULL,-1, NULL);
+												// bool affectation is different from int
+												 if($3.type == BOOL) { bool_affectation(qo, q1, $$, $3);}
+												
+												// in the mips translater, we have to differentiate between | = | += | -= |  
+												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
 
-													// generates a Q_POP quad	
-													if(tmpCount>0)
-														gen_q_pop(tmpCount*4);
-													pop_tmp();
-												}
+												// generates a Q_POP quad	
+												if(tmpCount>0) { gen_q_pop(tmpCount*4);}
+												pop_tmp();
+											}
 
 			/* The method call rules are defined below not here.*/
-			|	method_call	';'								{ ; }
+ 			|	method_call	';'				{ 	; }
 
-			|	If '(' expr ')' M block G Else M block	{	
-															/* Verifying types*/
-															if($3.type != BOOL) {
-																yyerror("\nErreur: Test avec expression non booléene\n");
-																return 1;
-															}
-															complete($3.t, $5); complete($3.f, $9);
-															$$.next = concat($7.next, $10.next);
-															$$.next = concat($$.next, $6.next);
-															$$.cntu = concat($6.cntu, $10.cntu);
-															$$.brk = concat($6.brk, $10.brk);
-															$$.rtrn = concat($6.rtrn,$10.rtrn);
-														}
-			|	If '(' expr ')' M block 				{	
-															if($3.type != BOOL) {
-																yyerror("\nErreur: Test avec expression non booléene\n");
-																return 1;
-															}
-															complete($3.t, $5);
-															$$.next = concat($3.f, $6.next);
-															$$.cntu = $6.cntu;
-															$$.brk = $6.brk;
-															$$.rtrn = concat($$.rtrn,$6.rtrn);
-														}
+			|	If '(' expr ')' M block 
+				G Else M block				{	
+												/* Verifying types*/
+												if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
+												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
+												$$.next = concat($$.next, $6.next); $$.cntu = concat($6.cntu, $10.cntu);
+												$$.brk = concat($6.brk, $10.brk); $$.rtrn = concat($6.rtrn,$10.rtrn);
+												gen_q_pop(curr_context->count*4); 
+											}
+			|	If '(' expr ')' M block 	{	
+												if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
+												complete($3.t, $5); $$.next = concat($3.f, $6.next);
+												$$.cntu = $6.cntu; $$.brk = $6.brk; $$.rtrn = $6.rtrn;
+												gen_q_pop(curr_context->count*4); 
+											}
 												
-			|	For id 	'=' expr ',' expr				{  															
-															/* verifying types, declaration of ID, and affectation*/
-															char* msg;
-															if( (msg = for_declare($2, $4, $6)) != NULL) {
-																yyerror(msg);
-																return 1;}
-														} 
-					M  									{	gen_test_counter($2, $6.result); } 
-					
-					block 								{   
-															complete($10.next, nextquad); complete($10.cntu, nextquad);
-															$$.next = crelist($8); $$.next = concat($$.next, $10.brk);
-															$$.rtrn = concat($$.rtrn, $10.rtrn);
+			|	For id '=' expr ',' expr Max{  	/* verifying types, declaration of ID, and affectation*/
+												char* msg;
+												if( (msg = for_declare($2, $4, $6)) != NULL) { yyerror(msg); return 1;}
+												$7 = get_max($2, $6);
+											} 
+					M  							{	gen_test_counter($2, $7); } 
+						
+					block 						{   complete($11.next, nextquad); complete($11.cntu, nextquad);
+													$$.next = crelist($9); $$.next = concat($$.next, $11.brk);
+													$$.rtrn = $11.rtrn;
+													gen_increment_and_loopback($2, $9);
 
-															gen_increment_and_loopback($8);
-															 
-															gen_q_pop(curr_context->count * 4);
-															popctx(); 
-														 }
+													complete($$.next, nextquad);
+													gen_q_pop(curr_context->count*4); 
+													popctx(); }
 
-			|	Return return_val ';'					 {															
-															/* Incomplete GOTO to jump to end of function*/
-															
-															$$.rtrn = crelist(nextquad);
+			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
+												/* we return $2.result and we store the return type in qo for later verification of types*/
+												quadop qo; qo.type = QO_CST; qo.u.cst = $2.type;
+												gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL); }
 
-															/* we return $2.result and we store the return type in qo for later verification of types*/
-															quadop qo;
-															qo.type = QO_CST;
-															qo.u.cst = $2.type;
-															gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL);
-															
-														}
-			|	Break ';'								 { 
-															if(!is_a_parent(CTX_FOR)) {
-																yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n");
-																return 1;
-															}
-															quadop qo;
-															qo.type = QO_EMPTY;
-															/* Incomplete GOTO to jump out of the for loop*/
-															$$.brk = crelist(nextquad);
-															gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL);
-														 }
-			|	Continue ';'							 { 
-															if(!is_a_parent(CTX_FOR)) {
-																yyerror("\nErreur: Continue; doit être au sein d'une boucle FOR\n");
-																return 1;
-															}
-															quadop qo;
-															qo.type = QO_EMPTY;
-															/* Incomplete GOTO to jump to the start of the loop*/
-															$$.cntu = crelist(nextquad);
-															gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL);
-			
-														 }
-			|	block									 { $$.next = $1.next ;}
+			|	Break ';'					{ 	if(!is_a_parent(CTX_FOR)) { yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n"); return 1; }
+												quadop qo; qo.type = QO_EMPTY;
+												$$.brk = crelist(nextquad);
+												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); }
 
-return_val	:	expr 									{	$$ = $1;}
-			|	%empty									{	$$.type = VOIDTYPE; 
-															$$.result.type = QO_EMPTY;
-														}
+			|	Continue ';'				{  if(!is_a_parent(CTX_FOR)) { yyerror("\nErreur: Continue; doit être au sein d'une boucle FOR\n");return 1;}
+												quadop qo; qo.type = QO_EMPTY;
+												$$.cntu = crelist(nextquad);  
+												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); }
+
+			|	block						{ 	$$.brk = $1.brk; $$.next = $1.next; $$.cntu = $1.cntu; $$.rtrn = $1.rtrn;}
+
+return_val	:	expr 						{ 	$$ = $1; }
+			|	%empty						{ 	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY; }
 
 
-method_call :	id '(' E ')' 					{
-													item_table *val = lookup($1);
-													if(val == NULL){
-														yyerror("\nErreur: Méthode non déclarée\n");
-														return 1;
-													}
-													if(val->item->id_type != ID_METHOD) {
-														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
-														return 1;
-													}
-													
-													/* retrieving return type */
-													$$.type = val->item->value; 
+method_call :	id '(' E ')' 				{	item_table *val = lookup($1);
+												if(val == NULL) { yyerror("\nErreur: Méthode non déclarée\n"); return 1; }
+												if(val->item->id_type != ID_METHOD) { yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n"); return 1;}
+												if(!verify_param(val->item->p, $3.p)) { yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");return 1;}
 
-													/* verifiying type and number of parameters */
-													if(!verify_param(val->item->p, $3.p)) {
-														yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");
-														return 1;
-													}
+												if(!strcmp($1,"WriteString")) {
+													get_write_string_args($3.p->arg.u.string_literal.label, $3.p->arg.u.string_literal.value); }
 
-													if(!strcmp($1,"WriteString")) {
-														str_labels[str_count-1].label = malloc(strlen($3.p->arg.u.string_literal.label)+1);
-														strcpy(str_labels[str_count-1].label,$3.p->arg.u.string_literal.label);
-														str_labels[str_count-1].value = malloc(strlen($3.p->arg.u.string_literal.value)+1);
-														strcpy(str_labels[str_count-1].value,$3.p->arg.u.string_literal.value);
-													}
+												$$.return_type = val->item->value; 
 
+												// we store in qo the label of the method to call and in q1 the return value
+												quadop qo,q2; q2.type = QO_EMPTY; qo.type = QO_CSTSTR;
+												qo.u.string_literal.label = malloc(strlen($1)+1);
+												strcpy(qo.u.string_literal.label,$1);
+												quadop q1; if($$.return_type != VOIDTYPE) { q1.type = QO_CST; q1.u.cst = $$.return_type; } else { q1.type = QO_EMPTY;}
+												complete($3.t,nextquad); complete($3.f,nextquad);
+												gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, $3.p);
+												$$.result = q1; }
 
+			|	id '(' ')'					{
+												item_table *val = lookup($1);
+												if(val == NULL) { yyerror("\nErreur: Méthode non déclarée\n"); return 1; }
+												if(val->item->id_type != ID_METHOD) { yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n"); return 1;}
+												if(!verify_param(val->item->p, NULL)) { yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n"); return 1;}
+												$$.return_type = val->item->value;
 
-													/* we store in qo the label of the method to call 
-														and in q1 the return value
-													*/
-													quadop qo,q2;
-													q2.type = QO_EMPTY;
-													qo.type = QO_CSTSTR;
-													qo.u.string_literal.label = malloc(strlen($1)+1);
-													strcpy(qo.u.string_literal.label,$1);
-													quadop q1;
-													if($$.type != VOIDTYPE){
-														q1.type = QO_CST;
-														q1.u.cst = $$.type;
-													}
-													complete($3.t,nextquad);
-													complete($3.f,nextquad);
-													gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, $3.p);
-													$$.result = q1;
-												}
-			|	id '(' ')'						{
-													item_table *val = lookup($1);
-													if(val == NULL){
-														yyerror("\nErreur: Méthode non déclarée\n");
-														return 1;
-													}
-													if(val->item->id_type != ID_METHOD) {
-														yyerror("\nErreur: l'ID utilisé n'est pas celui d'une méthode\n");
-														return 1;
-													}
-													/* retrieving return type */
-													 $$.type = val->item->value; 
-
-													/* verifiying parameters */
-													if(!verify_param(val->item->p, NULL)) {
-														yyerror("\nErreur: Appel de méthode avec paramètres incorrectes\n");
-														return 1;
-													}
-
-													/* we store in qo the label of the method to call*/
-													quadop qo;
-													qo.type = QO_CSTSTR;
-													qo.u.string_literal.label = malloc(strlen($1)+1);
-													strcpy(qo.u.string_literal.label,$1);
-													gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL);
-													
-												}
+												// we store in qo the label of the method to call
+												quadop qo;
+												qo.type = QO_CSTSTR;
+												qo.u.string_literal.label = malloc(strlen($1)+1);
+												strcpy(qo.u.string_literal.label,$1);
+												gencode(qo,qo,qo, Q_METHODCALL, NULL, -1, NULL); }
 
 /*
 	 E is a list of parameters of a method call 
@@ -766,11 +628,9 @@ expr		:	expr add_op expr %prec '+'	{
 											}
 			|	method_call					{ 
 												/* A method with void return type can't be used as an expression*/
-												if($1.type == VOIDTYPE){
-													yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n");
-													return 1;
-												}
-												$$ = $1;
+												if($1.return_type == VOIDTYPE){ yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n"); return 1;}
+												$$.result = $1.result;
+												$$.type = $1.return_type;
 											}
 			|	string_literal				{	
 												/* This is only used for Write_String( string_literal ) */

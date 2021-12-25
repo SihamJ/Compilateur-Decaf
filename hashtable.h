@@ -82,19 +82,13 @@ void print_ctx();
 void print_stack();
 void free_stack();
 
-/* verifies that list of parameters p1 corresponds to list p2 in number and types*/
-int verify_param(param p1, param p2);
-
-/* verifies if ctx_type type is a parent of the current context*/
-int is_a_parent(ctx_type type);
-
 /* returns the offset of item in the symbol table*/
 int offset(item_table *item);
 
 /* pop the temporary variables from the current context, called at the end of the evaluation of an expression*/
 void pop_tmp(); 
 
-param link_prev(param p);
+param reverse_list(param p);
 
 extern HashTable* curr_context; // points to the current context
 extern HashTable* glob_context; // points to the global context

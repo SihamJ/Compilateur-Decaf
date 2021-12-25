@@ -382,23 +382,7 @@ item_table *lookup(char *key){
     return NULL;
 }
 
-
-int verify_param(param p1, param p2){
-
-    while(p1 != NULL && p2 != NULL){
-        if(p1->type != p2->type){
-            return 0;
-        }
-        p1=p1->next;
-        p2=p2->next;
-    }
-    if(p1 != NULL || p2 != NULL){
-        return 0;
-    }
-    return 1;
-}
- 
-void print_ctx(){
+ void print_ctx(){
     printf("\nTABLES DES SYMBOLES:\n\n");
 	int count = 0;
     for (HashTable *i=curr_context; i; i = i->next){
@@ -475,32 +459,18 @@ Ht_item* new_temp(int type){
     return item;
 }
 
-/* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
-int is_a_parent(ctx_type type){
-    HashTable* pt = curr_context;
-    while(pt != NULL){
-        if(pt->type == type)
-            return true;
-        pt = pt->next;
-    }
-    return false;
-}
-
-
-param link_prev(param p){
-    param res;
-    param pt1,pt2, pt3;
-    pt1 = p->next;
-    pt2 = p;
-    p->prev = NULL;
+param reverse_list(param p){
+    param prev,curr, next;
+    curr = p;
+    prev = NULL;
+    next = NULL;
 
     /* linking prev for the first time*/
-    while(pt1 != NULL){
-        pt1->prev = pt2;
-        pt2 = pt1;
-        pt1 = pt1->next;
+    while(curr != NULL){
+        next = curr->next;
+        curr->next = prev;
+        prev = curr;
+        curr = next;
     }
-    
-    return pt2;
-
+    return prev;
 }

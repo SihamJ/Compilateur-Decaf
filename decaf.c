@@ -136,7 +136,6 @@ int main(int argc, char* argv[]){
         exit(EXIT_FAILURE);
     
 
-   // printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n\n","",GREEN,"",GREEN,NORMAL);
     add_labels();    
     
    /* if(version){
@@ -168,10 +167,10 @@ int main(int argc, char* argv[]){
             fclose(fout);
     }*/
     print_globalcode();	
-    fflush(stdout);    
     translate();
     if(fout != stdout)
             fclose(fout);
+    printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n\n","",GREEN,"",GREEN,NORMAL);
     free_stack();
     exit(EXIT_SUCCESS);
 }
