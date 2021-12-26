@@ -94,6 +94,7 @@ typedef struct literal{
 
 typedef struct location {
 		char *stringval;
+    char *index_name;
 		quadop index;	// in case it is an array, we need the index
 		int type;		// scalaire ou TAB
 	} location;

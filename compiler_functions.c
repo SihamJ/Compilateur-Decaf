@@ -58,7 +58,10 @@ char* end_func(char *name, int ctx_count, param p, int is_returnval){
     quadop qo;
     qo.type = QO_CST;
     qo.u.cst = is_returnval;
-    global_code[nextquad-1].label = new_endfunc_label(name); 
+    char *label = new_endfunc_label(name);
+    if(lookup(label)!=NULL)
+      label = new_label();
+    global_code[nextquad-1].label = label;
     global_code[nextquad-1].type = Q_ENDFUNC;
     global_code[nextquad-1].op2 = qo;
   }

@@ -189,8 +189,9 @@ void translate() {
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
 		case Q_ACCESTAB:
-		//	mips_load_1args(global_code[i]);
-		//	mips_tab_get_IdxByReg("$v0", global_code[i].op1.u.global.name, "$a0");
+			mips_load_1args(global_code[i].op3);
+			mips_tab_get_IdxByReg("$v0", global_code[i].op2.u.global.name, "$t0");
+			mips_write_stack("$v0", global_code[i].op1.u.offset);
 			break;
 
 		case Q_METHODCALL:

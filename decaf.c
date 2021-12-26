@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
         
         curr_context = NULL;
 
-     //  yydebug=1;
+       yydebug=1;
         int t = yyparse();
 
         if(t!=0)

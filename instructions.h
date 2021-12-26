@@ -72,7 +72,7 @@
 #define MIPS_DYN_CHECK "\nDYN_CHECK:\n\tbltz $t0 Out_Of_Bound\n\tbge $t0 $t1 Out_Of_Bound\n\tjr $ra\n"
 
 /* Print Error and quit program */
-#define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tla $t0 STR_DYN_CHECK\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
+#define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tla $a0 STR_DYN_CHECK\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
 
 #define MIPS_QUIT_PROGRAM "\nQuit_Program:\n\tli $v0 10 \n\tsyscall\n"
 

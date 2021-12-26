@@ -10,9 +10,16 @@ void mips_dec_global(quadop q){
 	if(q.u.global.type == QO_SCAL)
 		fprintf(fout, "\t%s: %s %d\n", q.u.global.name,".word", 0);
 	else{
-		fprintf(fout, "\t%s: %s %d\n",q.u.global.name, ".space", q.u.global.size);
+		int size = (q.u.global.size/4)-1;
+		char* str = malloc(size*3+1);
+		str = strcat(str,"0");
+		while(size){
+			str = strcat(str,", 0");
+			size--;
+		}
+		fprintf(fout, "\t%s: %s %s\n",q.u.global.name, ".word", str);
 		// Save constant value length for Dynamic Check
-		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size/4);
+		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size);
 	}
 }
 
@@ -311,14 +318,14 @@ void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (!strcmp("$t0", offset_reg))
-		fprintf(fout, "\tmove $t0 offset_reg\n");
+		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
 	
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
-	fprintf(fout, "%8ssw %s %s(%s)\n","", buffer_reg, tab_name, offset_reg);
+	fprintf(fout, "\tsw %s %s(%s)\n",buffer_reg, tab_name, offset_reg);
 }
 
 /**
@@ -338,7 +345,7 @@ void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 /* pass offset by register*/
 void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (!strcmp("$t0", offset_reg))
-		fprintf(fout, "\tmove $t0 offset_reg\n");
+		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
 
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
