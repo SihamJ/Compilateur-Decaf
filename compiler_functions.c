@@ -401,7 +401,7 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
   if(E != NULL){
-    complete(E->t,nextquad); complete(E->f,nextquad);
+    if(E->t != NULL) complete(E->t,nextquad); if(E->f != NULL) complete(E->f,nextquad);
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);

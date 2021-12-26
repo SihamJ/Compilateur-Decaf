@@ -10,13 +10,19 @@ void mips_dec_global(quadop q){
 	if(q.u.global.type == QO_SCAL)
 		fprintf(fout, "\t%s: %s %d\n", q.u.global.name,".word", 0);
 	else{
+		// problèmes avec strcat ...
 		int size = (q.u.global.size/4)-1;
-		char* str = malloc(size*3+1);
-		str = strcat(str,"0");
-		while(size){
-			str = strcat(str,", 0");
-			size--;
+		char str[size*3+2];
+		str[0] = '0';
+		int i = 1;
+		while(i<size*3){
+			str[i] =',';
+			str[i+1] = ' ';
+			str[i+2] = '0';
+			i+=3;
 		}
+		str[i] ='\0';
+
 		fprintf(fout, "\t%s: %s %s\n",q.u.global.name, ".word", str);
 		// Save constant value length for Dynamic Check
 		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size);

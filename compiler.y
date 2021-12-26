@@ -247,7 +247,10 @@ statement 	:	location assign_op expr ';' {
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
 												/* we return $2.result and we store the return type in qo for later verification of types*/
 												quadop qo;	 qo.type = QO_CST;	 qo.u.cst = $2.type;
-												gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL); }
+												if($2.type == BOOL) { complete($2.t, nextquad); complete($2.f, nextquad);}
+												gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL); 
+												
+												}
 
 			|	Break ';'					{ 	if(!is_a_parent(CTX_FOR)) { yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n"); return 1; }
 												quadop qo;	 	qo.type = QO_EMPTY; 	$$.brk = crelist(nextquad);
@@ -277,11 +280,13 @@ method_call :	id '(' E ')' 				{	char *msg;
 												gen_method_call($1, NULL, &$$); }
 
 //	 E is a list of parameters of a method call 
-E 			:	expr ',' E 						{ 	param p = (param) malloc(sizeof(struct param)); p->type = $1.type; p->arg = $1.result;
+E 			:	expr ',' E 						{ 
+													param p = (param) malloc(sizeof(struct param)); p->type = $1.type; p->arg = $1.result;
 													p->next = $3.p; 	$$.p = p;
 													if($1.type == BOOL) { $$.t = concat($$.t,$1.t); $$.f = concat($$.f,$1.f);}
 												}
-			|	expr 							{ 	$$.p = (param) malloc(sizeof(struct param)); 	
+			|	expr 							{
+													$$.p = (param) malloc(sizeof(struct param)); 	
 													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL;
 													if($1.type == BOOL) { $$.t = $1.t; $$.f = $1.f; }	
 												}
