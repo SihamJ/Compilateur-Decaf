@@ -42,7 +42,7 @@ int verify_returns(list rtrn, int type){
   return 1;
 }
 
-char* end_func(char *name, int ctx_count, param p){
+char* end_func(char *name, int ctx_count, param p, int is_returnval){
 
   if(!strcmp(name, "main")){
     if(p != NULL){
@@ -57,8 +57,10 @@ char* end_func(char *name, int ctx_count, param p){
   else{
     quadop qo;
     qo.type = QO_CST;
+    qo.u.cst = is_returnval;
     global_code[nextquad-1].label = new_endfunc_label(name); 
-    global_code[nextquad-1].type = Q_ENDFUNC; 
+    global_code[nextquad-1].type = Q_ENDFUNC;
+    global_code[nextquad-1].op2 = qo;
   }
   tmpCount = 0;
   return NULL;
@@ -284,10 +286,10 @@ expr_val get_max(char *counter_name, expr_val expr){
 }
 
 void gen_q_pop(int count){
-  quadop q;
+  quadop q, qo; qo.type = QO_EMPTY;
   q.type = QO_CST;
   q.u.cst = count;
-  gencode(q, q, q, Q_POP, NULL, -1, NULL);
+  gencode(q, qo, qo, Q_POP, NULL, -1, NULL);
 }
 
 void gen_test_counter(char *counter_name, expr_val max){
@@ -365,15 +367,35 @@ char* verify_and_get_type_call(char *id, param p, method_call *m){
   return NULL;
 }
 
+
+/**
+ * @brief we store in qo the name of the method to call, in q1 the return type and q2 is a temporary variable where we store the return value
+ * if there is any
+ * 
+ * @param id name of the method to call
+ * @param E arguments passed to the method
+ * @param m this structure has a result quadop where we will store the return value (q2), to pass it to expr in case there is an affectation
+ */
 void gen_method_call(char *id, expr_val *E, method_call *m){
+
   quadop qo,q2; 
-  q2.type = QO_EMPTY; 
+ 
   qo.type = QO_CSTSTR;
   qo.u.string_literal.label = malloc(strlen(id)+1);
   strcpy(qo.u.string_literal.label,id);
   quadop q1; 
 
-  if(m->return_type != VOIDTYPE) { q1.type = QO_CST; q1.u.cst = m->return_type; } else { q1.type = QO_EMPTY;}
+  if(m->return_type != VOIDTYPE) { 
+    q1.type = QO_CST; q1.u.cst = m->return_type; 
+    q2.type = QO_TMP; q2.u.offset = 0;
+    Ht_item* tmp = new_temp(INT);
+    m->result_id = malloc(strlen(tmp->key)+1);
+    strcpy(m->result_id, tmp->key);
+    quadop q; q.type = QO_EMPTY;
+    gencode(q2, q, q, Q_DECL, NULL, -1, NULL);
+  } 
+  
+  else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
   if(E != NULL){
     complete(E->t,nextquad); complete(E->f,nextquad);
@@ -382,7 +404,8 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
   }
   
-  m->result = q1; 
+  m->result = q2;
+ 
 
 }
 

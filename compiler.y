@@ -110,13 +110,14 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 									var->item->p = $5;}
 
 					block		{	// ( We verify that return exists ) !! UPDATE !! THIS IS NOT AN ERROR
-									 if($8.rtrn == NULL) { yywarning("\nWarning: Méthode de type non Void sans Return"); }
+									 int is_returnval=0; 
+									 if($8.rtrn == NULL) { yywarning("\nWarning: Méthode de type non Void sans Return"); } else is_returnval = 1;
 
 									// verifying return types
 									if(!verify_returns($8.rtrn, $1)) { yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 										
 									complete($8.next,nextquad-1); complete($8.rtrn, nextquad-1);
-									char* msg; if( (msg = end_func($2, curr_context->count, $5)) != NULL) { yyerror(msg); return 1;}
+									char* msg; if( (msg = end_func($2, curr_context->count, $5, is_returnval)) != NULL) { yyerror(msg); return 1;}
 									popctx(); 
 								}
 													
@@ -127,7 +128,7 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 			'(' P ')'  block	{ 	if(!verify_returns($7.rtrn, $1)){ yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 									item_table* var = lookup($2); var->item->p = $5;
 									complete($7.next,nextquad-1); complete($7.rtrn, nextquad-1);
-									char* msg; if( (msg = end_func($2, curr_context->count, $5)) != NULL) { yyerror(msg); return 1;}
+									char* msg; if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { yyerror(msg); return 1;}
 									popctx(); 	}
 
 P 			:	Param 	{ $$ = $1;}
@@ -411,7 +412,8 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 			|	'(' expr ')' 				{	$$ = $2; }
 
 			|	method_call					{ 	if($1.return_type == VOIDTYPE){ yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n"); return 1;}
-												$$.result = $1.result; $$.type = $1.return_type; }
+												$$.result = $1.result; $$.type = $1.return_type; 
+												$$.stringval = malloc(strlen($1.result_id)+1); strcpy($$.stringval, $1.result_id);}
 
 			|	string_literal				{	$$.type = STRING; $$.result.type = QO_CSTSTR;
 												$$.result.u.string_literal.label = new_str();

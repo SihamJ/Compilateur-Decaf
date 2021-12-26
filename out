@@ -1,0 +1,325 @@
+.data
+
+STR_TRUE: .asciiz "true"
+	STR_FALSE: .asciiz "false"
+STR_DYN_CHECK: .asciiz "Index Out Of Bound"
+	str_0: .asciiz "=0\n"
+	str_1: .asciiz "=0\n"
+	str_2: .asciiz "=0\n"
+	str_3: .asciiz "=0\n"
+
+.text
+
+.globl main
+
+j main
+
+WriteBool:
+	lw $a0, 0($sp)
+	lw $a0, 0($sp)
+	beqz $a0 Load_False
+	Load_True:
+	la $a0 STR_TRUE
+	j Print_Bool
+	Load_False:
+	la $a0 STR_FALSE
+	Print_Bool:
+	li $v0 4
+	syscall
+	jr $ra
+
+ReadInt:
+	li $v0, 5
+	syscall
+	jr $ra
+
+WriteString:
+	li $v0 4
+	syscall
+	jr $ra
+
+WriteInt:
+	lw $a0, 0($sp)
+	li $v0, 1
+	syscall
+	jr $ra
+
+Quit_Program:
+	li $v0 10 
+	syscall
+
+Out_Of_Bound:
+	la $t0 STR_DYN_CHECK
+	li $v0 4
+	syscall
+	j Quit_Program
+
+DYN_CHECK:
+	bltz $t0 Out_Of_Bound
+	bge $t0 $t1 Out_Of_Bound
+	jr $ra
+
+BZero:
+	addi $t1 $t1 -1
+	sw $zero ($t0)
+	addu $t0 $t0 4
+	bgtz $t1 BZero
+	jr $ra
+
+g:
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 4($sp)
+	lw $t1, 8($sp)
+	add $v0 $t0 $t1
+	sw $v0, 0($sp)
+	lw $v0, 0($sp)
+        j fin_g
+
+fin_g:
+	add $sp $sp 8
+	jr $ra
+
+f1:
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 11
+	sw $t0, 0($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 8($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal g
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $v0, 0($sp)
+        j fin_f1
+
+fin_f1:
+	add $sp $sp 8
+	jr $ra
+
+f2:
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 21
+	sw $t0, 4($sp)
+	li $t0, 22
+	sw $t0, 0($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 12($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal f1
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $v0, 0($sp)
+        j fin_f2
+
+fin_f2:
+	add $sp $sp 12
+	jr $ra
+
+f3:
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 31
+	sw $t0, 8($sp)
+	li $t0, 32
+	sw $t0, 4($sp)
+	li $t0, 33
+	sw $t0, 0($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 16($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal g
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $v0, 0($sp)
+        j fin_f3
+
+fin_f3:
+	add $sp $sp 16
+	jr $ra
+
+main:
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal g
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $t0, 0($sp)
+	sw $t0, 4($sp)
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 4($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal f1
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $t0, 0($sp)
+	sw $t0, 4($sp)
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 4($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_1
+	jal WriteString
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal f2
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $t0, 0($sp)
+	sw $t0, 4($sp)
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 4($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_2
+	jal WriteString
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal f3
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	sw $v0, 0($sp)
+	lw $t0, 0($sp)
+	sw $t0, 4($sp)
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 4($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_3
+	jal WriteString
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	add $sp $sp 4
+
+end:
+	li $v0, 10
+	syscall

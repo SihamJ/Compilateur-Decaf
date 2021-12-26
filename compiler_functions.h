@@ -33,7 +33,7 @@ int verify_returns(list rtrn, int type);
  *  @param param is a list of the method parameters 
  *  @return NULL if successful, or an error msg otherwise
  */
-char* end_func(char *name, int ctx_count, param p);
+char* end_func(char *name, int ctx_count, param p, int is_returnval);
 
 
 /** @brief used to get the next variable declaration and add it to the list of declarations

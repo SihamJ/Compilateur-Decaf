@@ -354,7 +354,7 @@ void mips_decl_string(char *varName, char *value) {
 
 void mips_method_call(quad q){
 
-	// we push $ra in the stack
+	// we save $ra in the stack
 	fprintf(fout, "\tmove $t0 $ra\n");
 	mips_push_word("$t0");
 
@@ -376,7 +376,11 @@ void mips_method_call(quad q){
 	// we retrieve $ra from the stack
 	mips_read_stack("$t0",0);
 	fprintf(fout, "\tmove $ra $t0\n");
-	mips_pop_stack(4); // we pop ra from the stack
+	mips_pop_stack(4); // we pop $ra from the stack
+
+	// if there is a return value, we save it to the corresponding offset
+	if(q.op2.type == QO_CST)
+		mips_write_stack("$v0", q.op3.u.offset);
 
 }
 
@@ -400,20 +404,24 @@ int mips_push_args(param p){
 
 
 void mips_end_func(quad q){
-	// we pop from the stack local variables
+
+	// we pop from the stack local variables of the method and push back the return value
 	if(q.op1.u.cst>0)
 		mips_pop_stack(q.op1.u.cst);
+		
 	fprintf(fout,"\tjr $ra\n");
 }
 
 void mips_return(quad q){
 
-	/* if there is a return value, we store it in $v0*/
+	/* if there is a return value, we store it in $vo */
 	if(q.op2.type != QO_EMPTY){
-		if(q.op1.type == QO_CST)
-			mips_load_immediate("$v0", q.op1.u.cst);
-		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP)
+		if(q.op1.type == QO_CST){
+			mips_load_immediate("$vo", q.op1.u.cst);
+		}
+		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP){
 			mips_read_stack("$v0", q.op1.u.offset);
+		}
 		else if(q.op1.type == QO_GLOBAL){
 			if(q.op1.u.global.type == QO_SCAL)
 				mips_load_word("$v0", q.op1.u.global.name);

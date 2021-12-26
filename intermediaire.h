@@ -83,7 +83,8 @@ typedef struct block {
 
 typedef struct method_call {
   quadop result;
-  int return_type; // if expr_val is a method, INT / BOOL / VOID
+  int return_type;
+  char* result_id; // a temporary variable where we store the return value if any
 } method_call;
 
 typedef struct literal{
