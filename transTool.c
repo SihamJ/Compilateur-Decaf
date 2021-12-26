@@ -417,7 +417,7 @@ void mips_return(quad q){
 	/* if there is a return value, we store it in $vo */
 	if(q.op2.type != QO_EMPTY){
 		if(q.op1.type == QO_CST){
-			mips_load_immediate("$vo", q.op1.u.cst);
+			mips_load_immediate("$v0", q.op1.u.cst);
 		}
 		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP){
 			mips_read_stack("$v0", q.op1.u.offset);

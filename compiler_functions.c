@@ -199,7 +199,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
 
 // if op1 is an element in array, we have the index in op3. otherwise, op3 is empty.
 // this is done by get_location()
-void bool_affectation(quadop op1, quadop op3, expr_val s, expr_val expr){
+void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr){
   /*
     If the affectation is of bOOL type, we have to create two quads. One is for false affectation (0) and
     the other one for true (1). The rules on expr already generate incomplete GOTOs. At this stage we complete
@@ -211,7 +211,7 @@ void bool_affectation(quadop op1, quadop op3, expr_val s, expr_val expr){
   quadop op2;
   op2.type = QO_CST;
   op2.u.cst = true;
-  complete(expr.t, nextquad);
+  complete(expr->t, nextquad);
   
   gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL); 	
 
@@ -219,13 +219,13 @@ void bool_affectation(quadop op1, quadop op3, expr_val s, expr_val expr){
     We add it to $$.next
   */
   op2.type = QO_EMPTY;
-  s.next = crelist(nextquad);
+  s->next = crelist(nextquad);
   gencode(op2, op2, op2, Q_GOTO, NULL, -1, NULL);
 
   /* False affectation*/
   op2.type = QO_CST;	
   op2.u.cst = false;		
-  complete(expr.f, nextquad);											
+  complete(expr->f, nextquad);											
   gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL);	
 }
 

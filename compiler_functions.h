@@ -66,7 +66,7 @@ char* var_declare(declaration *dec, int type);
 param push_param(char* name, int type, param next);
 char* verify_aff_types(int type1, int type2, int oper, Ht_item *item);
 void get_location(quadop* qo, quadop* q1, item_table* val, location l);
-void bool_affectation(quadop op1, quadop op3, expr_val s, expr_val expr);
+void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr);
 char* for_declare(char* counter_id, expr_val expr1, expr_val expr2);
 expr_val get_max(char *counter_name, expr_val expr);
 void gen_q_pop(int count);

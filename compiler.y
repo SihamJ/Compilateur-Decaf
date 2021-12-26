@@ -203,7 +203,7 @@ statement 	:	location assign_op expr ';' {
 												get_location(&qo, &q1, val, $1);
 
 												// bool affectation is different from int
-												 if($3.type == BOOL) { bool_affectation(qo, q1, $$, $3);}
+												 if($3.type == BOOL) { bool_affectation(qo, q1, &$$, &$3);}
 												
 												// in the mips translater, we have to differentiate between | = | += | -= |  
 												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
@@ -223,13 +223,11 @@ statement 	:	location assign_op expr ';' {
 												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
 												$$.next = concat($$.next, $6.next); $$.cntu = concat($6.cntu, $10.cntu);
 												$$.brk = concat($6.brk, $10.brk); $$.rtrn = concat($6.rtrn,$10.rtrn);
-												gen_q_pop(curr_context->count*4); 
 											}
 			|	If '(' expr ')' M block 	{	
 												if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5); $$.next = concat($3.f, $6.next);
 												$$.cntu = $6.cntu; $$.brk = $6.brk; $$.rtrn = $6.rtrn;
-												gen_q_pop(curr_context->count*4); 
 											}
 												
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
@@ -346,6 +344,11 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												if($1.type != $3.type ){ yyerror("\nErreur: Comparaison de types différents"); return 1; }
 												$$.type = BOOL; quadop qo; qo.type = QO_EMPTY; qo.u.cst = 0;
 
+												if($1.type == BOOL){
+													complete($1.t, nextquad); complete($1.f, nextquad); 
+													complete($3.t, nextquad); complete($3.f, nextquad);
+												}
+
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
 													item_table* val = lookup($1.stringval);
 													$1.result.u.offset = offset(val); }
@@ -356,42 +359,6 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												$$.t = crelist(nextquad); gencode(qo,$1.result,$3.result,$2,NULL, -1, NULL);
 												$$.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 
-											}
-			| 	literal 					{	$$.result.type = QO_CST; $$.type = $1.type; $$.result.u.cst = $1.intval; }
-											
-			|	location 					{	item_table *val = lookup($1.stringval);
-												if(val == NULL){ yyerror("\nErreur: Variable non déclarée\n"); return 1; }
-
-												if(val->table == glob_context) {
-
-													if($1.type == ID_VAR && val->item->id_type == ID_TAB) {
-														yyerror("\nErreur: Accès tableau comme scalaire\n"); return 1; }
-													if($1.type == ID_TAB && val->item->id_type == ID_VAR) {
-														yyerror("\nErreur: Scalaire utilisé comme tableau\n"); return 1;}
-
-													if($1.type == ID_VAR) {
-														quadop qo; qo.type = QO_GLOBAL; qo.u.global.type = QO_SCAL;
-														qo.u.global.name = malloc(strlen($1.stringval)+1);
-														strcpy(qo.u.global.name, $1.stringval); qo.u.global.size = 4;
-														$$.type = val->item->value; $$.result = qo; }
-
-													else if($1.type == ID_TAB) {
-														$$.type = val->item->value;
-														quadop qo; qo.type = QO_GLOBAL; qo.u.global.type = QO_TAB;
-														qo.u.global.name = malloc(strlen($1.stringval)+1);
-														strcpy(qo.u.global.name, $1.stringval); qo.u.global.size = 4;
-
-														Ht_item* item = new_temp(INT);
-														quadop q1; q1.type = QO_TMP; q1.u.offset = 0;
-														gencode(q1,q1,q1,Q_DECL,NULL,-1, NULL);
-
-														gencode(q1, qo, $1.index, Q_ACCESTAB, NULL, -1, NULL); $$.result = q1; 
-														$$.stringval = malloc(strlen(item->key)+1); strcpy($$.stringval, item->key);}
-												}
-												else {	// location can only be an ID if we are not in a global context
-														quadop qo; qo.type = QO_ID; qo.u.offset = offset(val); $$.result = qo;
-														$$.type = val->item->value; $$.stringval = malloc(strlen($1.stringval)+1);
-														strcpy($$.stringval, $1.stringval); }
 											}
 
 			|	'-' expr %prec NEG 			{	if($2.type != INT){ yyerror("\nErreur: Arithmètique non entière"); return 1; }
@@ -413,12 +380,72 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 
 			|	method_call					{ 	if($1.return_type == VOIDTYPE){ yyerror("\nErreur: méthode de type de retour void utilisée comme expression\n"); return 1;}
 												$$.result = $1.result; $$.type = $1.return_type; 
-												$$.stringval = malloc(strlen($1.result_id)+1); strcpy($$.stringval, $1.result_id);}
+												$$.stringval = malloc(strlen($1.result_id)+1); strcpy($$.stringval, $1.result_id);}		
+						
+			|	location 					{	item_table *val = lookup($1.stringval);
+												if(val == NULL){ yyerror("\nErreur: Variable non déclarée\n"); return 1; }
+
+												if(val->table == glob_context) {
+
+													if($1.type == ID_VAR && val->item->id_type == ID_TAB) {
+														yyerror("\nErreur: Accès tableau comme scalaire\n"); return 1; }
+													if($1.type == ID_TAB && val->item->id_type == ID_VAR) {
+														yyerror("\nErreur: Scalaire utilisé comme tableau\n"); return 1;}
+
+													if($1.type == ID_VAR) {
+														quadop qo; qo.type = QO_GLOBAL; qo.u.global.type = QO_SCAL;
+														qo.u.global.name = malloc(strlen($1.stringval)+1);
+														strcpy(qo.u.global.name, $1.stringval); qo.u.global.size = 4;
+														$$.type = val->item->value; $$.result = qo; 
+														
+													}
+
+													else if($1.type == ID_TAB) {
+														$$.type = val->item->value;
+														quadop qo; qo.type = QO_GLOBAL; qo.u.global.type = QO_TAB;
+														qo.u.global.name = malloc(strlen($1.stringval)+1);
+														strcpy(qo.u.global.name, $1.stringval); qo.u.global.size = 4;
+
+														Ht_item* item = new_temp(INT);
+														quadop q1; q1.type = QO_TMP; q1.u.offset = 0;
+														gencode(q1,q1,q1,Q_DECL,NULL,-1, NULL);
+
+														gencode(q1, qo, $1.index, Q_ACCESTAB, NULL, -1, NULL); $$.result = q1; 
+														$$.stringval = malloc(strlen(item->key)+1); strcpy($$.stringval, item->key);}
+												}
+												else {	// location can only be an ID if we are not in a global context
+														quadop qo; qo.type = QO_ID; qo.u.offset = offset(val); $$.result = qo;
+														$$.type = val->item->value; $$.stringval = malloc(strlen($1.stringval)+1);
+														strcpy($$.stringval, $1.stringval); 
+														if($$.type == BOOL){
+															quadop q1, q2; q1.type = QO_CST; q1.u.cst = 1; q2.type = QO_EMPTY;
+															$$.t = crelist(nextquad); gencode(q2, qo, q1, Q_EQ, NULL, -1, NULL);
+															$$.f = crelist(nextquad); gencode(q2, q2, q2, Q_GOTO, NULL, -1, NULL);
+														}
+														
+														}
+											}
 
 			|	string_literal				{	$$.type = STRING; $$.result.type = QO_CSTSTR;
 												$$.result.u.string_literal.label = new_str();
 												$$.result.u.string_literal.value = malloc(strlen($1)-2);
 												strncpy($$.result.u.string_literal.value, $1+1, strlen($1)-2); }
+
+			| 	literal 					{	$$.result.type = QO_CST; $$.type = $1.type; $$.result.u.cst = $1.intval; 
+
+												if($1.type == BOOL){
+													Ht_item* item = new_temp(BOOL);
+													quadop q1; q1.type = QO_TMP; q1.u.offset = 0;
+													gencode(q1,q1,q1,Q_DECL,NULL,-1, NULL);
+
+													quadop qo,q2; qo.type = QO_EMPTY; q2.type = QO_CST; q2.u.cst = $1.intval;
+													gencode(q1, q2, q2, Q_AFF, NULL, -1, NULL);
+													q2.u.cst = 1;
+													$$.t = crelist(nextquad); gencode(qo, q1, q2, Q_EQ, NULL, -1, NULL);
+													$$.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+												}														
+											}
+											
 
 
 literal		:	int_literal					{	$$.intval = $1; $$.type = INT;	}
