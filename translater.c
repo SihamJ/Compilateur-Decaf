@@ -133,56 +133,56 @@ void translate() {
         	break;
 		case Q_EQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete EQ\n\n%s",RED,NORMAL);
-					exit(1);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete EQ\n\n%s",YELLOW,NORMAL);
+					exit(0);
 				}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_eq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_NEQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete NEQ\n\n%s",RED,NORMAL);
-					exit(1);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete NEQ\n\n%s",YELLOW,NORMAL);
+					exit(0);
 				}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_neq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete LT\n\n%s",RED,NORMAL);
-					exit(1);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LT\n\n%s",YELLOW,NORMAL);
+					exit(0);
 				}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_lt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GT\n\n%s",RED,NORMAL);
-					exit(1);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GT\n\n%s",YELLOW,NORMAL);
+					exit(0);
 				}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_gt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LEQ:
 			if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete LEQ\n\n%s",RED,NORMAL);
-				exit(1);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LEQ\n\n%s",YELLOW,NORMAL);
+				exit(0);
 			}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_leq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GEQ:
 		if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GEQ\n\n%s",RED,NORMAL);
-				exit(1);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GEQ\n\n%s",YELLOW,NORMAL);
+				exit(0);
 			}
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_geq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GOTO:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete GOTO\n\n%s",RED,NORMAL);
-					exit(1);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GOTO\n\n%s",YELLOW,NORMAL);
+					exit(0);
 				}
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
@@ -199,8 +199,8 @@ void translate() {
 			break;
 		case Q_RETURN:
 			if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sErreur: Can't translate to MIPS, incomplete RETURN\n\n%s",RED,NORMAL);
-				exit(1);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete RETURN\n\n%s",YELLOW,NORMAL);
+				exit(0);
 			}
 			mips_return(global_code[i]);
 			break;
