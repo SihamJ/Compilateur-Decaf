@@ -20,7 +20,7 @@ all: decaf
 decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o $(dep5).o $(dep6).o $(dep7).o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-$(dep).o : $(dep).c $(dep).h $(dep2).h token.h
+$(dep).o : $(dep).c $(dep).h $(dep2).h token.h 
 	$(CC) -c -g $(dep).c
 
 $(dep2).o : $(dep2).c $(dep2).h $(dep).h token.h 
@@ -41,7 +41,7 @@ $(dep6).o : $(dep6).c $(dep6).h
 $(dep7).o : $(dep7).c $(dep7).h $(dep).h $(dep2).h token.h
 	$(CC) -c -g $(dep7).c
 
-*.y : $(dep).h $(dep2).h $(dep5).h $(dep6).h token.h $(dep7).h
+*.y : $(dep).h $(dep2).h $(dep5).h $(dep6).h token.h $(dep7).h 
 *.lex : $(dep).h token.h 
 
 $(prefixe).tab.c: $(prefixe).y

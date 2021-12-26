@@ -354,49 +354,72 @@ void mips_decl_string(char *varName, char *value) {
 
 void mips_method_call(quad q){
 
+	// we push $ra in the stack
+	fprintf(fout, "\tmove $t0 $ra\n");
+	mips_push_word("$t0");
+
+	int size = 0;
 	// push args in stack
 	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString"))
-		mips_push_args(q.p);
+		size = mips_push_args(q.p);
 
 	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
-	fprintf(fout, "\tmove $t2 $ra\n"); // we save $ra in $t2
+	
 	fprintf(fout, "\tjal %s\n",q.op1.u.string_literal.label); //jump and link 
+
+	// popping method call parameters from the stack
+	if(size>0)
+		mips_pop_stack(size*4);
+	
+	// we retrieve $ra from the stack
+	mips_read_stack("$t0",0);
+	fprintf(fout, "\tmove $ra $t0\n");
+	mips_pop_stack(4); // we pop ra from the stack
 
 }
 
-void mips_push_args(param p){
+int mips_push_args(param p){
+	int size = 0;
 	p = reverse_list(p);
 
 	while(p!=NULL){
 		if(p->arg.type == QO_ID)
-			mips_read_stack("$t0",p->arg.u.offset);
+			mips_read_stack("$t0",p->arg.u.offset+4); // we add 4 to all offsets because we pushed $ra in the stack
 		else if(p->arg.type == QO_GLOBAL)
 			mips_load_word("$t0", p->arg.u.global.name);
 		else if(p->arg.type == QO_CST)
 			mips_load_immediate("$t0", p->arg.u.cst);
 		mips_push_word("$t0");
 		p = p->next;
+		size++;
 	}
+	return size;
 }
 
-void mips_end_func(quad q){
 
+void mips_end_func(quad q){
+	// we pop from the stack local variables
 	if(q.op1.u.cst>0)
 		mips_pop_stack(q.op1.u.cst);
-
-	fprintf(fout,"%8sjr $ra\n","");
+	fprintf(fout,"\tjr $ra\n");
 }
 
 void mips_return(quad q){
 
 	/* if there is a return value, we store it in $v0*/
-	if(q.op1.type != QO_EMPTY){
-		if(q.op2.type == QO_CST)
+	if(q.op2.type != QO_EMPTY){
+		if(q.op1.type == QO_CST)
 			mips_load_immediate("$v0", q.op1.u.cst);
-		else if(q.op2.type == QO_ID)
+		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP)
 			mips_read_stack("$v0", q.op1.u.offset);
+		else if(q.op1.type == QO_GLOBAL){
+			if(q.op1.u.global.type == QO_SCAL)
+				mips_load_word("$v0", q.op1.u.global.name);
+			// TO DO: else if(q.op1.u.global.type == QO_TAB)
+
+		}
 	}
 
 	/* we jump to the end of the function label*/

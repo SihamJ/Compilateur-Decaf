@@ -37,7 +37,7 @@ char* new_str(){
 }
 
 char* new_endfunc_label(char *name){
-  char* label = malloc(strlen(name)+5);
+  char* label = malloc(strlen(name)+6);
   sprintf(label, "fin_%s",name);
   return label;
 }
@@ -67,7 +67,6 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
     global_code[nextquad].label = malloc(strlen(label)+1);
     strcpy(global_code[nextquad].label, label);
   }
-  if(t != Q_LABEL)
     nextquad++;
   }
 
@@ -116,7 +115,7 @@ void print_globalcode(){
     else if(global_code[i].op1.type == QO_GLOBAL)
       printf("%14s", global_code[i].op1.u.global.name);
     else if(global_code[i].op1.type == QO_EMPTY)
-      printf("%14s","");
+      printf("%14s","-");
     else 
       printf("%12s(%d)","",global_code[i].op1.u.offset);
     
@@ -222,8 +221,8 @@ char *op_type(int type){
     return ("GOTO");
 			break;
 
-    case Q_LABEL:
-    return ("LABEL");
+    case Q_FUNC:
+    return ("START FUNC");
     break;
 
     case Q_SYSCALL:
@@ -249,7 +248,7 @@ char *op_type(int type){
     case Q_POP:
     return ("POP STACK");
     break;
-    
+
     default:
      	break;
         }
@@ -274,7 +273,7 @@ char *get_type_oper(int type){
 void add_labels(){
   char *label;
   for(int i=0; i<nextquad; i++){
-    if(global_code[i].jump != -1 && global_code[global_code[i].jump].type != Q_ENDFUNC && global_code[global_code[i].jump].label == NULL){
+    if(global_code[i].jump != -1 && global_code[global_code[i].jump].label == NULL){
       label = new_label();
       global_code[global_code[i].jump].label = label;
     }

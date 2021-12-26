@@ -52,6 +52,8 @@ void translate() {
 
 		switch (global_code[i].type)
         {
+		case Q_FUNC:
+			break;
 		case Q_DECL:
 			mips_load_immediate("$t0", 0);			
 			mips_push_word("$t0");

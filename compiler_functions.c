@@ -26,8 +26,8 @@ char* add_to_tos(int type, char *name ){
     which can be overwritten by new declarations in the method block.
     */
     pushctx(CTX_METHOD);
-    global_code[nextquad].label = malloc(strlen(name)+1);
-    strcpy(global_code[nextquad].label,name);
+    quadop qo; qo.type = QO_EMPTY;
+    gencode(qo, qo, qo, Q_FUNC, name, -1, NULL);
 
     return NULL;
 }
@@ -57,12 +57,10 @@ char* end_func(char *name, int ctx_count, param p){
   else{
     quadop qo;
     qo.type = QO_CST;
-    qo.u.cst = ctx_count;
-    
-    // Notice that we stored the number of variables to pop in qo.
-    gencode(qo, qo, qo, Q_ENDFUNC, new_endfunc_label(name), -1, p);
+    global_code[nextquad-1].label = new_endfunc_label(name); 
+    global_code[nextquad-1].type = Q_ENDFUNC; 
   }
-  
+  tmpCount = 0;
   return NULL;
 }
 
@@ -172,9 +170,8 @@ char* verify_aff_types(int type1, int type2, int oper, Ht_item *item){
 void get_location(quadop* qo, quadop* q1, item_table* val, location l){
 
 /* If location is an element in an array, we need to retrieve the offset from 
-														the attribute 'quadop offset' and store it in q1. If not, we use q1 as an empty quadop
-														in the AFF below.
-													*/
+  the attribute 'quadop offset' of l and store it in q1. If not, we use q1 as an empty quadop in the AFF below. */
+
   if(val->table == glob_context) {
     qo->type = QO_GLOBAL;
     qo->u.global.name = malloc(strlen(l.stringval)+1);
@@ -194,6 +191,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
   else {
     qo->type = QO_ID;
     qo->u.offset = offset(val);
+    q1->type = QO_EMPTY;
   }
 }
 
@@ -252,8 +250,6 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
   Ht_item *item = create_item(counter_id, ID_VAR, INT);
   newname(item);
   
-  qo.type = QO_ID;
-  qo.u.offset = 0;
   gencode(qo, expr1.result, expr1.result, Q_AFF, NULL, -1, NULL); 
   return NULL;
 }

@@ -44,7 +44,7 @@
 * Assuming the value to print is in the stack
 * Called by jal, jalr $target_reg or jalr $ra $target_reg
 */
-#define MIPS_LIB_IO_WRITE_INT "\nWriteInt:\n\tlw $a0, 0($sp)\n\tli $v0, 1\n\tsyscall\n\tadd $sp $sp 4\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_INT "\nWriteInt:\n\tlw $a0, 0($sp)\n\tli $v0, 1\n\tsyscall\n\tjr $ra\n"
 
 #define MIPS_LIB_IO_WRITE_STRING "\nWriteString:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
@@ -62,7 +62,7 @@
 * Called by jal, jalr $target_reg or jalr $ra $target_reg
 * Assuming having 'True' and 'False' stored as literal string in STR_TRUE and STR_FALSE
 */
-#define MIPS_LIB_IO_WRITE_BOOL "\nWriteBool:\n\tlw $a0, 0($sp)\n\tlw $a0, 0($sp)\n\tbeqz $a0 Load_False\n\tLoad_True:\n\tla $a0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $a0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tadd $sp $sp 4\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_BOOL "\nWriteBool:\n\tlw $a0, 0($sp)\n\tlw $a0, 0($sp)\n\tbeqz $a0 Load_False\n\tLoad_True:\n\tla $a0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $a0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
 /**
  * Assuming the index is in $t0

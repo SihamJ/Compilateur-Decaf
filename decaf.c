@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
         
         curr_context = NULL;
 
-    //   yydebug=1;
+     //  yydebug=1;
         int t = yyparse();
 
         if(t!=0)
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]){
         translate();
         if(fout != stdout)
             fclose(fout);
-        printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n\n","",GREEN,"",GREEN,NORMAL);
+    //    printf("\n%8s%s\033[1mPARSING SUCCESSFULL!\033[0m \n%8s%s--------------------%s\n\n","",GREEN,"",GREEN,NORMAL);
 
         if( argc>4 && !strcmp(argv[4],"-tos"))
             print_stack();
