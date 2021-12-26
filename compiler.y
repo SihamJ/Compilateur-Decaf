@@ -124,7 +124,7 @@ method_decl	:		type id 	{
 
 					block		{
 									// We verify that return exists
-									if($8.rtrn == NULL) { yyerror("\nErreur: Méthode sans return\n"); return 1; }
+									// if($8.rtrn == NULL) { yyerror("\nErreur: Méthode sans return\n"); return 1; }
 
 									// verifying return types
 									if(!verify_returns($8.rtrn, $1)) { yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
