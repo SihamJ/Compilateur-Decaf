@@ -296,6 +296,7 @@ location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcp
 			|	id '[' expr ']'		{ 	if($3.type != INT) {yyerror("\nErreur: L'ndice d'accès à un tableau doit être de type INT\n"); return 1;}
 										$$.type = ID_TAB; $$.stringval = malloc(strlen($1)+1);
 										strcpy($$.stringval, $1); $$.index = $3.result; 
+										
 										 if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
 											$$.index_name = malloc(strlen($3.stringval)+1);	strcpy($$.index_name, $3.stringval); 
 											quadop qo, q1; qo.type = QO_CST; qo.u.cst = 4; q1.type = QO_EMPTY;

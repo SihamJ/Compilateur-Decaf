@@ -59,11 +59,20 @@ void translate() {
 			mips_push_word("$t0");
 			break;
 		case Q_AFF:
-			mips_load_1args(global_code[i].op2);
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)			
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				mips_load_1args(global_code[i].op2);
 				mips_write_stack("$t0", global_code[i].op1.u.offset);
-			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$t0", global_code[i].op1.u.global.name);
+			}	
+			else if(global_code[i].op1.type == QO_GLOBAL){
+				if(global_code[i].op1.u.global.type == QO_SCAL){
+					mips_load_1args(global_code[i].op2);
+					mips_store_word("$t0", global_code[i].op1.u.global.name);
+				}
+				else if(global_code[i].op1.u.global.type == QO_TAB){
+					mips_load_2args(global_code[i].op2, global_code[i].op3);
+					mips_tab_put_IdxByReg("$t0", global_code[i].op1.u.global.name,"$t1");
+				}
+			}
 			break;
 		case Q_AFFADD:
 			mips_load_2args(global_code[i].op1, global_code[i].op2);
