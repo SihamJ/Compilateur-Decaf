@@ -39,10 +39,18 @@ typedef struct quadop {
   } u;
 } quadop;
 
+/* list for storing address of incomplete quads */
+typedef struct list{
+  int addr;
+  struct list* suiv;
+}*list;
+
 /* To store parameters of a method at declaration or call */
 typedef struct param{
     int type;           // INT or BOOL or STRING;
     quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
+    list t;
+    list f;
     struct param* next;
 } *param;
 
@@ -55,11 +63,6 @@ typedef struct quad{
   param p;  // si method call
 } quad;
 
-/* list for storing address of incomplete quads */
-typedef struct list{
-  int addr;
-  struct list* suiv;
-}*list;
 
 typedef struct expr_val {
     quadop result;

@@ -266,7 +266,7 @@ return_val	:	expr 						{ 	$$ = $1; }
 
 
 method_call :	id '(' E ')' 				{	char *msg;
-												if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
+												 if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
 
 												if(!strcmp($1,"WriteString")) {
 													get_write_string_args($3.p->arg.u.string_literal.label, $3.p->arg.u.string_literal.value); }
@@ -280,14 +280,24 @@ method_call :	id '(' E ')' 				{	char *msg;
 
 //	 E is a list of parameters of a method call 
 E 			:	expr ',' E 						{ 
-													param p = (param) malloc(sizeof(struct param)); p->type = $1.type; p->arg = $1.result;
-													p->next = $3.p; 	$$.p = p;
-													if($1.type == BOOL) { $$.t = concat($$.t,$1.t); $$.f = concat($$.f,$1.f);}
+													param p = (param) malloc(sizeof(struct param));
+
+													/* if($1.result.type == QO_ID || $1.result.type == QO_TMP){
+														item_table* val = lookup($1.stringval); 
+														$1.result.u.offset = offset(val);
+													} */
+													p->type = $1.type; p->arg = $1.result; p->next = $3.p; 	
+												 	if($1.type == BOOL) { p->t = $1.t; p->f = $1.f;}
+													$$.p = p;
 												}
 			|	expr 							{
-													$$.p = (param) malloc(sizeof(struct param)); 	
+													$$.p = (param) malloc(sizeof(struct param));
+													/* if($1.result.type == QO_ID || $1.result.type == QO_TMP){
+														item_table* val = lookup($1.stringval); 
+														$1.result.u.offset = offset(val);
+													}*/
 													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL;
-													if($1.type == BOOL) { $$.t = $1.t; $$.f = $1.f; }	
+													if($1.type == BOOL) { $$.p->t = $1.t; $$.p->f = $1.f; }	
 												}
 
 location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcpy($$.stringval, $1); }
@@ -314,11 +324,12 @@ location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcp
 											q1.type = QO_CST; q1.u.cst = 4;
 											gencode(qo, qo, q1, Q_MUL, NULL, -1, NULL);
 											$$.index_name = malloc(strlen(item->key)+1);	strcpy($$.index_name, item->key); 
-											$$.index = qo; 
+											$$.index = qo;
 										}
 										else if($3.result.type == QO_CST){
 											$$.index.u.cst = 4*$3.result.u.cst;
 										}
+										
 										// TO DO : Accès tableau avec offset variable globale
 										
 									}

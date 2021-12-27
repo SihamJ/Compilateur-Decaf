@@ -315,7 +315,7 @@ void mips_syscall(int num){
  * @param offset The offset
  */
 void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
@@ -353,7 +353,7 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (strcmp("$t0", offset_reg))
 		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
 
-	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
@@ -402,10 +402,12 @@ int mips_push_args(param p){
 	p = reverse_list(p);
 
 	while(p!=NULL){
-		if(p->arg.type == QO_ID)
+		if(p->arg.type == QO_ID || p->arg.type == QO_TMP)
 			mips_read_stack("$t0",p->arg.u.offset+4); // we add 4 to all offsets because we pushed $ra in the stack
-		else if(p->arg.type == QO_GLOBAL)
-			mips_load_word("$t0", p->arg.u.global.name);
+		else if(p->arg.type == QO_GLOBAL){
+				mips_load_word("$t0", p->arg.u.global.name);
+			// can't be an array!
+		}
 		else if(p->arg.type == QO_CST)
 			mips_load_immediate("$t0", p->arg.u.cst);
 		mips_push_word("$t0");

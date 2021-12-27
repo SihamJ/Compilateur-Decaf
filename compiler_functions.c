@@ -385,12 +385,11 @@ char* verify_and_get_type_call(char *id, param p, method_call *m){
  */
 void gen_method_call(char *id, expr_val *E, method_call *m){
 
-  quadop qo,q2; 
+  quadop qo,q1,q2; 
  
   qo.type = QO_CSTSTR;
   qo.u.string_literal.label = malloc(strlen(id)+1);
-  strcpy(qo.u.string_literal.label,id);
-  quadop q1; 
+  strcpy(qo.u.string_literal.label, id);
 
   if(m->return_type != VOIDTYPE) { 
     q1.type = QO_CST; q1.u.cst = m->return_type; 
@@ -405,7 +404,15 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
   if(E != NULL){
-    if(E->t != NULL) complete(E->t,nextquad); if(E->f != NULL) complete(E->f,nextquad);
+    // if(E->t != NULL) complete(E->t,nextquad); if(E->f != NULL) complete(E->f,nextquad);
+    param p = E->p;
+    while(p){
+      if(p->type == BOOL){
+        if(p->t != NULL) complete(p->t, nextquad);
+        if(p->f != NULL) complete(p->f, nextquad);    
+      }
+      p = p->next;
+    }
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
