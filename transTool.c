@@ -323,10 +323,10 @@ void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 }
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (!strcmp("$t0", offset_reg))
+	if (strcmp("$t0", offset_reg))
 		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
 	
-	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t3
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
@@ -342,7 +342,7 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  */
 void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t3
 	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
@@ -350,7 +350,7 @@ void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 }
 /* pass offset by register*/
 void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (!strcmp("$t0", offset_reg))
+	if (strcmp("$t0", offset_reg))
 		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
 
 	fprintf(fout, "\tlw $t1 %s_SIZE\n", tab_name); // Load table size to $t1

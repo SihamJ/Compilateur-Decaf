@@ -189,6 +189,10 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
     }
     else if(l.type == ID_TAB) {
       qo->u.global.type = QO_TAB;
+      if(l.index.type == QO_ID || l.index.type == QO_TMP){
+        item_table* val = lookup(l.index_name);
+        l.index.u.offset = offset(val);
+      }
       *q1 = l.index;
     }
   }

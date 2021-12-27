@@ -149,7 +149,7 @@ Param		:	type id ',' Param	{
 										$$ = push_param($2, $1, NULL);
 									}
 
-block 		:	'{' {  pushctx(CTX_BLOCK); } 
+block 		:	'{' { pushctx(CTX_BLOCK); } 
 
 			V S2 '}' { 	
 						/* we retrieve the adresses of the incomplete GOTOs if they exist*/
@@ -218,17 +218,14 @@ statement 	:	location assign_op expr ';' {
  			|	method_call	';'				{ 	; }
 
 			|	If '(' expr ')' M block 
-				G Else M block				{	
-												/* Verifying types*/
-												if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
+				G Else M block				{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
 												$$.next = concat($$.next, $6.next); $$.cntu = concat($6.cntu, $10.cntu);
-												$$.brk = concat($6.brk, $10.brk); $$.rtrn = concat($6.rtrn,$10.rtrn);
-											}
-			|	If '(' expr ')' M block 	{	
-												if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
+												$$.brk = concat($6.brk, $10.brk); $$.rtrn = concat($6.rtrn,$10.rtrn); }
+												
+			|	If '(' expr ')' M	block 	{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5);		 $$.next = concat($3.f, $6.next);
-												$$.cntu = $6.cntu; 		$$.brk = $6.brk; 	$$.rtrn = $6.rtrn;
+												$$.cntu = $6.cntu; 		$$.brk = $6.brk; 	$$.rtrn = $6.rtrn; 
 											}
 												
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
@@ -241,7 +238,9 @@ statement 	:	location assign_op expr ';' {
 				block 						{   complete($11.next, nextquad);	complete($11.cntu, nextquad);
 												$$.next = crelist($9); 		  	$$.next = concat($$.next, $11.brk);
 												$$.rtrn = $11.rtrn; 		 	gen_increment_and_loopback($2, $9);
-												complete($$.next, nextquad);  	gen_q_pop(curr_context->count*4); 
+												complete($$.next, nextquad);	gen_q_pop(curr_context->count*4);
+												$$.next = crelist( nextquad);
+												quadop qo; qo.type = QO_EMPTY; gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
 												popctx(); }
 
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
@@ -296,15 +295,31 @@ location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcp
 			|	id '[' expr ']'		{ 	if($3.type != INT) {yyerror("\nErreur: L'ndice d'accès à un tableau doit être de type INT\n"); return 1;}
 										$$.type = ID_TAB; $$.stringval = malloc(strlen($1)+1);
 										strcpy($$.stringval, $1); $$.index = $3.result; 
-										
-										 if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
+
+										 if($3.result.type == QO_TMP) {
+											item_table *val = lookup($3.stringval);
+											$3.result.u.offset = offset(val); 
+											quadop qo, q1; qo.type = QO_CST; qo.u.cst = 4;
+											gencode($3.result, $3.result, qo, Q_MUL, NULL, -1, NULL);
 											$$.index_name = malloc(strlen($3.stringval)+1);	strcpy($$.index_name, $3.stringval); 
-											quadop qo, q1; qo.type = QO_CST; qo.u.cst = 4; q1.type = QO_EMPTY;
-											gencode($$.index, qo, q1, Q_MUL, NULL, -1, NULL);
+											$$.index = $3.result;
+										}
+										else if($3.result.type == QO_ID){
+											quadop qo;	qo.type = QO_TMP;	qo.u.offset = 0;	Ht_item *item = new_temp(INT);
+											quadop q1;	q1.type = QO_EMPTY;
+											gencode(qo, q1, q1, Q_DECL, NULL, -1, NULL);
+											item_table *val = lookup($3.stringval);
+											$3.result.u.offset = offset(val);
+											gencode(qo, $3.result, q1, Q_AFF, NULL, -1, NULL);
+											q1.type = QO_CST; q1.u.cst = 4;
+											gencode(qo, qo, q1, Q_MUL, NULL, -1, NULL);
+											$$.index_name = malloc(strlen(item->key)+1);	strcpy($$.index_name, item->key); 
+											$$.index = qo; 
 										}
 										else if($3.result.type == QO_CST){
 											$$.index.u.cst = 4*$3.result.u.cst;
 										}
+										// TO DO : Accès tableau avec offset variable globale
 										
 									}
 

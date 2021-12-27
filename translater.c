@@ -69,8 +69,9 @@ void translate() {
 					mips_store_word("$t0", global_code[i].op1.u.global.name);
 				}
 				else if(global_code[i].op1.u.global.type == QO_TAB){
-					mips_load_2args(global_code[i].op2, global_code[i].op3);
-					mips_tab_put_IdxByReg("$t0", global_code[i].op1.u.global.name,"$t1");
+					mips_load_2args(global_code[i].op3, global_code[i].op2);
+					fprintf(fout, "\tmove $v0 $t1\n"); // t1 is the value to store, we save it in v0 before DYNAMIC CHECK.
+					mips_tab_put_IdxByReg("$v0", global_code[i].op1.u.global.name,"$t0"); //t0 is the offset
 				}
 			}
 			break;
