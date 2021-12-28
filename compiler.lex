@@ -69,6 +69,11 @@ comment 		\/\/.*
 "break" return Break;
 
 
+"ReadInt" 			{ 
+						yylval.stringval = malloc(strlen(yytext)+1);
+						strcpy(yylval.stringval, yytext);
+						return ReadInt;
+					}
 
 {bool_literal} 		{
 						yylval.intval = (strcmp(yytext, "true") == 0);

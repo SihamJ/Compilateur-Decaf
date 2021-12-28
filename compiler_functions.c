@@ -329,9 +329,23 @@ void gen_increment_and_loopback(char* counter_name, int jump){
 
 void get_write_string_args(char *label, char*value){
   str_labels[str_count-1].label = malloc(strlen(label)+1);
-  strcpy(str_labels[str_count-1].label,label);
+ // strcpy(str_labels[str_count-1].label,label);
   str_labels[str_count-1].value = malloc(strlen(value)+1);
-  strcpy(str_labels[str_count-1].value,value);
+ // strcpy(str_labels[str_count-1].value,value);
+
+  int i=0;
+  while(label[i]!='\0'){
+    str_labels[str_count-1].label[i] = label[i];
+    i++;
+  }
+  str_labels[str_count-1].label[i] = '\0';
+
+   i=0;
+  while(value[i]!='\0'){
+    str_labels[str_count-1].value[i] = value[i];
+    i++;
+  }
+  str_labels[str_count-1].value[i] = '\0';
 }
 
 /* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */

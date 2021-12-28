@@ -28,8 +28,11 @@ void add_libs_to_tos(){
 
         Ht_item *item4 = create_item("ReadInt", ID_METHOD, VOIDTYPE);
         newname(item4);
+        param p_read_int = (struct param*) malloc(sizeof(struct param));
+        p_read_int->type = INT;
+        p_read_int->next = NULL;
         item_table* var4 = lookup("ReadInt");
-        var4->item->p = NULL;
+        var4->item->p = p_read_int;
         
 
 }

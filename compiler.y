@@ -27,7 +27,7 @@
 }
 
 %token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
-%token <stringval> id string_literal 
+%token <stringval> id string_literal ReadInt
 %token class If Else For Return Break Continue 
 
 %type <expr> expr return_val E statement block S2 S Max
@@ -217,6 +217,8 @@ statement 	:	location assign_op expr ';' {
 			/* The method call rules are defined below not here.*/
  			|	method_call	';'				{ 	; }
 
+			|	method_call_by_address ';'	{;}
+
 			|	If '(' expr ')' M block 
 				G Else M block				{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
@@ -227,7 +229,7 @@ statement 	:	location assign_op expr ';' {
 												complete($3.t, $5);		 $$.next = concat($3.f, $6.next);
 												$$.cntu = $6.cntu; 		$$.brk = $6.brk; 	$$.rtrn = $6.rtrn; 
 											}
-												
+
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
 												char* msg;
 												if( (msg = for_declare($2, $4, $6)) != NULL) { yyerror(msg); return 1;}
@@ -264,6 +266,15 @@ statement 	:	location assign_op expr ';' {
 return_val	:	expr 						{ 	$$ = $1; }
 			|	%empty						{ 	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY; }
 
+method_call_by_address	:	ReadInt '(' location ')' { 
+														quadop qo,q1,q2; qo.type = QO_CSTSTR;printf("here\n"); qo.u.string_literal.label = malloc(strlen($1)+1); 
+														strcpy(qo.u.string_literal.label, $1);
+														q1.type = QO_ID; item_table* val = lookup($3.stringval); q1.u.offset = offset(val);
+														q2.type = QO_EMPTY;
+														gencode(qo, q1, q2, Q_METHODCALL, NULL, -1, NULL);
+													}
+
+											
 
 method_call :	id '(' E ')' 				{	char *msg;
 												 if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }

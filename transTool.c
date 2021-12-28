@@ -373,12 +373,13 @@ void mips_method_call(quad q){
 
 	int size = 0;
 	// push args in stack
-	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString"))
+	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString") && strcmp(q.op1.u.string_literal.label,"ReadInt"))
 		size = mips_push_args(q.p);
 
 	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
+
 	
 	fprintf(fout, "\tjal %s\n",q.op1.u.string_literal.label); //jump and link 
 
@@ -394,6 +395,10 @@ void mips_method_call(quad q){
 	// if there is a return value, we save it to the corresponding offset
 	if(q.op2.type == QO_CST)
 		mips_write_stack("$v0", q.op3.u.offset);
+	
+	if(!strcmp(q.op1.u.string_literal.label,"ReadInt")){
+		mips_write_stack("$v0", q.op2.u.offset);
+	}
 
 }
 
