@@ -75,7 +75,10 @@ typedef struct expr_val {
     list cntu; 		// continue
     list rtrn;		// return
     param p;
+    int isElseBlock;
+    list elseGoto;
     } expr_val;
+
 
 typedef struct block {
   list next;		

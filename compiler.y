@@ -30,7 +30,7 @@
 %token <stringval> id string_literal ReadInt
 %token class If Else For Return Break Continue 
 
-%type <expr> expr return_val E statement block S2 S Max
+%type <expr> expr return_val E statement block S2 S Max ElseBlock
 <next> G
 <m> method_call
 %type <loc> location
@@ -219,7 +219,7 @@ statement 	:	location assign_op expr ';' {
 
 			|	method_call_by_address ';'	{;}
 
-			|	If '(' expr ')' M block 
+/*			|	If '(' expr ')' M block 
 				G Else M block				{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
 												$$.next = concat($$.next, $6.next); $$.cntu = concat($6.cntu, $10.cntu);
@@ -228,7 +228,7 @@ statement 	:	location assign_op expr ';' {
 			|	If '(' expr ')' M	block 	{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
 												complete($3.t, $5);		 $$.next = concat($3.f, $6.next);
 												$$.cntu = $6.cntu; 		$$.brk = $6.brk; 	$$.rtrn = $6.rtrn; 
-											}
+											}*/
 
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
 												char* msg;
@@ -262,6 +262,37 @@ statement 	:	location assign_op expr ';' {
 												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); }
 
 			|	block						{ 	$$.brk = $1.brk;	 $$.next = $1.next; 	$$.cntu = $1.cntu; 		$$.rtrn = $1.rtrn;}
+
+			|	If '(' expr ')' 	      	{ 	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; } 
+												if(tmpCount>0) {
+													quadop qo; qo.type = QO_EMPTY;
+
+													complete($3.t, nextquad); gen_q_pop(tmpCount*4); 
+													$3.t = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+													
+													complete($3.f, nextquad); gen_q_pop(tmpCount*4); 
+													$3.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+													
+													pop_tmp();
+												} 
+											} 
+			
+				M ElseBlock					{ 	complete($3.t, $6); $$.cntu = $7.cntu; $$.brk = $7.brk; $$.rtrn = $7.rtrn;
+												if(!$7.isElseBlock) {
+													$$.next = concat($3.f, $7.next); 
+												}
+												else {
+													complete($3.f, $7.isElseBlock); $$.next = concat($7.elseGoto, $7.next);
+												}
+											}
+
+ElseBlock	:	block 						{	$$.elseGoto = NULL; $$.isElseBlock = 0; $$.next = $1.next; 
+												$$.cntu = $1.cntu; $$.brk = $1.brk; $$.rtrn = $1.rtrn; }
+
+			|	block G Else M block		{	$$.isElseBlock = $4; $$.elseGoto = $2;	
+												$$.next = concat($1.next, $5.next); $$.rtrn = concat($1.rtrn, $5.rtrn);
+												$$.cntu = concat($1.cntu, $5.cntu); $$.brk = concat($1.cntu, $5.cntu);
+											}
 
 return_val	:	expr 						{ 	$$ = $1; }
 			|	%empty						{ 	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY; }

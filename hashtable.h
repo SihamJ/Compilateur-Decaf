@@ -90,6 +90,9 @@ void pop_tmp();
 
 param reverse_list(param p);
 
+char* get_type_global(int type);
+char* get_type_id(int type);
+
 extern HashTable* curr_context; // points to the current context
 extern HashTable* glob_context; // points to the global context
 extern HashTable* stack;        // stack of symbol tables where the popped ones are stored
