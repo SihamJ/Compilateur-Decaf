@@ -16,6 +16,7 @@ void version(char *m1, char* f1, char* m2, char *f2, char* m3, char *f3, char *m
 
 int main(int argc, char* argv[]){
 
+    
     if(argc < 4 && strcmp(argv[1],"-version")){
         usage(argv[0]);
     }
@@ -46,7 +47,7 @@ int main(int argc, char* argv[]){
         }
         
         curr_context = NULL;
-
+        str_count = 0;
      //  yydebug=1;
         int t = yyparse();
 

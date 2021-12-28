@@ -362,7 +362,7 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 }
 
 void mips_decl_string(char *varName, char *value) {
-	fprintf(fout, "\t%s: .asciiz \"%s\"\n",varName, value);
+	fprintf(fout, "\t%s: .asciiz %s\n",varName, value);
 }
 
 void mips_method_call(quad q){

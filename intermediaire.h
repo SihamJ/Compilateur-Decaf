@@ -119,7 +119,6 @@ extern size_t labelCount; // counter of the number of auto-generated labels
 extern size_t glob_dec_count; // counter of global variables declared
 extern size_t str_count; // counter of number of string_literals to be declared in MIPS .data, used only for generating labels
 extern string_labels str_labels[100];
-extern size_t str_count;
 
 list crelist(int addr);
 void complete(list n, int addr);

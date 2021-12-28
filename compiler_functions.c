@@ -278,7 +278,7 @@ expr_val get_max(char *counter_name, expr_val expr){
   Ht_item *item = create_item(name, ID_VAR, INT);
   newname(item);
 
-  if(expr.result.type == QO_ID){
+  if(expr.result.type == QO_ID || expr.result.type == QO_TMP ){
     item_table* val = lookup(expr.stringval);
     expr.result.u.offset = offset(val);
   }
@@ -413,7 +413,16 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
     strcpy(m->result_id, tmp->key);
     quadop q; q.type = QO_EMPTY;
     gencode(q2, q, q, Q_DECL, NULL, -1, NULL);
-  } 
+
+    if(E!= NULL && E->p != NULL){
+    param p = E->p;
+    while(p){
+      if(p->arg.type == QO_ID || p->arg.type == QO_TMP){
+        p->arg.u.offset += 4;
+      } 
+      p = p->next;
+    }
+  } }
   
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
@@ -422,8 +431,8 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
     param p = E->p;
     while(p){
       if(p->type == BOOL){
-        if(p->t != NULL) complete(p->t, nextquad);
-        if(p->f != NULL) complete(p->f, nextquad);    
+        if(p->t != NULL) complete(p->t, nextquad);    // TO DO: A REVOIR
+        if(p->f != NULL) complete(p->f, nextquad);    // TO DO: A REVOIR
       }
       p = p->next;
     }

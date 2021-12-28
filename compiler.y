@@ -272,7 +272,7 @@ statement 	:	location assign_op expr ';' {
 													
 													complete($3.f, nextquad); gen_q_pop(tmpCount*4); 
 													$3.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-													
+
 													pop_tmp();
 												} 
 											} 
@@ -324,20 +324,22 @@ method_call :	id '(' E ')' 				{	char *msg;
 E 			:	expr ',' E 						{ 
 													param p = (param) malloc(sizeof(struct param));
 
-													/* if($1.result.type == QO_ID || $1.result.type == QO_TMP){
+													 if($1.result.type == QO_ID || $1.result.type == QO_TMP){
 														item_table* val = lookup($1.stringval); 
 														$1.result.u.offset = offset(val);
-													} */
+													} 
+													// TODO ajouter IF pour globale
 													p->type = $1.type; p->arg = $1.result; p->next = $3.p; 	
 												 	if($1.type == BOOL) { p->t = $1.t; p->f = $1.f;}
 													$$.p = p;
 												}
 			|	expr 							{
 													$$.p = (param) malloc(sizeof(struct param));
-													/* if($1.result.type == QO_ID || $1.result.type == QO_TMP){
+													 if($1.result.type == QO_ID || $1.result.type == QO_TMP){
 														item_table* val = lookup($1.stringval); 
 														$1.result.u.offset = offset(val);
-													}*/
+													}
+													// TODO ajouter IF pour globale
 													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL;
 													if($1.type == BOOL) { $$.p->t = $1.t; $$.p->f = $1.f; }	
 												}
@@ -516,8 +518,10 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 
 			|	string_literal				{	$$.type = STRING; 	$$.result.type = QO_CSTSTR;
 												$$.result.u.string_literal.label = new_str();
-												$$.result.u.string_literal.value = malloc(strlen($1)-2);
-												strncpy($$.result.u.string_literal.value, $1+1, strlen($1)-2); }
+												$$.result.u.string_literal.value = malloc(strlen($1)+1);
+												strcpy($$.result.u.string_literal.value, $1);
+												$$.result.u.string_literal.value[strlen($1)] = '\0';
+												}
 
 			| 	literal 					{	$$.result.type = QO_CST;	$$.type = $1.type;	$$.result.u.cst = $1.intval; 
 
