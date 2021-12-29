@@ -312,19 +312,19 @@ void print_table(HashTable *table)
     {
         if (table->items[i])
         {
-            printf("%8sIndex: %d | %4sID: %s | %4sType: %s ","", table->items[i]->order,"", table->items[i]->key,"", get_type_id(table->items[i]->value));
+            printf("%8sIndex: %d | %4sID: %4s | %4sType: %s ","", table->items[i]->order,"", table->items[i]->key,"", get_type_id(table->items[i]->value));
             if(table->items[i]->id_type == ID_TAB)
-                printf("| %4sArray | %4ssize: %d ","", "", table->items[i]->size);
+                printf("| %4sArray | %4ssize: %d ","", "", table->items[i]->size/4);
             if (table->lists[i])
             {
                 printf(" => list => ");
                 LinkedList *head = table->lists[i];
                 while (head)
                 {
-                    printf("%8sIndex: %d | %4sID:%s | %4sType:%d ","", head->item->order,"", head->item->key,"", head->item->value);
+                    printf("%8sIndex: %d | %4sID: %4s | %4sType:%d ","", head->item->order,"", head->item->key,"", head->item->value);
                     printf("| ID: %s | Type: %s ",head->item->key, get_type_id(head->item->value));
                     if(head->item->id_type == ID_TAB)
-                        printf("| %4sArray | %4ssize: %d ","", "",head->item->size);
+                        printf("| %4sArray | %4ssize: %d ","", "",head->item->size/4);
                     head = head->next;
                 }
             }

@@ -49,10 +49,11 @@ void translate() {
 	for (int i = glob_dec_count; i < nextquad; i++) {
 		if(global_code[i].label != NULL)
 			fprintf(fout, "\n%s:\n", global_code[i].label);
-
+		
 		switch (global_code[i].type)
         {
 		case Q_FUNC:
+			fprintf(fout,"\tmove $fp $sp\n");
 			break;
 		case Q_DECL:
 			mips_load_immediate("$t0", 0);			

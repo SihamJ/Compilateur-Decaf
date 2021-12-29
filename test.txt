@@ -1,0 +1,14 @@
+class AccesHorsBornes {
+    int t [10];
+    int g;
+   
+    void main ()
+    {
+        g = 1;
+        t[g] = 3;
+        WriteInt(t[g]);
+
+        WriteString ("=3\n"); // il faut au moins une ligne
+        
+    }
+}

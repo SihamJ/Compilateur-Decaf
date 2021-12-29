@@ -244,19 +244,9 @@ statement 	:	location assign_op expr ';' {
 												popctx(); }
 
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
-												/* we return $2.result and we store the return type in qo for later verification of types
-													in q1 we store the ctx count to pop if we are not in CTX_METHOD so we can
-													add it to the number of variables to pop in ENDFUNC
-												*/
-												quadop qo,q1;	 qo.type = QO_CST;	 qo.u.cst = $2.type; q1.type = QO_CST; q1.u.cst = 0;
-												if(curr_context->next->type != CTX_METHOD){
-													
-													HashTable* pt = curr_context;
-													while(pt && pt->next->type != CTX_METHOD){
-														q1.u.cst += pt->count*4;
-														pt = pt->next;
-													} 
-												}
+												// we return $2.result and we store the return type in qo for later verification of types
+												
+												quadop qo,q1;	 qo.type = QO_CST;	 qo.u.cst = $2.type; q1.type = QO_EMPTY;
 												if($2.type == BOOL) { complete($2.t, nextquad); complete($2.f, nextquad);}
 												gencode($2.result, qo, q1, Q_RETURN, NULL, -1, NULL); 
 												
