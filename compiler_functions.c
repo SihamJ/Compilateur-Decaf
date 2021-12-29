@@ -425,7 +425,7 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
   if(E != NULL){
-   // E->p = reverse_list(E->p);
+
     param p = E->p;
     while(p){
       if(p->type == BOOL){

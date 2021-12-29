@@ -32,8 +32,8 @@ void mips_dec_global(quadop q){
 void mips_init_array(quadop q) {
 	// Double Test if it's a Array, just to be sure
 	if(q.u.global.type == QO_TAB) {
-		fprintf(fout, "\tla $t0 %s\n", q.u.global.name);
-		fprintf(fout, "\tli $t1 %d\n",  q.u.global.size/4);
+		fprintf(fout, "\tla $s0 %s\n", q.u.global.name);
+		fprintf(fout, "\tli $s1 %d\n",  q.u.global.size/4);
 		fprintf(fout, "\tjal BZero\n");
 	}
 }
@@ -315,18 +315,18 @@ void mips_syscall(int num){
  * @param offset The offset
  */
 void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 	fprintf(fout, "%8ssw %s %s+%d\n","", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (strcmp("$t0", offset_reg))
-		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
+	if (strcmp("$s0", offset_reg))
+		fprintf(fout, "\tmove $s0 %s\n",offset_reg);
 	
-	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t3
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t3
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
@@ -342,18 +342,18 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  */
 void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t3
-	fprintf(fout, "\tli $t0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t3
+	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
-	if (strcmp("$t0", offset_reg))
-		fprintf(fout, "\tmove $t0 %s\n",offset_reg);
+	if (strcmp("$s0", offset_reg))
+		fprintf(fout, "\tmove $s0 %s\n",offset_reg);
 
-	fprintf(fout, "\tlw $t3 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
@@ -380,7 +380,8 @@ void mips_method_call(quad q){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
 
-	
+	// we initialize the register indicating if there is a return value
+	mips_load_immediate("$v1",0);
 	fprintf(fout, "\tjal %s\n",q.op1.u.string_literal.label); //jump and link 
 
 	// popping method call parameters from the stack
@@ -393,8 +394,10 @@ void mips_method_call(quad q){
 	mips_pop_stack(4); // we pop $ra from the stack
 
 	// if there is a return value, we save it to the corresponding offset
-	if(q.op2.type == QO_CST)
+	if(q.op2.type == QO_CST){
+		fprintf(fout,"\tbeqz $v1 Quit_Program\n"); // verif dynamique
 		mips_write_stack("$v0", q.op3.u.offset);
+	}
 	
 	if(!strcmp(q.op1.u.string_literal.label,"ReadInt")){
 		mips_write_stack("$v0", q.op2.u.offset);
@@ -426,32 +429,34 @@ int mips_push_args(param p){
 
 void mips_end_func(quad q){
 
-	// we pop from the stack local variables of the method and push back the return value
-	fprintf(fout,"\taddi $v1 %d\n",q.op1.u.cst);
-	fprintf(fout,"\tadd $sp $sp $v1\n");
+	// we pop from the stack local variables of the method 
+	fprintf(fout,"\taddi $s0 $s0 %d\n",q.op1.u.cst);
+	fprintf(fout,"\tadd $sp $sp $s0\n");
 		
 	fprintf(fout,"\tjr $ra\n");
 }
 
 void mips_return(quad q){
 
-	/* if there is a return value, we store it in $vo */
+	/* if there is a return value, we store it in $vo and indicate in $v1 that there is one*/
 	if(q.op2.type != QO_EMPTY){
 		if(q.op1.type == QO_CST){
 			mips_load_immediate("$v0", q.op1.u.cst);
+			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP){
 			mips_read_stack("$v0", q.op1.u.offset);
+			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_GLOBAL){
-			if(q.op1.u.global.type == QO_SCAL)
+			if(q.op1.u.global.type == QO_SCAL){
 				mips_load_word("$v0", q.op1.u.global.name);
-			// TO DO: else if(q.op1.u.global.type == QO_TAB)
-
+				mips_load_immediate("$v1",1);
+			}
 		}
 	}
-	/* we store in $v1 the number of variable to pop at end func*/
-	mips_load_immediate("$v1", q.op3.u.cst);
+	/* we store in $t0 the number of variable to pop at end func*/
+	mips_load_immediate("$s0", q.op3.u.cst);
 	/* we jump to the end of the function label*/
 	fprintf(fout,"%8sj %s\n","",global_code[q.jump].label);
 }
