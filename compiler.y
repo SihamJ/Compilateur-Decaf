@@ -27,12 +27,13 @@
 }
 
 %token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
-%token <stringval> id string_literal ReadInt
+%token <stringval> id string_literal ReadInt address
 %token class If Else For Return Break Continue 
 
 %type <expr> expr return_val E statement block S2 S Max ElseBlock
 <next> G
 <m> method_call
+
 %type <loc> location
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
@@ -137,6 +138,7 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 
 P 			:	Param 	{ $$ = $1; param p = $1;
 							while(p){	
+								if( ht_search(curr_context, p->stringval) != NULL ) { yyerror("\nErreur: Deux paramètres de méthodes de même nom\n"); return 1;}
 								Ht_item *item = create_item(p->stringval, ID_PARAM, p->type);
 								newname(item); p = p->next; }
 						}
@@ -145,7 +147,7 @@ P 			:	Param 	{ $$ = $1; param p = $1;
 /* Param is a list that retrieves the the names of declared parameters and their types */
 Param		:	type id ',' Param	{ 	
 										/* we verify that we don't declare two parameters with the same ID*/
-										if( ht_search(curr_context, $2) != NULL ) { yyerror("\nErreur: Deux paramètres de méthodes de même nom\n"); return 1;}
+										
 
 										/* we store the parameter in the symbol table*/
 										$$ = push_param($2, $1, $4);
@@ -225,7 +227,7 @@ statement 	:	location assign_op expr ';' {
 			/* The method call rules are defined below not here.*/
  			|	method_call	';'				{ 	; }
 
-			|	method_call_by_address ';'	{;}
+		
 
 
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
@@ -294,16 +296,7 @@ ElseBlock	:	block 						{	$$.elseGoto = NULL; $$.isElseBlock = 0; $$.next = $1.n
 return_val	:	expr 						{ 	$$ = $1; }
 			|	%empty						{ 	$$.type = VOIDTYPE; $$.result.type = QO_EMPTY; }
 
-method_call_by_address	:	ReadInt '(' location ')' { 
-														quadop qo,q1,q2; qo.type = QO_CSTSTR;printf("here\n"); qo.u.string_literal.label = malloc(strlen($1)+1); 
-														strcpy(qo.u.string_literal.label, $1);
-														q1.type = QO_ID; item_table* val = lookup($3.stringval); q1.u.offset = offset(val);
-														q2.type = QO_EMPTY;
-														gencode(qo, q1, q2, Q_METHODCALL, NULL, -1, NULL);
-													}
-
 											
-
 method_call :	id '(' E ')' 				{	char *msg;
 												 if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
 												param p = $3.p;
@@ -328,7 +321,7 @@ E 			:	expr ',' E 						{
 														strcpy(p->stringval, $1.stringval);
 													}
 													
-													p->type = $1.type; p->arg = $1.result; p->next = $3.p; 	
+													p->type = $1.type; p->arg = $1.result; p->next = $3.p; 	p->byAddress = 0;
 												 	if($1.type == BOOL) { p->t = $1.t; p->f = $1.f;}
 													$$.p = p;
 													
@@ -342,9 +335,40 @@ E 			:	expr ',' E 						{
 														strcpy($$.p->stringval, $1.stringval);
 													}
 													
-													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL;
+													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL; $$.p->byAddress = 0;
 													if($1.type == BOOL) { $$.p->t = $1.t; $$.p->f = $1.f; }	
 													
+												}
+			|	address ','	E 					{	param p = (param) malloc(sizeof(struct param));
+													char *name = malloc(strlen($1)); strcpy(name, $1+1); printf("\n%s\n",name);
+													item_table* val = lookup(name);
+													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n");return 1;}
+													quadop qo; 
+													if(val->table == glob_context){
+														qo.type = QO_GLOBAL; qo.u.global.name = name; qo.u.global.type = QO_SCAL;
+													}
+													else{
+														qo.type = QO_ID; qo.u.offset = offset(val);
+													}
+													$$.p->stringval = name;
+													p->type = val->item->value; p->arg = qo; p->next = $3.p; p->byAddress = 1;
+													$$.p = p;
+												}
+
+			|	address							{	$$.p = (param) malloc(sizeof(struct param));
+													char *name = malloc(strlen($1)); strcpy(name, $1+1); printf("\n%s\n",name);
+													item_table* val = lookup(name);
+													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n");return 1;}
+													quadop qo; 
+													if(val->table == glob_context){
+														qo.type = QO_GLOBAL; qo.u.global.name = name; qo.u.global.type = QO_SCAL;
+													}
+													else{
+														qo.type = QO_ID; qo.u.offset = offset(val);
+													}
+													
+													$$.p->stringval = name;
+													$$.p->type = val->item->value;  $$.p->arg = qo;  $$.p->next = NULL; $$.p->byAddress = 1;
 												}
 
 location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcpy($$.stringval, $1); }
@@ -375,10 +399,7 @@ location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcp
 										}
 										else if($3.result.type == QO_CST){
 											$$.index.u.cst = 4*$3.result.u.cst;
-										}
-										
-										// TO DO : Accès tableau avec offset variable globale
-										
+										}										
 									}
 
 

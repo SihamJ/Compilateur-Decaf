@@ -411,7 +411,7 @@ int offset(item_table *val){
 
     /* for debugging*/
     if(val->table == glob_context){
-        fprintf(stderr, "\nErreur: You can't retrieve offset of a global variable!\n");
+        fprintf(stderr, "\nErreur debug: You can't retrieve offset of a global variable!\n");
         exit(1);
     }
 

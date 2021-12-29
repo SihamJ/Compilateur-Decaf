@@ -8,6 +8,9 @@ typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR
   } quadop_type;
 
+/**
+ * @brief if the quadop is global, we need to know if it is a scalar or an array
+ */
 typedef enum global_type{
     QO_SCAL, QO_TAB
   } global_type;
@@ -16,12 +19,22 @@ typedef enum quad_type{
     Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_FUNC, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP
   } quad_type;
 
-/* strings to declare for write string as labels in mips*/
+/**
+ * @brief a list of strings to declare in mips .data section
+ */
 typedef struct string_labels{
   char *label;
   char *value;
 } string_labels; 
 
+/**
+ * @brief a quad operand
+ * @param type Constant, Local Variable, Temporary Variable, Global Variable, String
+ * @param union__int_cst If the type is constant, we store the value in cst
+ * @param union__int_offset If the type is a local or temporary variable, we store its offset in offset
+ * @param union__struct_global If the type is global, we need a structure where we can store the name of the operand, the type (scalar or array), and the size for the array
+ * @param union__struct_string_literal If the type is String, we need a structure to store its value and give it a label to declare it in mips 
+ */
 typedef struct quadop {
   quadop_type type;     // Constante, identificateur, temporaire, globale, constante str, tableau
   union {
@@ -39,13 +52,23 @@ typedef struct quadop {
   } u;
 } quadop;
 
-/* list for storing address of incomplete quads */
+/**
+ * @brief a list containing indexes of incomplete GOTOs
+ */
 typedef struct list{
   int addr;
   struct list* suiv;
 }*list;
 
-/* To store parameters of a method at declaration or call */
+/**
+ * @brief a list to store parameters of a method at the declaration or call
+ * @param type INT BOOL or STRING
+ * @param quadop_arg This is used in case of a method call. The argument is stored in a quad operand
+ * @param list if the argument is of type BOOL, we need to retrieve the true and false lists to complete them
+ * @param stringval so we can store the name of the temporary variable and retrieve the offset. This is needed when temporary variables are created to evaluate arguments of a method call
+ * @param byAddress a boolean indicating if this a copy or a pointer, useful for ReadInt
+ * @param next is the next parameter in the list
+ */
 typedef struct param{
     int type;           // INT or BOOL or STRING;
     quadop arg;         // utilisé dans le cas d'un appel de méthode, l'argument est stocké dans un quadop
@@ -53,10 +76,18 @@ typedef struct param{
     list f;
     struct param* next;
     char *stringval;
+    int byAddress;    // passage par adresse ou par valeur
 } *param;
 
+/**
+ * @brief quad for three address instruction
+ * @param type is the type of operation (ADD, MUL, DECLARATION, etc)
+ * @param op_1_2_3 op1 op2 op3 are the three operands 
+ * @param label If there is a jump to this quad, it needs to have a label name for mips. This is added at the end of 3 address code generation.
+ * @param jump Index of jump in the global code array
+ * @param p list of arguments if this quad is a method call
+ */
 typedef struct quad{
-  int addr;
   quad_type type;
   quadop op1, op2, op3;
   char *label; // label à placer avant le quad dans le mips (pour une méthode par exemple)
@@ -78,7 +109,7 @@ typedef struct expr_val {
     param p;
     int isElseBlock;
     list elseGoto;
-    } expr_val;
+  } expr_val;
 
 
 typedef struct block {
@@ -127,37 +158,28 @@ list concat(list n1, list n2);
 
 void print_globalcode();
 
-/* used for printing global code*/
-char *op_type(int type);
+char *op_type(int type); //used for printing intermediary code
 
-/* used for comparing a declared id with the supposed next auto-generated label*/
+/* used for comparing an id with the supposed next auto-generated label to avoid conflicts*/
 char* next_label_name();
 
-/* generates a label for the end of a function.*/
+/* generates a label for the end of a function*/
 char* new_endfunc_label(char *name);
 
 /* Called at the end in the main, it adds labels for all the quad adresses where we do a jump*/
 void add_labels();
 
-/* used for printing global code*/
+/* used for printing intermediary code*/
 char *get_type_oper(int type);
 
 /* generates a new_label*/
 char* new_label();
 
-/* generates a new label for string declaration*/
+/* generates a new label for string declarations*/
 char* new_str();
 
-void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, param p); // écrie le quadruplet avec les paramètres spécifiés dans global_code[nextquad] et incrémente nextquad
-/* HOW TO USE GENCODE : 
+void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, param p); 
 
-Opération binaire:  a = b op c       =>  op1 = a ; op2 = b ; op3 = c
-Affectation:        a = b            =>  op1 = a ; op2 = b ; op3 = we don't care
-Comparaison:        a rel_op b       =>  op1 = we don't care;  op2 = a ; op3 = b ;
-GOTO:               j next           =>  type = Q_GOTO, jump = next
-*/
-
-void update_offsets(quadop *op1, int offset);
 
 
 

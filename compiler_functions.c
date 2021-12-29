@@ -368,7 +368,7 @@ int is_a_parent(ctx_type type){
 
 int verify_param(param p1, param p2){
     while(p1 != NULL && p2 != NULL){
-        if(p1->type != p2->type){
+        if(p1->type != p2->type || p1->byAddress != p2->byAddress){
             return 0;
         }
         p1=p1->next;
@@ -432,10 +432,11 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
         if(p->t != NULL) complete(p->t, nextquad);    // TO DO: A REVOIR
         if(p->f != NULL) complete(p->f, nextquad);    // TO DO: A REVOIR
       }
-      if(p->arg.type == QO_ID || p->arg.type == QO_TMP){
+      if( p->arg.type == QO_ID || p->arg.type == QO_TMP){
         item_table* val = lookup(p->stringval);
         p->arg.u.offset = offset(val);
-      } 
+        }
+       
       p = p->next;
     }
     

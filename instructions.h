@@ -87,6 +87,5 @@
 
 #define MIPS_BZERO "\nBZero:\n\taddi $s1 $s1 -1\n\tsw $zero ($s0)\n\taddu $s0 $s0 4\n\tbgtz $s1 BZero\n\tjr $ra\n"
 
-// TODO: decl str
 
 #endif

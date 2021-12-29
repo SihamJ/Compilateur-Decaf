@@ -23,6 +23,7 @@ string_literal 	\"{char}*\"
 hex_literal		"0x"{hex_digit}{hex_digit}*
 decimal_literal	{digit}{digit}*
 id 				{alpha}{alpha_num}*
+address			&{id}
 newline			\\n
 comment 		\/\/.*
 %%
@@ -69,11 +70,6 @@ comment 		\/\/.*
 "break" return Break;
 
 
-"ReadInt" 			{ 
-						yylval.stringval = malloc(strlen(yytext)+1);
-						strcpy(yylval.stringval, yytext);
-						return ReadInt;
-					}
 
 {bool_literal} 		{
 						yylval.intval = (strcmp(yytext, "true") == 0);
@@ -110,6 +106,12 @@ comment 		\/\/.*
 						yylval.stringval = malloc(strlen(yytext)+1);
 						strcpy(yylval.stringval, yytext);
 						return id;
+					}
+
+{address}			{
+						yylval.stringval = malloc(strlen(yytext)+1);
+						strcpy(yylval.stringval, yytext);
+						return address;
 					}
 
 {string_literal}	{

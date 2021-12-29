@@ -408,7 +408,10 @@ void mips_method_call(quad q){
 	
 	// if we called ReadInt, we store the value in the corresponding location
 	if(!strcmp(q.op1.u.string_literal.label,"ReadInt")){
-		mips_write_stack("$v0", q.op2.u.offset);
+		if(q.p->arg.type == QO_ID)
+			mips_write_stack("$v0", q.op2.u.offset);
+		else if(q.p->arg.type == QO_GLOBAL && q.p->arg.u.global.type == QO_SCAL)
+			fprintf(fout,"\tsw $v0 %s\n",q.p->arg.u.global.name);
 	}
 
 }

@@ -6,6 +6,7 @@ void add_libs_to_tos(){
         newname(item1);
         param p_write_int = (struct param*) malloc(sizeof(struct param));
         p_write_int->type = INT;
+        p_write_int->byAddress = 0;
         p_write_int->next = NULL;
         item_table* var1 = lookup("WriteInt");
         var1->item->p = p_write_int;
@@ -14,6 +15,7 @@ void add_libs_to_tos(){
         newname(item2);
         param p_write_string = (struct param*) malloc(sizeof(struct param));
         p_write_string->type = STRING;
+        p_write_string->byAddress = 0;
         p_write_string->next = NULL;
         item_table* var2 = lookup("WriteString");
         var2->item->p = p_write_string;
@@ -22,6 +24,7 @@ void add_libs_to_tos(){
         newname(item3);
         param p_write_bool = (struct param*) malloc(sizeof(struct param));
         p_write_bool->type = BOOL;
+        p_write_bool->byAddress = 0;
         p_write_bool->next = NULL;
         item_table* var3 = lookup("WriteBool");
         var3->item->p = p_write_bool;
@@ -30,6 +33,7 @@ void add_libs_to_tos(){
         newname(item4);
         param p_read_int = (struct param*) malloc(sizeof(struct param));
         p_read_int->type = INT;
+        p_read_int->byAddress = 1;
         p_read_int->next = NULL;
         item_table* var4 = lookup("ReadInt");
         var4->item->p = p_read_int;
