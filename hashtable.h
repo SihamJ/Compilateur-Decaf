@@ -86,7 +86,7 @@ void free_stack();
 int offset(item_table *item);
 
 /* pop the temporary variables from the current context, called at the end of the evaluation of an expression*/
-void pop_tmp(); 
+int pop_tmp(); 
 
 param reverse_list(param p);
 

@@ -258,7 +258,12 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 
   Ht_item *item = create_item(counter_id, ID_VAR, INT);
   newname(item);
-  
+
+  if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP){
+    item_table* val = lookup(expr1.stringval);
+    expr1.result.u.offset = offset(val);
+  }
+
   gencode(qo, expr1.result, expr1.result, Q_AFF, NULL, -1, NULL); 
   return NULL;
 }

@@ -210,8 +210,7 @@ statement 	:	location assign_op expr ';' {
 												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
 
 												// generates a Q_POP quad	
-												if(tmpCount>0) { gen_q_pop(tmpCount*4);}
-												pop_tmp();
+												int nb = 0; if((nb = pop_tmp())>0) { gen_q_pop(nb*4);}
 											}
 
 			/* The method call rules are defined below not here.*/
@@ -219,16 +218,6 @@ statement 	:	location assign_op expr ';' {
 
 			|	method_call_by_address ';'	{;}
 
-/*			|	If '(' expr ')' M block 
-				G Else M block				{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
-												complete($3.t, $5); complete($3.f, $9); $$.next = concat($7, $10.next);
-												$$.next = concat($$.next, $6.next); $$.cntu = concat($6.cntu, $10.cntu);
-												$$.brk = concat($6.brk, $10.brk); $$.rtrn = concat($6.rtrn,$10.rtrn); }
-												
-			|	If '(' expr ')' M	block 	{	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; }
-												complete($3.t, $5);		 $$.next = concat($3.f, $6.next);
-												$$.cntu = $6.cntu; 		$$.brk = $6.brk; 	$$.rtrn = $6.rtrn; 
-											}*/
 
 		|	For id '=' expr ',' expr Max	{  	/* verifying types, declaration of ID, and affectation*/
 												char* msg;
@@ -264,16 +253,14 @@ statement 	:	location assign_op expr ';' {
 			|	block						{ 	$$.brk = $1.brk;	 $$.next = $1.next; 	$$.cntu = $1.cntu; 		$$.rtrn = $1.rtrn;}
 
 			|	If '(' expr ')' 	      	{ 	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; } 
-												if(tmpCount>0) {
+												int nb = 0; if((nb = pop_tmp()) > 0) {
 													quadop qo; qo.type = QO_EMPTY;
 
-													complete($3.t, nextquad); gen_q_pop(tmpCount*4); 
+													complete($3.t, nextquad); gen_q_pop(nb*4); 
 													$3.t = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 													
-													complete($3.f, nextquad); gen_q_pop(tmpCount*4); 
+													complete($3.f, nextquad); gen_q_pop(nb*4); 
 													$3.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-
-													pop_tmp();
 												} 
 											} 
 			

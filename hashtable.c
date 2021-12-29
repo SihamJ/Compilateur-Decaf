@@ -433,13 +433,16 @@ int offset(item_table *val){
 }
 
 /* Dépile les variables temporaires du context courant, est appelée à la fin de l'évaluation d'une expression */
-void pop_tmp(){
+int pop_tmp(){
+    int nb = 0;
     for (int i = 0; i < curr_context->max_size; i++){
         if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
-            ht_delete(curr_context, curr_context->items[i]->key);            
+            ht_delete(curr_context, curr_context->items[i]->key);  
+            nb++;          
         }
     }
     tmpCount = 0;
+    return nb;
 }
 
 
