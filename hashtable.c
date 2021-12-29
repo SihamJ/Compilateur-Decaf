@@ -470,7 +470,6 @@ param reverse_list(param p){
     prev = NULL;
     next = NULL;
 
-    /* linking prev for the first time*/
     while(curr != NULL){
         next = curr->next;
         curr->next = prev;

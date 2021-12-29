@@ -107,7 +107,10 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 									/* item is an Ht_item, it contains the attribute p for the items of type method where we store
 									the types of parameters that the method takes.
 									P is either a list of parameters or NULL if the method does not take any parameter */
-									var->item->p = $5;}
+									
+									
+									var->item->p = $5;
+									}
 
 					block		{	// ( We verify that return exists ) !! UPDATE !! THIS IS NOT AN ERROR
 									 int is_returnval=0; 
@@ -132,7 +135,11 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 									char* msg; if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { yyerror(msg); return 1;}
 									popctx(); 	}
 
-P 			:	Param 	{ $$ = $1;}
+P 			:	Param 	{ $$ = $1; param p = $1;
+							while(p){	
+								Ht_item *item = create_item(p->stringval, ID_PARAM, p->type);
+								newname(item); p = p->next; }
+						}
 			|	%empty	{ $$ = NULL;}
 
 /* Param is a list that retrieves the the names of declared parameters and their types */
@@ -142,11 +149,13 @@ Param		:	type id ',' Param	{
 
 										/* we store the parameter in the symbol table*/
 										$$ = push_param($2, $1, $4);
+										// printf("\nPARAM: %s\n", $2);
 									}
 										
 			|	type id				{	/* Idem*/
 									 	if( ht_search(curr_context, $2) != NULL ) { yyerror("\nErreur: Deux paramètres de méthodes de même nom\n"); return 1;}
 										$$ = push_param($2, $1, NULL);
+									//	printf("\nPARAM: %s\n", $2);
 									}
 
 block 		:	'{' { pushctx(CTX_BLOCK); } 
@@ -235,10 +244,21 @@ statement 	:	location assign_op expr ';' {
 												popctx(); }
 
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
-												/* we return $2.result and we store the return type in qo for later verification of types*/
-												quadop qo;	 qo.type = QO_CST;	 qo.u.cst = $2.type;
+												/* we return $2.result and we store the return type in qo for later verification of types
+													in q1 we store the ctx count to pop if we are not in CTX_METHOD so we can
+													add it to the number of variables to pop in ENDFUNC
+												*/
+												quadop qo,q1;	 qo.type = QO_CST;	 qo.u.cst = $2.type; q1.type = QO_CST; q1.u.cst = 0;
+												if(curr_context->next->type != CTX_METHOD){
+													
+													HashTable* pt = curr_context;
+													while(pt && pt->next->type != CTX_METHOD){
+														q1.u.cst += pt->count*4;
+														pt = pt->next;
+													} 
+												}
 												if($2.type == BOOL) { complete($2.t, nextquad); complete($2.f, nextquad);}
-												gencode($2.result, qo, qo, Q_RETURN, NULL, -1, NULL); 
+												gencode($2.result, qo, q1, Q_RETURN, NULL, -1, NULL); 
 												
 												}
 
@@ -296,7 +316,7 @@ method_call_by_address	:	ReadInt '(' location ')' {
 
 method_call :	id '(' E ')' 				{	char *msg;
 												 if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
-
+												param p = $3.p;
 												if(!strcmp($1,"WriteString")) {
 													get_write_string_args($3.p->arg.u.string_literal.label, $3.p->arg.u.string_literal.value); }
 
@@ -314,21 +334,27 @@ E 			:	expr ',' E 						{
 													 if($1.result.type == QO_ID || $1.result.type == QO_TMP){
 														item_table* val = lookup($1.stringval); 
 														$1.result.u.offset = offset(val);
-													} 
-													// TODO ajouter IF pour globale
+														p->stringval = malloc(strlen($1.stringval)+1);
+														strcpy(p->stringval, $1.stringval);
+													}
+													
 													p->type = $1.type; p->arg = $1.result; p->next = $3.p; 	
 												 	if($1.type == BOOL) { p->t = $1.t; p->f = $1.f;}
 													$$.p = p;
+													
 												}
 			|	expr 							{
 													$$.p = (param) malloc(sizeof(struct param));
 													 if($1.result.type == QO_ID || $1.result.type == QO_TMP){
 														item_table* val = lookup($1.stringval); 
 														$1.result.u.offset = offset(val);
+														$$.p->stringval = malloc(strlen($1.stringval)+1);
+														strcpy($$.p->stringval, $1.stringval);
 													}
-													// TODO ajouter IF pour globale
+													
 													$$.p->type = $1.type;	$$.p->arg = $1.result; 	$$.p->next = NULL;
 													if($1.type == BOOL) { $$.p->t = $1.t; $$.p->f = $1.f; }	
+													
 												}
 
 location	:	id					{	$$.type = ID_VAR; $$.stringval = malloc(strlen($1)+1); strcpy($$.stringval, $1); }
@@ -468,10 +494,19 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 														yyerror("\nErreur: Scalaire utilisé comme tableau\n"); return 1;}
 
 													if($1.type == ID_VAR) {
-														quadop qo; 	qo.type = QO_GLOBAL; 	qo.u.global.type = QO_SCAL;
-														qo.u.global.name = malloc(strlen($1.stringval)+1);
-														strcpy(qo.u.global.name, $1.stringval);	 qo.u.global.size = 4;
-														$$.type = val->item->value; $$.result = qo; 
+														quadop q1; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
+														q1.u.global.name = malloc(strlen($1.stringval)+1);
+														strcpy(q1.u.global.name, $1.stringval);	 q1.u.global.size = 4;
+
+														quadop qo; qo.type = QO_TMP; qo.u.offset = 0; 
+														Ht_item* item = new_temp(val->item->value);
+														gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL); 
+														gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
+														$$.stringval = malloc(strlen(item->key)+1);
+														strcpy($$.stringval, item->key);
+														$$.type = val->item->value;
+														$$.result = qo;
+
 													}
 
 													else if($1.type == ID_TAB) {

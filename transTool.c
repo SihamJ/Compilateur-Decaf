@@ -404,11 +404,12 @@ void mips_method_call(quad q){
 
 int mips_push_args(param p){
 	int size = 0;
-	p = reverse_list(p);
+	// p = reverse_list(p);
 
 	while(p!=NULL){
 		if(p->arg.type == QO_ID || p->arg.type == QO_TMP)
-			mips_read_stack("$t0",p->arg.u.offset+4); // we add 4 to all offsets because we pushed $ra in the stack
+		// we add the offset of ra + the args that were pushed before
+			mips_read_stack("$t0",p->arg.u.offset+(size+1)*4); 
 		else if(p->arg.type == QO_GLOBAL){
 				mips_load_word("$t0", p->arg.u.global.name);
 			// can't be an array!
@@ -426,8 +427,8 @@ int mips_push_args(param p){
 void mips_end_func(quad q){
 
 	// we pop from the stack local variables of the method and push back the return value
-	if(q.op1.u.cst>0)
-		mips_pop_stack(q.op1.u.cst);
+	fprintf(fout,"\taddi $v1 %d\n",q.op1.u.cst);
+	fprintf(fout,"\tadd $sp $sp $v1\n");
 		
 	fprintf(fout,"\tjr $ra\n");
 }
@@ -449,7 +450,8 @@ void mips_return(quad q){
 
 		}
 	}
-
+	/* we store in $v1 the number of variable to pop at end func*/
+	mips_load_immediate("$v1", q.op3.u.cst);
 	/* we jump to the end of the function label*/
 	fprintf(fout,"%8sj %s\n","",global_code[q.jump].label);
 }

@@ -147,11 +147,13 @@ declaration get_declarations(char *name, declaration *next, int type, int size){
 
 param push_param(char* name, int type, param next){
 
-  Ht_item *item = create_item(name, ID_PARAM, type);
-  newname(item);
+  // Ht_item *item = create_item(name, ID_PARAM, type);
+  // newname(item);
   param p = (param) malloc(sizeof(struct param));
   p->type = type;
   p->next = next;
+  p->stringval = malloc(strlen(name)+1);
+  strcpy(p->stringval, name);
   return p;
 }
 
@@ -418,29 +420,25 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
     strcpy(m->result_id, tmp->key);
     quadop q; q.type = QO_EMPTY;
     gencode(q2, q, q, Q_DECL, NULL, -1, NULL);
-
-    if(E!= NULL && E->p != NULL){
-    param p = E->p;
-    while(p){
-      if(p->arg.type == QO_ID || p->arg.type == QO_TMP){
-        p->arg.u.offset += 4;
-      } 
-      p = p->next;
-    }
-  } }
+   }
   
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
   if(E != NULL){
-    // if(E->t != NULL) complete(E->t,nextquad); if(E->f != NULL) complete(E->f,nextquad);
+   // E->p = reverse_list(E->p);
     param p = E->p;
     while(p){
       if(p->type == BOOL){
         if(p->t != NULL) complete(p->t, nextquad);    // TO DO: A REVOIR
         if(p->f != NULL) complete(p->f, nextquad);    // TO DO: A REVOIR
       }
+      if(p->arg.type == QO_ID || p->arg.type == QO_TMP){
+        item_table* val = lookup(p->stringval);
+        p->arg.u.offset = offset(val);
+      } 
       p = p->next;
     }
+    
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);

@@ -52,6 +52,7 @@ typedef struct param{
     list t;
     list f;
     struct param* next;
+    char *stringval;
 } *param;
 
 typedef struct quad{
