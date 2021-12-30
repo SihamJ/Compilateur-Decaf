@@ -59,7 +59,7 @@ int main(int argc, char* argv[]){
             else if(!strcmp(argv[i],"-i"))
                 inter = true;
            
-            else if(!strcmp(argv[i],"-Cafe"))
+            else if(!strcmp(argv[i],"-Cafeine"))
                 warning = 1;
             else
                 usage(argv[0]);

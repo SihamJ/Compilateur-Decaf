@@ -147,10 +147,8 @@ declaration get_declarations(char *name, declaration *next, int type, int size){
   return var;
 }
 
-param push_param(char* name, int type, param next){
+param get_param(char* name, int type, param next){
 
-  // Ht_item *item = create_item(name, ID_PARAM, type);
-  // newname(item);
   param p = (param) malloc(sizeof(struct param));
   p->type = type;
   p->next = next;
@@ -227,7 +225,7 @@ void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr){
   gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL); 	
 
   /* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
-    We add it to $$.next
+    We add it to res.next
   */
   op2.type = QO_EMPTY;
   s->next = crelist(nextquad);
@@ -448,7 +446,250 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   }
   
   m->result = q2;
- 
-
 }
 
+
+expr_val get_literal(literal l){
+  expr_val res;
+  res.result.type = QO_CST;	res.type = l.type;	res.result.u.cst = l.intval; 
+
+  // TO DO REVOIR CETTE PARTIE, LA METTRE DANS IF PEUT ETRE
+  if(l.type == BOOL){
+    Ht_item* item = new_temp(BOOL);
+    quadop q1,q2; q2.type = QO_EMPTY;	q1.type = QO_TMP; 	q1.u.offset = 0;
+    gencode(q1,q2,q2,Q_DECL,NULL,-1, NULL);
+
+    quadop qo; qo.type = QO_EMPTY; 	q2.type = QO_CST; 	q2.u.cst = l.intval;	
+    gencode(q1, q2, q2, Q_AFF, NULL, -1, NULL);
+    q2.u.cst = 1;
+    res.t = crelist(nextquad); 	gencode(qo, q1, q2, Q_EQ, NULL, -1, NULL);
+    res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+  }
+  return res;								
+}
+
+expr_val gen_global_scalar(location l, item_table* val){
+    expr_val res;
+    quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
+    q1.u.global.name = malloc(strlen(l.stringval)+1);
+    strcpy(q1.u.global.name, l.stringval);	 q1.u.global.size = 4;
+    q2.type = QO_EMPTY;
+    quadop qo; qo.type = QO_TMP; qo.u.offset = 0; 
+    Ht_item* item = new_temp(val->item->value);
+    gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL); 
+    gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
+    res.stringval = malloc(strlen(item->key)+1);
+    strcpy(res.stringval, item->key);
+    res.type = val->item->value;
+    res.result = qo;
+    return res;
+}
+
+char* verify_location_access(location l, item_table* val){
+  if(l.type == ID_VAR && val->item->id_type == ID_TAB) 
+      return "\nErreur: Accès tableau comme scalaire\n"; 
+  if(l.type == ID_TAB && val->item->id_type == ID_VAR) 
+      return "\nErreur: Scalaire utilisé comme tableau\n"; 
+  return NULL;
+}
+
+expr_val gen_access_tab(location l, item_table *val){
+
+  expr_val res;
+  res.type = val->item->value;
+  quadop qo; 		qo.type = QO_GLOBAL; 	qo.u.global.type = QO_TAB;
+  qo.u.global.name = malloc(strlen(l.stringval)+1);
+  strcpy(qo.u.global.name, l.stringval); 	qo.u.global.size = val->item->size;
+
+  Ht_item* item = new_temp(INT);
+  quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.offset = 0;
+  gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
+
+    if(l.index.type == QO_ID || l.index.type == QO_TMP){
+    item_table *val = lookup(l.index_name);
+    l.index.u.offset = offset(val);}
+  gencode(q1, qo, l.index, Q_ACCESTAB, NULL, -1, NULL); 	res.result = q1; 
+  res.stringval = malloc(strlen(item->key)+1); strcpy(res.stringval, item->key);
+
+  return res;
+}
+
+expr_val get_local_id(location l, item_table *val){
+  expr_val res;
+  quadop qo; 	qo.type = QO_ID; 	qo.u.offset = offset(val); 	res.result = qo;
+  res.type = val->item->value; 	res.stringval = malloc(strlen(l.stringval)+1);
+  strcpy(res.stringval, l.stringval); 
+  if(res.type == BOOL){
+    quadop q1, q2; 	q1.type = QO_CST; 	q1.u.cst = 1; 	q2.type = QO_EMPTY;
+    res.t = crelist(nextquad); 	gencode(q2, qo, q1, Q_EQ, NULL, -1, NULL);
+    res.f = crelist(nextquad); 	gencode(q2, q2, q2, Q_GOTO, NULL, -1, NULL);
+    }
+  return res;
+}
+
+expr_val unaire(expr_val expr){
+  expr_val res;
+  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.offset = 0;
+  quadop q1; q1.type = QO_EMPTY;
+  gencode(qo, q1, q1, Q_DECL, NULL,-1, NULL);
+  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
+
+  if(expr.result.type == QO_ID || expr.result.type == QO_TMP) {
+    item_table* val; val = lookup(expr.stringval); expr.result.u.offset = offset(val); }
+
+  q1.type = QO_CST; 	q1.u.cst = 0;
+  gencode(qo, q1, expr.result, Q_SUB, NULL,-1, NULL); 	res.result = qo;
+  return res;
+}
+
+expr_val eqop(expr_val expr1, int op, expr_val expr2){
+  expr_val res;
+  res.type = BOOL; 	quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
+
+  if(expr1.type == BOOL){
+    complete(expr1.t, nextquad); 	complete(expr1.f, nextquad); 
+    complete(expr2.t, nextquad); 	complete(expr2.f, nextquad);
+  }
+
+  if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
+    item_table* val = lookup(expr1.stringval);
+    expr1.result.u.offset = offset(val); }
+  if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
+    item_table* val = lookup(expr2.stringval);
+    expr2.result.u.offset = offset(val); }
+
+  res.t = crelist(nextquad); 	gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL);
+  res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+  return res;
+}
+
+
+expr_val oprel(expr_val expr1, int op, expr_val expr2){
+  expr_val res;
+  res.type = BOOL;
+  quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
+
+  if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
+    item_table* val = lookup(expr1.stringval);
+    expr1.result.u.offset = offset(val); }
+  if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
+    item_table* val = lookup(expr2.stringval);
+    expr2.result.u.offset = offset(val); }
+
+  res.t = crelist(nextquad); 	gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL);
+  res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+}
+
+expr_val mul(expr_val expr1, int op, expr_val expr2){
+  expr_val res;
+  res.type = INT;	 Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.offset = 0;
+
+  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
+
+  if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
+    item_table* val; val = lookup(expr1.stringval); expr1.result.u.offset = offset(val); 	}
+  if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
+    item_table* val; val = lookup(expr2.stringval); expr2.result.u.offset = offset(val); }
+  quadop q1; q1.type = QO_EMPTY;
+  gencode(qo, q1, q1, Q_DECL, NULL, -1, NULL);
+  gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL); 	res.result = qo;
+  return res;
+}
+
+expr_val add(expr_val expr1, int op, expr_val expr2){
+  expr_val res;
+  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.offset = 0;
+
+  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
+
+  if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
+    item_table* val; val = lookup(expr1.stringval); expr1.result.u.offset = offset(val); }
+  if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
+    item_table* val; val = lookup(expr2.stringval); expr2.result.u.offset = offset(val); }
+  quadop q1; q1.type = QO_EMPTY;
+  gencode(qo,q1,q1,Q_DECL,NULL,-1, NULL);
+  gencode(qo,expr1.result,expr2.result,op,NULL,-1, NULL); res.result = qo;
+  return res;
+}
+
+void gen_index_access_tab(location *res, char* name, expr_val index){
+
+  res->type = ID_TAB; res->stringval = malloc(strlen(name)+1);
+  strcpy(res->stringval, name); res->index = index.result; 
+
+  if(index.result.type == QO_TMP) {
+    item_table *val = lookup(index.stringval);
+    index.result.u.offset = offset(val); 
+    quadop qo, q1; qo.type = QO_CST; qo.u.cst = 4;
+    gencode(index.result, index.result, qo, Q_MUL, NULL, -1, NULL);
+    res->index_name = malloc(strlen(index.stringval)+1);	strcpy(res->index_name, index.stringval); 
+    res->index = index.result;
+  }
+  else if(index.result.type == QO_ID){
+    quadop qo;	qo.type = QO_TMP;	qo.u.offset = 0;	Ht_item *item = new_temp(INT);
+    quadop q1;	q1.type = QO_EMPTY;
+    gencode(qo, q1, q1, Q_DECL, NULL, -1, NULL);
+    item_table *val = lookup(index.stringval);
+    index.result.u.offset = offset(val);
+    gencode(qo, index.result, q1, Q_AFF, NULL, -1, NULL);
+    q1.type = QO_CST; q1.u.cst = 4;
+    gencode(qo, qo, q1, Q_MUL, NULL, -1, NULL);
+    res->index_name = malloc(strlen(item->key)+1);	strcpy(res->index_name, item->key); 
+    res->index = qo;
+  }
+  else if(index.result.type == QO_CST){
+    res->index.u.cst = 4*index.result.u.cst;
+  }						
+}
+
+expr_val get_string_literal(char* str){
+  expr_val res;
+  res.type = STRING; 	res.result.type = QO_CSTSTR;
+  res.result.u.string_literal.label = new_str();
+  res.result.u.string_literal.value = malloc(strlen(str)+1);
+  strcpy(res.result.u.string_literal.value, str);
+  return res;
+}
+
+// not used, adds too much abstraction to the code, hard to understand
+void complete_for_block(expr_val *statement, char* counter, expr_val b, int marker){
+  complete(b.next, nextquad);	complete(b.cntu, nextquad);
+  statement->next = crelist(marker); 	statement->next = concat(statement->next, b.brk); statement->rtrn = b.rtrn; 		 	
+  gen_increment_and_loopback(counter, marker);
+  complete(statement->next, nextquad);	
+  gen_q_pop(curr_context->count*4);
+  statement->next = crelist( nextquad);
+  quadop qo; qo.type = QO_EMPTY;	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+  
+}
+
+param copy_method_call_arg(expr_val expr, param list){
+  param p = (param) malloc(sizeof(struct param));
+
+  if(expr.result.type == QO_ID || expr.result.type == QO_TMP){
+    item_table* val = lookup(expr.stringval); 
+    expr.result.u.offset = offset(val);
+    p->stringval = malloc(strlen(expr.stringval)+1);
+    strcpy(p->stringval, expr.stringval);
+  }
+  p->type = expr.type; p->arg = expr.result; p->next = list; 	p->byAddress = 0;
+  if(expr.type == BOOL) { p->t = expr.t; p->f = expr.f;}
+  return p;
+}
+
+param get_arg_by_address(char* str, param list, item_table* val){
+
+  param p = (param) malloc(sizeof(struct param));
+  char *name = malloc(strlen(str)); strcpy(name, str+1); 
+  
+  quadop qo; 
+  if(val->table == glob_context){
+    qo.type = QO_GLOBAL; qo.u.global.name = name; qo.u.global.type = QO_SCAL;
+  }
+  else{
+    qo.type = QO_ID; qo.u.offset = offset(val);
+  }
+  p->stringval = name;
+  p->type = val->item->value; p->arg = qo; p->next = list; p->byAddress = 1;
+  return p;
+}

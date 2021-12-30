@@ -63,7 +63,7 @@ char* var_declare(declaration *dec, int type);
 
 
 
-param push_param(char* name, int type, param next);
+param get_param(char* name, int type, param next);
 char* verify_aff_types(int type1, int type2, int oper, Ht_item *item);
 void get_location(quadop* qo, quadop* q1, item_table* val, location l);
 void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr);
@@ -79,4 +79,19 @@ int is_a_parent(ctx_type type);
 int verify_param(param p1, param p2);
 char* verify_and_get_type_call(char *id, param p, method_call *m);
 void gen_method_call(char *id, expr_val *E, method_call *m);
+expr_val get_literal(literal l);
+char* verify_location_access(location l, item_table* val);
+expr_val gen_global_scalar(location l, item_table* val);
+expr_val gen_access_tab(location l, item_table *val);
+expr_val get_local_id(location l, item_table *val);
+expr_val unaire(expr_val expr);
+expr_val eqop(expr_val expr1, int op, expr_val expr2);
+expr_val oprel(expr_val expr1, int op, expr_val expr2);
+expr_val mul(expr_val expr1, int op, expr_val expr2);
+expr_val add(expr_val expr1, int op, expr_val expr2);
+void gen_index_access_tab(location *res, char* name, expr_val index);
+expr_val get_string_literal(char* str);
+void complete_for_block(expr_val *statement, char* counter, expr_val b, int marker);
+param copy_method_call_arg(expr_val expr, param list);
+param get_arg_by_address(char* str, param list, item_table* val);
 #endif

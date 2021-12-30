@@ -1,51 +1,19 @@
-class cafe {
+class Reification3 {
 
-    
-
-    int random(int seed, int max){
-        int next;
-        next = seed * 1103 + 12345;
-        return next%max;
-    }
-
-    void main(){
-        int guess, bingo, win, rounds, seed;
-        seed = 476;
-        bingo = random(seed, 101);
-        guess = -1;
-        
-        win = 0;
-        rounds = 1;
-        WriteString("\nCan you guess the Magic Number between 0 and 100? You have 10 chances!\n");
-        
-        for i = 0, 10 {
-            WriteString("\nEnter your guess\n");
-         //   ReadInt(&guess);
-            if(guess == bingo){
-                win = 1;
-                break;
-            }
-            else if(guess < bingo){
-                WriteString("A little more!\n");
-            }
-            else{
-                WriteString("A little less!\n");
-            }
-            rounds=rounds+1;
-        }
-
-        if(win == 0){
-            WriteString("\nLooser! The number was:\n");
-            WriteInt(bingo);
-        }
-        else{
-            WriteString("Bravo! You won in ");
-            WriteInt(rounds);
-            WriteString(" rounds!\n");
-        }
-
-        
+    void main ()
+    {
+        boolean a;
+        boolean b;
+        boolean c;
+        boolean d;
+        a = true;
+        b = false;
+        c = true;
+        d = ((a != b) && (b != c)) == (a == true && c || ! a && c == false);
+        WriteBool (d);
+        WriteString ("=true\n");
     }
 
 }
+
 
