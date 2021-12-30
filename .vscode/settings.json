@@ -8,6 +8,9 @@
 		"intermediaire.h": "c",
 		"hashtable.h": "c",
 		"token.h": "c",
-		"string.h": "c"
+		"string.h": "c",
+		"string_view": "c",
+		"initializer_list": "c",
+		"utility": "c"
 	}
 }

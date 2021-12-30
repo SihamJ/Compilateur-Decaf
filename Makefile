@@ -23,7 +23,7 @@ decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o 
 $(dep).o : $(dep).c $(dep).h $(dep2).h token.h 
 	$(CC) -c -g $(dep).c
 
-$(dep2).o : $(dep2).c $(dep2).h $(dep).h token.h 
+$(dep2).o : $(dep2).c $(dep2).h $(dep).h token.h $(dep6).h
 	$(CC) -c -g $(dep2).c
 
 $(dep3).o : $(dep3).c $(dep3).h $(dep).h $(dep4).h $(dep2).h instructions.h

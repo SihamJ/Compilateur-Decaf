@@ -8,6 +8,8 @@
 #define NORMAL "\x1B[0m"
 #define BLUE "\e[0;34m"
 #define PURPLE "\e[0;35m"
+#define CYAN "\033[0;36m"
+#define BLACK "\033[0;30m"
 
 void set_color(char *code);
 

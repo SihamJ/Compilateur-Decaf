@@ -1,0 +1,52 @@
+class cafe {
+
+    
+
+    int random(int seed, int max){
+        int next;
+        next = seed * 1103 + 12345;
+        return next%max;
+    }
+
+    void main(){
+        int guess, bingo, win, rounds, seed;
+        seed = 476;
+        bingo = random(seed, 101);
+        guess = -1;
+        
+        win = 0;
+        rounds = 1;
+        WriteString("\nCan you guess the Magic Number between 0 and 100? You have 5 chances!\n");
+        
+        for i = 0, 4 {
+            WriteString("\nEnter your guess\n");
+            ReadInt(&guess);
+
+            if(guess == bingo){
+                win = 1;
+                break;
+            }
+            if(guess < bingo){
+                WriteString("A little more!\n");
+            }
+            else{
+                WriteString("A little less!\n");
+            }
+            rounds=rounds+1;
+        }
+
+        if(win == 0){
+            WriteString("\nLooser! The number was:\n");
+            WriteInt(bingo);
+        }
+        else{
+            WriteString("Bravo! You won in ");
+            WriteInt(rounds);
+            WriteString(" rounds!\n");
+        }
+
+        
+    }
+
+}
+

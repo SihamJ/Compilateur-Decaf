@@ -8,6 +8,7 @@
 	#include "compiler.tab.h"
 	
 	int yylex();
+	int warning;
 	void yyerror( char* );
 	void yywarning(char *);
 	char* program_name;
@@ -340,7 +341,7 @@ E 			:	expr ',' E 						{
 													
 												}
 			|	address ','	E 					{	param p = (param) malloc(sizeof(struct param));
-													char *name = malloc(strlen($1)); strcpy(name, $1+1); printf("\n%s\n",name);
+													char *name = malloc(strlen($1)); strcpy(name, $1+1); 
 													item_table* val = lookup(name);
 													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n");return 1;}
 													quadop qo; 
@@ -356,7 +357,7 @@ E 			:	expr ',' E 						{
 												}
 
 			|	address							{	$$.p = (param) malloc(sizeof(struct param));
-													char *name = malloc(strlen($1)); strcpy(name, $1+1); printf("\n%s\n",name);
+													char *name = malloc(strlen($1)); strcpy(name, $1+1); 
 													item_table* val = lookup(name);
 													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n");return 1;}
 													quadop qo; 
@@ -607,6 +608,8 @@ void yyerror(char *msg) {
 }
 
 void yywarning(char *msg) {
-	fprintf(stderr, "\t%s%s\n%s",YELLOW, msg, NORMAL);
-	set_color(NORMAL);
+	if(warning == 1){
+		fprintf(stderr, "\t%s%s\n%s",YELLOW, msg, NORMAL);
+		set_color(NORMAL);
+	}
 }

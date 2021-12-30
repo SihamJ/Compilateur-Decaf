@@ -306,32 +306,41 @@ void ht_delete(HashTable *table, char *key)
 
 void print_table(HashTable *table)
 {
-    printf("\n_______________________________________________________________________\n");
-
+    printf("\n\t\033[1m_________________________________________________________________\033[0m\n\n");
+    int j = 0;
     for (int i = 0; i < table->max_size; i++)
     {
         if (table->items[i])
         {
-            printf("%8sIndex: %d | %4sID: %4s | %4sType: %s ","", table->items[i]->order,"", table->items[i]->key,"", get_type_id(table->items[i]->value));
+            printf("%s\033[1m%20s\033[0m |%s %4sIndex: %d |  %4sType: %s | ",YELLOW, table->items[i]->key,NORMAL,"", table->items[i]->order,"", get_type_id(table->items[i]->value));
             if(table->items[i]->id_type == ID_TAB)
-                printf("| %4sArray | %4ssize: %d ","", "", table->items[i]->size/4);
+                printf("%10sArray | %4ssize: %d ","", "", table->items[i]->size/4);
+            else if(table->items[i]->id_type == ID_METHOD)
+                printf("%10sMethod ","");
+            else if(table->items[i]->id_type == ID_VAR)
+                printf("%10sScalar ","");
+            else if(table->items[i]->id_type == ID_PARAM)
+                printf("%10sParam ","");
             if (table->lists[i])
             {
                 printf(" => list => ");
                 LinkedList *head = table->lists[i];
                 while (head)
                 {
-                    printf("%8sIndex: %d | %4sID: %4s | %4sType:%d ","", head->item->order,"", head->item->key,"", head->item->value);
-                    printf("| ID: %s | Type: %s ",head->item->key, get_type_id(head->item->value));
+                    printf("\033[1m%20s\033[0m | %4sIndex: %d | %4sType:%s | ", head->item->key,"", head->item->order,"", get_type_id(head->item->value));
                     if(head->item->id_type == ID_TAB)
-                        printf("| %4sArray | %4ssize: %d ","", "",head->item->size/4);
+                        printf("%4sArray | %4ssize: %d ","","", head->item->size/4);
+                    else if(head->item->id_type == ID_METHOD)
+                        printf("%10sMethod ","");
                     head = head->next;
                 }
             }
-            printf("\n");
+            printf("\n"); j++;
         }
     }
-    printf("_______________________________________________________________________\n");
+    if(j==0)
+        printf("%20sEMPTY CONTEXT","");
+    printf("\n\n");
 }
 
 void pushctx(ctx_type type){
@@ -396,14 +405,17 @@ item_table *lookup(char *key){
 }
 
 void print_stack(){
-    printf("\n\tTABLES DES SYMBOLES\n\n");
-	int count = 0;
+    printf("\n\t%s\e[4m\033[1mTABLES DES SYMBOLES\033[0m\e[0m\n\n%s",CYAN,NORMAL);
+	int count = 1;
     for (HashTable *i=stack; i; i = i->next){
-        printf("\tCONTEXT %d:",count++);
+        if(count == 1){
+        printf("\t\033[1mGLOBAL CONTEXT:\033[0m"); count++;}
+        else
+        printf("\t\033[1mCONTEXT %d:\033[0m",count++);
         print_table(i);
         printf("\n");
     }
-    printf("\n");
+    printf("\n\t%s\033[1m___________________________  FIN  TOS  __________________________\033[0m%s\n\n",CYAN,NORMAL);
 }
 
 
@@ -497,3 +509,4 @@ char* get_type_global(int type){
         return "Array";
     else return "NA";
 }
+

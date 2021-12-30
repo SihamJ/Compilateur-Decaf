@@ -3,6 +3,7 @@
 
 #include "token.h"
 #include "intermediaire.h"
+#include "text_formating.h"
 
 /* Type de l'identificateur dans la TOS */
 typedef enum id_type{
