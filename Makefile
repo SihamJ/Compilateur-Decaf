@@ -6,14 +6,7 @@ dep4=transTool
 dep5=IOfunctions
 dep6=text_formating
 dep7=compiler_functions
-# exige 3 fichiers:
-# - $(prefixe).y (fichier bison)
-# - $(prefixe).lex (fichier flex)
-# - main.c (programme principal)
-# construit un exécutable nommé "main"
 
-# note : le programme principal ne doit surtout pas s'appeler $(prefixe).c
-# (make l'écraserait parce qu'il a une règle "%.c: %.y")
 
 all: decaf
 
