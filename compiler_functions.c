@@ -89,7 +89,8 @@ char* field_declare(declaration *dec, int type){
     strcpy(qo.u.global.name, pt->name);
     qo.u.global.size = pt->size;
     qo.u.global.type = pt->type;
-    gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
+    quadop q; q.type = QO_EMPTY;
+    gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
     /* we increment the global variables counter, useful for MIPS*/
     glob_dec_count++;
@@ -125,7 +126,8 @@ char* var_declare(declaration *dec, int type){
       labelCount++;
 
     qo.u.offset = 0;
-    gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
+    quadop q; q.type = QO_EMPTY;
+    gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
     Ht_item *item = create_item(pt->name, ID_VAR, type);
     newname(item);
@@ -255,8 +257,8 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
   /* We declare the loop counter id, push it to the symbol table, and store the initial value expr1 in it*/
   quadop qo;
   qo.type = QO_ID;
-  qo.u.offset = 0;
-  gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
+  qo.u.offset = 0; quadop q; q.type = QO_EMPTY;
+  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
   Ht_item *item = create_item(counter_id, ID_VAR, INT);
   newname(item);
@@ -277,8 +279,8 @@ expr_val get_max(char *counter_name, expr_val expr){
   
   quadop qo;
   qo.type = QO_ID;
-  qo.u.offset = 0;
-  gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL);
+  qo.u.offset = 0; quadop q; q.type = QO_EMPTY;
+  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
   char *name = malloc(strlen(counter_name)+5);
   snprintf(name, strlen(counter_name)+5, "%s%s",counter_name, "_max");

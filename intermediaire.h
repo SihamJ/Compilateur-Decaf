@@ -3,6 +3,7 @@
 #define __INTERM_H__
 
 #include "token.h"
+#include "text_formating.h"
 
 typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR

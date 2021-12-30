@@ -17,9 +17,12 @@ class cafe {
         win = 0;
         rounds = 1;
         WriteString("\nCan you guess the Magic Number between 0 and 100? You have 5 chances!\n");
-        
+        WriteString("Enter your guess:\n\n");
+
         for i = 0, 4 {
-            WriteString("\nEnter your guess\n");
+            WriteString("Round ");
+            WriteInt(rounds);
+            WriteString(":  ");
             ReadInt(&guess);
 
             if(guess == bingo){
@@ -27,22 +30,22 @@ class cafe {
                 break;
             }
             if(guess < bingo){
-                WriteString("A little more!\n");
+                WriteString("\nA little more!\n");
             }
             else{
-                WriteString("A little less!\n");
+                WriteString("\nA little less!\n");
             }
             rounds=rounds+1;
         }
 
         if(win == 0){
-            WriteString("\nLooser! The number was:\n");
+            WriteString("\nLooser! The number was ");
             WriteInt(bingo);
         }
         else{
-            WriteString("Bravo! You won in ");
+            WriteString("\nBravo! You won in ");
             WriteInt(rounds);
-            WriteString(" rounds!\n");
+            WriteString(" rounds!\n\n");
         }
 
         

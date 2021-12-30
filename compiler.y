@@ -413,8 +413,8 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 													item_table* val; val = lookup($1.stringval); $1.result.u.offset = offset(val); }
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
 													item_table* val; val = lookup($3.stringval); $3.result.u.offset = offset(val); }
-
-												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
+												quadop q1; q1.type = QO_EMPTY;
+												gencode(qo,q1,q1,Q_DECL,NULL,-1, NULL);
 												gencode(qo,$1.result,$3.result,$2,NULL,-1, NULL); $$.result = qo;
 											}
 
@@ -427,8 +427,8 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 													item_table* val; val = lookup($1.stringval); $1.result.u.offset = offset(val); 	}
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
 													item_table* val; val = lookup($3.stringval); $3.result.u.offset = offset(val); }
-
-												gencode(qo,qo,qo,Q_DECL,NULL,-1, NULL);
+												quadop q1; q1.type = QO_EMPTY;
+												gencode(qo,q1,q1,Q_DECL,NULL,-1, NULL);
 												gencode(qo,$1.result,$3.result,$2,NULL,-1, NULL); 	$$.result = qo;
 											}
 
@@ -476,13 +476,14 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 
 			|	'-' expr %prec NEG 			{	if($2.type != INT){ yyerror("\nErreur: Arithmètique non entière"); return 1; }
 												$$.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.offset = 0;
-												gencode(qo, qo, qo, Q_DECL, NULL,-1, NULL);
+												quadop q1; q1.type = QO_EMPTY;
+												gencode(qo, q1, q1, Q_DECL, NULL,-1, NULL);
 												$$.stringval = malloc(strlen(item->key)+1); 	strcpy($$.stringval, item->key);
 
 												if($2.result.type == QO_ID || $2.result.type == QO_TMP) {
 													item_table* val; val = lookup($2.stringval); $2.result.u.offset = offset(val); }
 
-												quadop q1; 	q1.type = QO_CST; 	q1.u.cst = 0;
+												q1.type = QO_CST; 	q1.u.cst = 0;
 												gencode(qo, q1, $2.result, Q_SUB, NULL,-1, NULL); 	$$.result = qo;
 											}
 
@@ -506,13 +507,13 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 														yyerror("\nErreur: Scalaire utilisé comme tableau\n"); return 1;}
 
 													if($1.type == ID_VAR) {
-														quadop q1; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
+														quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
 														q1.u.global.name = malloc(strlen($1.stringval)+1);
 														strcpy(q1.u.global.name, $1.stringval);	 q1.u.global.size = 4;
-
+														q2.type = QO_EMPTY;
 														quadop qo; qo.type = QO_TMP; qo.u.offset = 0; 
 														Ht_item* item = new_temp(val->item->value);
-														gencode(qo, qo, qo, Q_DECL, NULL, -1, NULL); 
+														gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL); 
 														gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
 														$$.stringval = malloc(strlen(item->key)+1);
 														strcpy($$.stringval, item->key);
@@ -528,8 +529,8 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 														strcpy(qo.u.global.name, $1.stringval); 	qo.u.global.size = val->item->size;
 
 														Ht_item* item = new_temp(INT);
-														quadop q1; 		q1.type = QO_TMP; 		q1.u.offset = 0;
-														gencode(q1, q1, q1, Q_DECL, NULL, -1, NULL);
+														quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.offset = 0;
+														gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
 
 														 if($1.index.type == QO_ID || $1.index.type == QO_TMP){
 															item_table *val = lookup($1.index_name);
@@ -561,10 +562,10 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 
 												if($1.type == BOOL){
 													Ht_item* item = new_temp(BOOL);
-													quadop q1; 	q1.type = QO_TMP; 	q1.u.offset = 0;
-													gencode(q1,q1,q1,Q_DECL,NULL,-1, NULL);
+													quadop q1,q2; q2.type = QO_EMPTY;	q1.type = QO_TMP; 	q1.u.offset = 0;
+													gencode(q1,q2,q2,Q_DECL,NULL,-1, NULL);
 
-													quadop qo,q2; qo.type = QO_EMPTY; 	q2.type = QO_CST; 	q2.u.cst = $1.intval;	
+													quadop qo; qo.type = QO_EMPTY; 	q2.type = QO_CST; 	q2.u.cst = $1.intval;	
 													gencode(q1, q2, q2, Q_AFF, NULL, -1, NULL);
 													q2.u.cst = 1;
 													$$.t = crelist(nextquad); 	gencode(qo, q1, q2, Q_EQ, NULL, -1, NULL);

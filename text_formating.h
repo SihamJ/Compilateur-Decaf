@@ -10,6 +10,7 @@
 #define PURPLE "\e[0;35m"
 #define CYAN "\033[0;36m"
 #define BLACK "\033[0;30m"
+#define BOLD "\033[1m"
 
 void set_color(char *code);
 

@@ -103,13 +103,13 @@ void complete(list n, int addr){
 
 void print_globalcode(){
 
-  printf("\nCode Intermediaire:\n_______________________________________________________________________________________\n            type          op1           op2          op3         oper         label          jump    \n_______________________________________________________________________________________\n\n");
+  printf("\n%s\033[1mCode Intermediaire:%s\033[1m\n\n%6stype%12sop1%8sop2%8sop3%8soper%10slabel%4sjump%s\n___________________________________________________________________________________\n\n",CYAN,NORMAL,"","","","","","","",NORMAL);
   for (int i=0; i<nextquad; i++){
-    printf("%3d",i);
-    printf("%14s", get_type_oper(global_code[i].op1.type));
+    printf("%2d",i);
+    printf("%8s", get_type_oper(global_code[i].op1.type));
       
     if(global_code[i].op1.type == QO_CST)
-      printf("%14d", global_code[i].op1.u.cst);
+      printf("%s%s%14d%s", CYAN,BOLD, global_code[i].op1.u.cst, NORMAL);
       else if(global_code[i].op1.type == QO_CSTSTR)
       printf("%14s", global_code[i].op1.u.string_literal.label);
     else if(global_code[i].op1.type == QO_GLOBAL)
@@ -117,40 +117,44 @@ void print_globalcode(){
     else if(global_code[i].op1.type == QO_EMPTY)
       printf("%14s","-");
     else 
-      printf("%12s(%d)","",global_code[i].op1.u.offset);
+      printf("%s%s%14d%s",YELLOW,BOLD,global_code[i].op1.u.offset,NORMAL);
     
 
     if(global_code[i].op2.type == QO_CST)
-      printf("%14d", global_code[i].op2.u.cst);
+      printf("%s%s%10d%s", CYAN,BOLD, global_code[i].op2.u.cst, NORMAL);
       else if(global_code[i].op2.type == QO_CSTSTR)
-      printf("%14s", global_code[i].op2.u.string_literal.label);
+      printf("%10s", global_code[i].op2.u.string_literal.label);
     else if(global_code[i].op2.type == QO_GLOBAL)
-      printf("%14s", global_code[i].op2.u.global.name);
+      printf("%10s", global_code[i].op2.u.global.name);
     else if(global_code[i].op2.type == QO_EMPTY)
-      printf("%14s","-");
+      printf("%10s","-");
     else 
-      printf("%12s(%d)","",global_code[i].op2.u.offset);
+      printf("%s%s%10d%s",YELLOW,BOLD,global_code[i].op2.u.offset,NORMAL);
     
 
     if(global_code[i].op3.type == QO_CST)
-      printf("%14d", global_code[i].op3.u.cst);
+      printf("%s%s%10d%s", CYAN,BOLD, global_code[i].op3.u.cst, NORMAL);
     else if(global_code[i].op3.type == QO_CSTSTR)
-      printf("%14s", global_code[i].op3.u.string_literal.label);
+      printf("%10s", global_code[i].op3.u.string_literal.label);
     else if(global_code[i].op3.type == QO_GLOBAL)
-      printf("%14s", global_code[i].op3.u.global.name);
+      printf("%10s", global_code[i].op3.u.global.name);
     else if(global_code[i].op3.type == QO_EMPTY)
-      printf("%14s","-");
+      printf("%10s","-");
     else 
-      printf("%12s(%d)","",global_code[i].op3.u.offset);
+      printf("%s%s%10d%s",YELLOW,BOLD,global_code[i].op3.u.offset,NORMAL);
     
     
     printf("%14s",op_type(global_code[i].type));
+    
     if(global_code[i].label != NULL)
       printf("%14s",global_code[i].label);
     else
-      printf("%14s","______");
-
-    printf("%14d\n",global_code[i].jump);
+      printf("%14s","-");
+    
+    if(global_code[i].jump!=-1)
+      printf("%8d\n",global_code[i].jump);
+    else
+      printf("%8s\n","-");
   }
   printf("\n");
 }
