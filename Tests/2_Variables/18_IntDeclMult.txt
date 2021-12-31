@@ -1,0 +1,11 @@
+class Test {
+	void main(){
+		int a, b;
+		WriteInt(a);
+		WriteString("=0");
+		WriteString("\n");
+		WriteInt(b);
+		WriteString("=0");
+		WriteString("\n");
+	}
+}

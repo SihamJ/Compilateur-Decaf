@@ -1,0 +1,9 @@
+class Test {
+	bool a[1];
+	void main(){
+		a[0] = true;
+		WriteBool(a[0]);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

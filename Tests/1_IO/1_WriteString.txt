@@ -1,0 +1,6 @@
+class Test {
+	void main(){
+		WriteString("0=0");
+		WriteString("\n");
+	}
+}

@@ -1,0 +1,34 @@
+class Test {
+	int a;
+	bool b;
+	int c[1];
+	bool d[1];
+	void main(){
+		int e;
+		bool f;
+		a = 42;
+		b = true;
+		c[0] = 53;
+		d[0] = true;
+		e = 64;
+		f = true;
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=true");
+		WriteString("\n");
+		WriteInt(c[0]);
+		WriteString("=53");
+		WriteString("\n");
+		WriteBool(d[0]);
+		WriteString("=true");
+		WriteString("\n");
+		WriteInt(e);
+		WriteString("=64");
+		WriteString("\n");
+		WriteBool(f);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

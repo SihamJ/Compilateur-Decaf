@@ -32,8 +32,8 @@
 %token class If Else For Return Break Continue 
 
 %type <expr> expr return_val E statement block S2 S Max ElseBlock
-<next> G
-<m> method_call
+%type <next> G
+%type <m> method_call
 
 %type <loc> location
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op

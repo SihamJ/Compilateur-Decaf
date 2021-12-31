@@ -1,0 +1,17 @@
+class Test {
+	int a[1], b[2];
+	void main(){
+		a[0] = 42;
+		b[0] = 53;
+		b[1] = 64;
+		WriteInt(a[0]);
+		WriteString("=42");
+		WriteString("\n");
+		WriteInt(b[0]);
+		WriteString("=53");
+		WriteString("\n");
+		WriteInt(b[1]);
+		WriteString("=64");
+		WriteString("\n");
+	}
+}

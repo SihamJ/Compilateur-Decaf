@@ -1,0 +1,17 @@
+class Test {
+	void main(){
+		int a, b, c;
+		b = 84;
+		c = 2;
+		a = b / c;
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+		WriteInt(b);
+		WriteString("=84");
+		WriteString("\n");
+		WriteInt(c);
+		WriteString("=2");
+		WriteString("\n");
+	}
+}

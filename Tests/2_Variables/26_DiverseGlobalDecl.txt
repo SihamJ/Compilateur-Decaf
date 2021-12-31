@@ -1,0 +1,20 @@
+class Test {
+	int a;
+	bool b;
+	int c[1];
+	bool d[1];
+	void main(){
+		WriteInt(a);
+		WriteString("=0");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=false");
+		WriteString("\n");
+		WriteInt(c[0]);
+		WriteString("=0");
+		WriteString("\n");
+		WriteBool(d[0]);
+		WriteString("=false");
+		WriteString("\n");
+	}
+}
