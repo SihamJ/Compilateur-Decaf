@@ -94,4 +94,12 @@ expr_val get_string_literal(char* str);
 void complete_for_block(expr_val *statement, char* counter, expr_val b, int marker);
 param copy_method_call_arg(expr_val expr, param list);
 param get_arg_by_address(char* str, param list, item_table* val);
+expr_val val_to_goto(expr_val expr);
+
+expr_val goto_to_val(expr_val expr);
+
+expr_val not_op(expr_val expr);
+expr_val pop_if_tmp(int nb, expr_val expr);
+
+expr_val eqop_cst(expr_val expr1, expr_val expr2, int op);
 #endif

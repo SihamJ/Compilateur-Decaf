@@ -457,6 +457,29 @@ int pop_tmp(){
     return nb;
 }
 
+void pop_nb_tmp(int nb){
+    for (int i = 0, j = 0; i < curr_context->max_size, j < nb ; i++){
+        if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
+            ht_delete(curr_context, curr_context->items[i]->key);  
+            tmpCount--; j++;
+        }
+    }
+}
+
+char* num_to_char(int nb){
+
+    char* label;
+    int a = nb;
+    int cpt = 1;
+    while(a){
+        a=a/10;
+        cpt++;
+    }
+    label = malloc(cpt+1);
+    sprintf(label, "%d",nb);
+    
+    return label;
+}
 
 Ht_item* new_temp(int type){
 

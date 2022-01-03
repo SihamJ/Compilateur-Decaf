@@ -36,7 +36,7 @@
 %type <m> method_call
 
 %type <loc> location
-%type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
+%type <intval> int_literal assign_op type M oprel eq_op add_op mul_op TMP
 %type <decl> B glob_id 
 %type <p> Param P
 %type <l> literal
@@ -71,6 +71,8 @@ M 		:	%empty 		{	$$ = nextquad; }
 G 		:	%empty		{	$$ = crelist(nextquad); 	quadop qo;	 qo.type = QO_EMPTY; 	gencode(qo,qo,qo, Q_GOTO, NULL, -1, NULL); }
 
 Max		:	%empty		{;}
+
+TMP		:	%empty		{$$ = tmpCount;}
 
 GLOBAL 		: MD		{;}
 			| FD MD 	{;}
@@ -190,7 +192,7 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 												quadop qo,q1,q2;	get_location(&qo, &q1, val, $1);
 
 												// bool affectation is different from int
-												 if($3.type == BOOL) { bool_affectation(qo, q1, &$$, &$3);}
+												 if($3.result.type == QO_GOTO) { bool_affectation(qo, q1, &$$, &$3);}
 												
 												// in the mips translater, we have to differentiate between | = | += | -= |  
 												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
@@ -236,15 +238,20 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 			|	block						{ 	$$.brk = $1.brk;	 $$.next = $1.next; 	$$.cntu = $1.cntu; 		$$.rtrn = $1.rtrn;}
 
 			|	If '(' expr ')' 	      	{ 	if($3.type != BOOL) { yyerror("\nErreur: Test avec expression non booléene\n"); return 1; } 
-												int nb = 0; if((nb = pop_tmp()) > 0) {
-													quadop qo; qo.type = QO_EMPTY;
+											
+												 if($3.result.type == QO_CST) { 
+													$3.t = crelist(nextquad);
+													quadop qo,q1; qo.type = QO_EMPTY; q1.type = QO_CST; q1.u.cst = true;
+													gencode(qo, $3.result, q1, Q_EQ, NULL, -1, NULL);
+													$3.f = crelist(nextquad); 
+													gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+												}
 
-													complete($3.t, nextquad); gen_q_pop(nb*4); 
-													$3.t = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-													
-													complete($3.f, nextquad); gen_q_pop(nb*4); 
-													$3.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-												} 
+												else if($3.result.type == QO_ID || $3.result.type == QO_TMP || $3.result.type == QO_GLOBAL) { 
+													$3 = val_to_goto($3); 
+												}
+
+												int nb = 0; if((nb = pop_tmp()) > 0) { $3 = pop_if_tmp(nb, $3); }
 											} 
 			
 				M ElseBlock					{ 	complete($3.t, $6); $$.cntu = $7.cntu; $$.brk = $7.brk; $$.rtrn = $7.rtrn;
@@ -267,7 +274,6 @@ return_val	:	expr 						{ 	$$ = $1; }
 //  we verifiy the parameters of the method call and generate the quad								
 method_call :	id '(' E ')' 				{	char *msg;
 												if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { yyerror(msg); return 1; }
-												param p = $3.p;
 												if(!strcmp($1,"WriteString")) {
 													get_write_string_args($3.p->arg.u.string_literal.label, $3.p->arg.u.string_literal.value); }
 
@@ -310,46 +316,85 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												$$ = mul($1, $2, $3);
 											}
 
-			|	expr and M expr				{	if($1.type != BOOL || $4.type != BOOL){ yyerror("\nErreur: AND operator with non boolean value"); return 1; }			
-												$$.type = BOOL; 	complete($1.t, $3); 	$$.f = concat($1.f, $4.f); 	$$.t = $4.t; }
+			|	expr and 		{	if($1.type != BOOL) { yyerror("\nErreur: AND operator with non boolean value"); return 1; }
+									if($1.result.type != QO_GOTO) { $1 = val_to_goto($1);	}
+								}
+			
+				M expr			{	if($5.type != BOOL) { yyerror("\nErreur: AND operator with non boolean value"); return 1; }			
+									$$.type = BOOL;
+									if($5.result.type != QO_GOTO) { $5 = val_to_goto($5);	}
+									complete($1.t, $4); $$.f = concat($1.f, $5.f); 	$$.t = $5.t; $$.result.type = QO_GOTO; 
+								}
 
-			|	expr or M expr				{	if($1.type != BOOL || $4.type != BOOL){ yyerror("\nErreur: OR operator with non boolean value"); return 1; }
-												$$.type = BOOL; 	complete($1.f, $3); 	$$.t = concat($1.t, $4.t); 	$$.f = $4.f; }
+			|	expr or TMP 	{	if($1.type != BOOL) { yyerror("\nErreur: OR operator with non boolean value"); return 1; }
+									if($1.result.type != QO_GOTO) {  $1 = val_to_goto($1);	}
+									
+								}
+			
+				M expr			{	if($6.type != BOOL) { yyerror("\nErreur: OR operator with non boolean value"); return 1; }
+									$$.type = BOOL;
+									if($6.result.type != QO_GOTO) { $6 = val_to_goto($6); }
+									int nb = tmpCount - $3; 
+									if(nb > 0) { 
+										for(int i = tmpCount; i > $3; i--){
+											ht_delete(curr_context, num_to_char(i));
+										}
+										tmpCount -= nb; printf("\n%ld\n",tmpCount);
+
+										quadop q; q.type = QO_EMPTY;
+										complete($6.t, nextquad);
+										gen_q_pop(nb*4); $6.t = crelist(nextquad); gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+										complete($6.f, nextquad); gen_q_pop(nb*4); 
+										$6.f = crelist(nextquad); gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+										
+									}
+
+									complete($1.f, $5); $$.t = concat($1.t, $6.t); 	$$.f = $6.f; $$.result.type = QO_GOTO;
+								}
 
 			|	expr oprel expr	%prec '<' 	{	if($1.type != INT || $3.type != INT){ yyerror("\nErreur: REL OP non entière"); return 1; }
 												$$.type = BOOL;
 												quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-													item_table* val = lookup($1.stringval);
-													$1.result.u.offset = offset(val); }
+													item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
-													item_table* val = lookup($3.stringval);
-													$3.result.u.offset = offset(val); }
+													item_table* val = lookup($3.stringval); $3.result.u.offset = offset(val); }
 
 												$$.t = crelist(nextquad); 	gencode(qo, $1.result, $3.result, $2, NULL, -1, NULL);
 												$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+												$$.result.type = QO_GOTO;
 											}
 
-			|	expr eq_op expr	%prec eq	{	
-												if($1.type != $3.type ){ yyerror("\nErreur: Comparaison de types différents"); return 1; }
-												$$.type = BOOL; 	quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
+			|	expr eq_op 					{	 if($1.result.type == QO_GOTO) {	$1 = goto_to_val($1); } }
+			
+				M expr %prec eq				{	if($1.type != $5.type ) { yyerror("\nErreur: Comparaison de types différents"); return 1; }
+												quadop qo; 	qo.type = QO_EMPTY;
+												
+												if($1.type == BOOL) {
+													if($5.result.type == QO_GOTO) { $5 = goto_to_val($5); complete($5.t, nextquad); }
 
-												if($1.type == BOOL){
-													complete($1.t, nextquad); 	complete($1.f, nextquad); 
-													complete($3.t, nextquad); 	complete($3.f, nextquad);
+													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
+														item_table* val = lookup($5.stringval); $5.result.u.offset = offset(val); }
+
+													 if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
+														item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
+
+													$$.t = crelist(nextquad); 	gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
+													$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+													if($1.t) complete($1.t, $4);
+												}
+												else {
+													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
+														item_table* val = lookup($5.stringval); $5.result.u.offset = offset(val); }
+													if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
+														item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
+
+													$$.t = crelist(nextquad); 	gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
+													$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
 												}
 
-												if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-													item_table* val = lookup($1.stringval);
-													$1.result.u.offset = offset(val); }
-												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
-													item_table* val = lookup($3.stringval);
-													$3.result.u.offset = offset(val); }
-
-												$$.t = crelist(nextquad); 	gencode(qo,$1.result,$3.result,$2,NULL, -1, NULL);
-												$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-
+												$$.type = BOOL;	$$.result.type = QO_GOTO;
 											}
 
 			|	'-' expr %prec NEG 			{	if($2.type != INT){ yyerror("\nErreur: Arithmètique non entière"); return 1; }
@@ -357,7 +402,16 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 											}
 
 			|	'!' expr %prec NEG 			{	if($2.type != BOOL) { yyerror("\nErreur: NOT operator with non boolean value"); return 1; }
-												$$.type = BOOL; 	$$.t = $2.f; 	$$.f = $2.t; }
+
+												if($2.result.type == QO_CST) {
+													$$.result.type = QO_CST; $$.result.u.cst = !$2.result.u.cst; }
+
+												else if($2.result.type == QO_GOTO) { $$.t = $2.f; 	$$.f = $2.t;  $$.result.type = QO_GOTO; }
+
+												else if($2.result.type == QO_ID || $2.result.type == QO_TMP || $2.result.type == QO_GLOBAL)
+												 	$$ = not_op($2); 
+
+												$$.type = BOOL; }
 
 			|	'(' expr ')' 				{	$$ = $2; }
 
@@ -371,6 +425,7 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												if(val->table == glob_context) {
 
 													char *msg; if( (msg = verify_location_access($1, val)) != NULL) { yyerror(msg); return 1;}
+
 													if($1.type == ID_VAR) { $$ = gen_global_scalar($1,val); }
 													else if($1.type == ID_TAB) { $$ = gen_access_tab($1, val);}
 												}

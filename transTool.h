@@ -82,6 +82,10 @@ void mips_jump(char *label);
 
 void mips_syscall(int num);
 
+void mips_seq(char *target, char *eqL, char *eqR);
+
+void mips_sne(char *target, char *eqL, char *eqR);
+
 /** The abstraction of "For" and "While" should be the same.
 * (Looping the content in its block: @param block_content
 * based on the value of a boolean: @param condition_reg) 

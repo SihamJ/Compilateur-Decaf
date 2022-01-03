@@ -6,7 +6,7 @@
 #include "text_formating.h"
 
 typedef enum quadop_type{
-    QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR
+    QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR, QO_GOTO
   } quadop_type;
 
 /**
@@ -17,7 +17,7 @@ typedef enum global_type{
   } global_type;
 
 typedef enum quad_type{
-    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_FUNC, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP
+    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_SEQ, Q_SNE, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_FUNC, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP
   } quad_type;
 
 /**
@@ -101,6 +101,7 @@ typedef struct expr_val {
     quadop result;
     char *stringval;
     int type;		// type of result operand: INT / BOOL / STRING
+    int booltype;
     list t;  		// true
     list f;   		// false
     list next;		
@@ -181,7 +182,11 @@ char* new_str();
 
 void gencode(quadop op1, quadop op2, quadop op3, quad_type type, char *label, int jump, param p); 
 
+int delete_quad(int index);
 
+int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p);
 
+void delete_quad_list(list n);
 
+void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p);
 #endif

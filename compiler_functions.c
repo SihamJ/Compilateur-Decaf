@@ -74,7 +74,7 @@ char* field_declare(declaration *dec, int type){
   quadop qo,q1;
   declaration *pt = dec;
   qo.type = QO_GLOBAL;
-  /* glob_id is a list of all arrays and global variables declared of same type, see rule below*/
+  /* dec is a list of all arrays and global variables declared of same type*/
   while(pt != NULL){
 
     /* verifying that the ID does not already exist in the current context*/
@@ -446,6 +446,8 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   }
   
   m->result = q2;
+
+
 }
 
 
@@ -453,23 +455,12 @@ expr_val get_literal(literal l){
   expr_val res;
   res.result.type = QO_CST;	res.type = l.type;	res.result.u.cst = l.intval; 
 
-  // TO DO REVOIR CETTE PARTIE, LA METTRE DANS IF PEUT ETRE
-  if(l.type == BOOL){
-    Ht_item* item = new_temp(BOOL);
-    quadop q1,q2; q2.type = QO_EMPTY;	q1.type = QO_TMP; 	q1.u.offset = 0;
-    gencode(q1,q2,q2,Q_DECL,NULL,-1, NULL);
-
-    quadop qo; qo.type = QO_EMPTY; 	q2.type = QO_CST; 	q2.u.cst = l.intval;	
-    gencode(q1, q2, q2, Q_AFF, NULL, -1, NULL);
-    q2.u.cst = 1;
-    res.t = crelist(nextquad); 	gencode(qo, q1, q2, Q_EQ, NULL, -1, NULL);
-    res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-  }
+  if(l.type == BOOL){ res.t = NULL; res.f = NULL; }
   return res;								
 }
 
-expr_val gen_global_scalar(location l, item_table* val){
-    expr_val res;
+expr_val gen_global_scalar(location l, item_table* val) {
+  expr_val res;
     quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
     q1.u.global.name = malloc(strlen(l.stringval)+1);
     strcpy(q1.u.global.name, l.stringval);	 q1.u.global.size = 4;
@@ -483,6 +474,7 @@ expr_val gen_global_scalar(location l, item_table* val){
     res.type = val->item->value;
     res.result = qo;
     return res;
+
 }
 
 char* verify_location_access(location l, item_table* val){
@@ -505,9 +497,10 @@ expr_val gen_access_tab(location l, item_table *val){
   quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.offset = 0;
   gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
 
-    if(l.index.type == QO_ID || l.index.type == QO_TMP){
+  if(l.index.type == QO_ID || l.index.type == QO_TMP){
     item_table *val = lookup(l.index_name);
     l.index.u.offset = offset(val);}
+
   gencode(q1, qo, l.index, Q_ACCESTAB, NULL, -1, NULL); 	res.result = q1; 
   res.stringval = malloc(strlen(item->key)+1); strcpy(res.stringval, item->key);
 
@@ -519,11 +512,7 @@ expr_val get_local_id(location l, item_table *val){
   quadop qo; 	qo.type = QO_ID; 	qo.u.offset = offset(val); 	res.result = qo;
   res.type = val->item->value; 	res.stringval = malloc(strlen(l.stringval)+1);
   strcpy(res.stringval, l.stringval); 
-  if(res.type == BOOL){
-    quadop q1, q2; 	q1.type = QO_CST; 	q1.u.cst = 1; 	q2.type = QO_EMPTY;
-    res.t = crelist(nextquad); 	gencode(q2, qo, q1, Q_EQ, NULL, -1, NULL);
-    res.f = crelist(nextquad); 	gencode(q2, q2, q2, Q_GOTO, NULL, -1, NULL);
-    }
+  if(res.type == BOOL){  res.t = NULL; res.f = NULL; }
   return res;
 }
 
@@ -664,6 +653,7 @@ void complete_for_block(expr_val *statement, char* counter, expr_val b, int mark
 }
 
 param copy_method_call_arg(expr_val expr, param list){
+
   param p = (param) malloc(sizeof(struct param));
 
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP){
@@ -672,9 +662,17 @@ param copy_method_call_arg(expr_val expr, param list){
     p->stringval = malloc(strlen(expr.stringval)+1);
     strcpy(p->stringval, expr.stringval);
   }
+  else if(expr.result.type == QO_GOTO){
+    expr = goto_to_val(expr);
+    p->stringval = malloc(strlen(expr.stringval)+1);
+    strcpy(p->stringval, expr.stringval);
+  }
+  
   p->type = expr.type; p->arg = expr.result; p->next = list; 	p->byAddress = 0;
   if(expr.type == BOOL) { p->t = expr.t; p->f = expr.f;}
   return p;
+
+  
 }
 
 param get_arg_by_address(char* str, param list, item_table* val){
@@ -693,3 +691,155 @@ param get_arg_by_address(char* str, param list, item_table* val){
   p->type = val->item->value; p->arg = qo; p->next = list; p->byAddress = 1;
   return p;
 }
+
+expr_val val_to_goto(expr_val expr){
+
+  if(expr.result.type == QO_ID || expr.result.type == QO_TMP) {
+    item_table *val = lookup(expr.stringval);
+    expr.result.u.offset = offset(val);
+  }
+
+  quadop qo, q; q.type = QO_EMPTY;  qo.type = QO_CST; qo.u.cst = true; 
+
+  expr.t = crelist(nextquad);
+  gencode(q, expr.result, qo, Q_EQ, NULL, -1, NULL);
+
+  expr.f = crelist(nextquad);
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+
+ 
+
+  expr.result.type = QO_GOTO;
+  return expr;
+}
+
+
+expr_val goto_to_val (expr_val expr) {
+
+  expr_val res;
+  quadop q, qo, q1; q.type = QO_EMPTY; qo.type = QO_TMP; qo.u.offset = 0; q1.type = QO_CST; q1.u.cst = true;
+  Ht_item* tmp = new_temp(expr.type);
+  res.stringval = malloc(strlen(tmp->key)+1);
+  strcpy(res.stringval, tmp->key);
+
+  
+  complete(expr.t, nextquad);
+  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
+  gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
+  
+
+  res.t = crelist(nextquad);
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+
+  q1.u.cst = false;
+  complete(expr.f, nextquad);
+  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
+  gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
+
+  res.result = qo; res.type = expr.type;
+
+  return res;
+}
+
+
+expr_val not_op(expr_val expr){
+
+  expr_val res; res.type = BOOL;
+  Ht_item* item = new_temp(BOOL);
+
+  quadop qo, q1, q2; q2.type = QO_EMPTY; qo.type = QO_TMP;  qo.u.offset = 0; 	q1.type = QO_CST; 	q1.u.cst = true;	
+
+  gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL);
+  
+  if(expr.result.type == QO_ID || expr.result.type == QO_TMP){
+    item_table *val = lookup(expr.stringval);
+    expr.result.u.offset = offset(val);
+  }
+
+  gencode(qo, q1, expr.result, Q_SUB, NULL, -1, NULL);
+  res.result = qo;
+
+  res.stringval = malloc(strlen(item->key)+1);
+  strcpy(res.stringval, item->key);
+
+  return res;
+}
+
+expr_val pop_if_tmp(int nb, expr_val expr){
+  quadop qo; qo.type = QO_EMPTY;
+  complete(expr.t, nextquad); gen_q_pop(nb*4); 
+  expr.t = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+  
+  complete(expr.f, nextquad); gen_q_pop(nb*4); 
+  expr.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
+  return expr;
+}
+
+// avec un peu d'optimisation..
+expr_val eqop_cst(expr_val expr1, expr_val expr2, int op){
+
+  expr_val res; res.type = BOOL; 
+  
+  if(op == Q_EQ){
+    
+    if(expr1.result.type == QO_CST) {
+      if(expr2.result.type == QO_CST){
+        if(expr1.result.u.cst == expr2.result.u.cst) {
+          res.result.type = QO_CST; res.result.u.cst = true; }
+        else { res.result.type = QO_CST; res.result.u.cst = false; }	
+      }
+      else {
+        if(expr1.result.u.cst == true)	
+          res = expr2;
+        else if(expr1.result.u.cst == false){
+          res.t = expr2.f; res.f = expr2.t; res.result.type = QO_GOTO;
+        }
+      }
+    }
+    else if(expr2.result.type == QO_CST) {
+      if(expr2.result.u.cst == true) 
+        res = expr1;
+      else if(expr2.result.u.cst == false) {
+        res.t = expr1.f; res.f = expr1.t; res.result.type = QO_GOTO;
+      }
+    }
+    // if none of the above conditions are fulfilled, we need to return it (i.e -1)
+    else {
+      res.result.type = QO_CST; res.result.u.cst = -1;
+    }
+  }
+  else if(op == Q_NEQ){
+    
+    if(expr1.result.type == QO_CST) {
+      if(expr2.result.type == QO_CST){
+        if(expr1.result.u.cst == expr2.result.u.cst) {
+          res.result.type = QO_CST; res.result.u.cst = false; }
+        else { 
+          res.result.type = QO_CST; res.result.u.cst = true; }	
+      }
+      else {
+        if(expr1.result.u.cst == false)	
+          res = expr2;
+        else if(expr1.result.u.cst == true){
+          res.t = expr2.f; res.f = expr2.t; res.result.type = QO_GOTO;
+        }
+      }
+    }
+    else if(expr2.result.type == QO_CST) {
+      if(expr2.result.u.cst == false) 
+        res = expr1; 
+      else if(expr2.result.u.cst == true) {
+        res.t = expr1.f; res.f = expr1.t;  res.result.type = QO_GOTO;
+    }
+    }
+    // if none of the above conditions are fulfilled, we need to return it (i.e -1)
+    else { 
+      res.result.type = QO_CST; res.result.u.cst = -1;
+    }
+  
+  }
+  
+  // res.type = BOOL; 
+  return res;
+}
+

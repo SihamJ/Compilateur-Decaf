@@ -1,0 +1,13 @@
+// 9.comparison - JANATI Siham 
+
+class AssociativiteEqNe2 {
+
+    void main ()
+    {
+        int x;
+        x = 17;
+        if (x == 17 != true) {WriteString ("true");} else {WriteString ("false");}
+        WriteString ("=false\n");
+    }
+
+}

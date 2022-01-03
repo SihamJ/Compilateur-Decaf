@@ -217,12 +217,28 @@ void mips_eq(char *target, char *eqL, char *eqR, char *label) {
 	fprintf(fout,"%8sbeq $t0 $t1 %s\n", "",label);
 }
 
+void mips_seq(char *target, char *eqL, char *eqR) {
+	if (strcmp("$t0", eqL))
+        mips_load_from_addr("$t0", eqL);
+    if (strcmp("$t1", eqR))
+        mips_load_from_addr("$t1", eqR);
+	fprintf(fout,"\tseq %s $t0 $t1 \n", target);
+}
+
 void mips_neq(char *target, char *neqL, char *neqR, char *label) {
 	if (strcmp("$t0", neqL))
         mips_load_from_addr("$t0", neqL);
     if (strcmp("$t1", neqR))
         mips_load_from_addr("$t1", neqR);
 	fprintf(fout,"%8sbne $t0 $t1 %s\n","", label);
+}
+
+void mips_sne(char *target, char *eqL, char *eqR) {
+	if (strcmp("$t0", eqL))
+        mips_load_from_addr("$t0", eqL);
+    if (strcmp("$t1", eqR))
+        mips_load_from_addr("$t1", eqR);
+	fprintf(fout,"\tsne %s $t0 $t1 \n",target);
 }
 
 void mips_lt(char *target, char *ltL, char *ltR, char *label) {
@@ -429,6 +445,7 @@ int mips_push_args(param p){
 		}
 		else if(p->arg.type == QO_CST)
 			mips_load_immediate("$t0", p->arg.u.cst);
+			
 		mips_push_word("$t0");
 		p = p->next;
 		size++;

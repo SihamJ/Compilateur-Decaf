@@ -39,6 +39,7 @@ void translate() {
 	fprintf(fout, "%s", MIPS_OUT_OF_BOUND);
 	fprintf(fout, "%s", MIPS_DYN_CHECK);
 	fprintf(fout, "%s", MIPS_BZERO);
+	fprintf(fout, "%s", MIPS_LIB_GET_TIME);
 
 	/* Initialiser la valeur de chaque tableau */
 	for(int i=0; i<glob_dec_count;i++){
@@ -160,6 +161,15 @@ void translate() {
 			mips_load_2args(global_code[i].op2, global_code[i].op3);
 			mips_neq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
+
+		case Q_SEQ:
+			// TODO
+			break;
+
+		case Q_SNE:
+			// TODO
+			break;
+
 		case Q_LT:
 			if(global_code[i].jump == -1){
 					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LT\n\n%s",YELLOW,NORMAL);

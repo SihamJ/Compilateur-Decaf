@@ -70,7 +70,6 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
     nextquad++;
   }
 
-
 list crelist(int addr){
   list n = (list) malloc(sizeof(struct list));
   n->addr = addr;
@@ -94,8 +93,9 @@ list concat(list n1, list n2){
 }
 
 void complete(list n, int addr){
-  while(n){
-    if(global_code[n->addr].jump == -1)
+  while(n != NULL){
+    if(n->addr < nextquad && global_code[n->addr].jump == -1)
+
         global_code[n->addr].jump = addr;
     n = n->suiv;
   }
@@ -103,7 +103,8 @@ void complete(list n, int addr){
 
 void print_globalcode(){
 
-  printf("\n%s\033[1mCode Intermediaire:%s\033[1m\n\n%6stype%12sop1%8sop2%8sop3%8soper%10slabel%4sjump%s\n___________________________________________________________________________________\n\n",CYAN,NORMAL,"","","","","","","",NORMAL);
+  printf("\n%s%sCode Intermediaire:%s\n\n%sYELLOW = Offset  %s|  %sCYAN = Constant%s\n\n%6stype%12sop1%8sop2%8sop3%8soper%10slabel%4sjump%s\n___________________________________________________________________________________\n\n",CYAN,BOLD,NORMAL,YELLOW,NORMAL,CYAN,NORMAL,"","","","","","","",NORMAL);
+  
   for (int i=0; i<nextquad; i++){
     printf("%2d",i);
     printf("%8s", get_type_oper(global_code[i].op1.type));
@@ -204,6 +205,14 @@ char *op_type(int type){
 		case Q_NEQ:
     return("NEQ");
 
+    case Q_SEQ:
+    return ("SEQ");
+    break;
+
+    case Q_SNE:
+    return ("SNE");
+    break;
+
 			break;
 		case Q_LT:
     return("LT");
@@ -269,6 +278,8 @@ char *get_type_oper(int type){
     return "GLOB";
     else if (type == QO_CSTSTR)
     return "STRING";
+  else if(type == QO_GOTO)
+    return "GOTO";
   else
     return "NONE";
 
@@ -285,6 +296,65 @@ void add_labels(){
 }
 
 
+int delete_quad(int index){
+  
+  if(index >= nextquad){
+    fprintf(stderr,"\n l'index à supprimer est supérieur à la taille du tableau\n");
+    return 0;
+  }
+  while(index < nextquad){
+    global_code[index] = global_code[index+1];
+    index++;
+  }
+  return 1;
+}
 
+void delete_quad_list(list n){
+  while(n){
+    delete_quad(n->addr);
+    n=n->suiv;
+  }
+}
 
+int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
+  if(index >= nextquad){
+    fprintf(stderr,"\nIndex de quad à remplacer vide\n");
+    return 0;
+  }
+  global_code[index].type = t;
+  global_code[index].op1 = op1;
+  global_code[index].op2 = op2;
+  global_code[index].op3 = op3;
+  global_code[index].jump = jump;
+  global_code[index].p = p;
+
+  if(label != NULL ){
+    global_code[index].label = malloc(strlen(label)+1);
+    strcpy(global_code[index].label, label);
+  }
+  return 1;
+  }
+
+// sometimes I'm good at making jokes, here is an example (or the one above):
+void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
+  
+  int i = nextquad;
+  while(i != index){
+    global_code[i] = global_code[i-1];
+    i--;
+  }
+
+  global_code[index].type = t;
+  global_code[index].op1 = op1;
+  global_code[index].op2 = op2;
+  global_code[index].op3 = op3;
+  global_code[index].jump = jump;
+  global_code[index].p = p;
+
+  if(label != NULL ){
+    global_code[index].label = malloc(strlen(label)+1);
+    strcpy(global_code[index].label, label);
+  }
+  nextquad++;
+}
 

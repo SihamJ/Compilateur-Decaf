@@ -53,7 +53,12 @@
 */
 #define MIPS_LIB_IO_READ_INT "\nReadInt:\n\tli $v0, 5\n\tsyscall\n\tjr $ra\n"
 
-
+/**
+ * Gets system time
+ * $a0 = low order 32 bits of system time
+ * $a1 = high order 32 bits of system time. 
+ */
+#define MIPS_LIB_GET_TIME "\nGetTime:\n\tli $v0, 30\n\tsyscall\n\tjr $ra\n"
 
 #define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\n\tSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
 

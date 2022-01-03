@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
         curr_context = NULL;
         str_count = 0;
         
-        //yydebug=1;
+     //   yydebug=1;
         int t = yyparse();
 
         if(t!=0)
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]){
         if(tos)
             print_stack();
         
-        if(inter)
+       // if(inter)
             print_globalcode();
 
         translate();

@@ -123,6 +123,8 @@ int offset(item_table *item);
  * @return the number of variable to pop
  */
 int pop_tmp(); 
+char* num_to_char(int nb);
+void pop_nb_tmp(int nb);
 
 param reverse_list(param p);    // not used anymore
 
