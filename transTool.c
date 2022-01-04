@@ -418,7 +418,7 @@ void mips_method_call(quad q){
 
 	// if there is a return value, we save it to the corresponding offset
 	if(q.op2.type == QO_CST){
-		fprintf(fout,"\tbeqz $v1 Quit_Program\n"); // verif dynamique for return value
+		fprintf(fout,"\tbeqz $v1 No_Return\n"); // verif dynamique for return value
 		mips_write_stack("$v0", q.op3.u.offset);
 	}
 	

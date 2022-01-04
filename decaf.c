@@ -80,7 +80,7 @@ int main(int argc, char* argv[]){
         if(tos)
             print_stack();
         
-       // if(inter)
+        if(inter)
             print_globalcode();
 
         translate();

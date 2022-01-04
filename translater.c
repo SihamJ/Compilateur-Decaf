@@ -40,7 +40,8 @@ void translate() {
 	fprintf(fout, "%s", MIPS_DYN_CHECK);
 	fprintf(fout, "%s", MIPS_BZERO);
 	fprintf(fout, "%s", MIPS_LIB_GET_TIME);
-
+	fprintf(fout, "%s", MIPS_NO_RETURN);
+	
 	/* Initialiser la valeur de chaque tableau */
 	for(int i=0; i<glob_dec_count;i++){
 		if (global_code[i].op1.u.global.type==QO_TAB)

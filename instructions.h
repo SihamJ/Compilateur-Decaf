@@ -60,7 +60,7 @@
  */
 #define MIPS_LIB_GET_TIME "\nGetTime:\n\tli $v0, 30\n\tsyscall\n\tjr $ra\n"
 
-#define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\n\tSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"Index Out Of Bound\"\n"
+#define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\n\tSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"**** Index Out Of Bound\"\nSTR_NO_RETURN: .asciiz \"**** Non void method does not reach a return statement\"\n"
 
 /**
 * Assuming the value to print is stored in the stack
@@ -74,10 +74,12 @@
  * Assuming the uppder bound of the array is in $t1
  * Called by jal when accessing tables
  */
-#define MIPS_DYN_CHECK "\nDYN_CHECK:\n\tbltz $s0 Quit_Program\n\tbge $s0 $s1 Quit_Program\n\tjr $ra\n"
+#define MIPS_DYN_CHECK "\nDYN_CHECK:\n\tbltz $s0 Out_Of_Bound\n\tbge $s0 $s1 Out_Of_Bound\n\tjr $ra\n"
 
 /* Print Error and quit program */
 #define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tla $a0 STR_DYN_CHECK\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
+
+#define MIPS_NO_RETURN "\nNo_Return:\n\tla $a0 STR_NO_RETURN\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
 
 // #define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
 

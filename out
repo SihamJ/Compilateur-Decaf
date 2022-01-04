@@ -1,0 +1,164 @@
+.data
+
+STR_TRUE: .asciiz "true"
+	STR_FALSE: .asciiz "false"
+STR_DYN_CHECK: .asciiz "**** Index Out Of Bound"
+STR_NO_RETURN: .asciiz "**** Non void method does not reach a return statement"
+	str_0: .asciiz "=5\n"
+
+.text
+
+.globl main
+
+j main
+
+WriteBool:
+	lw $a0, 0($sp)
+	beqz $a0 Load_False
+	Load_True:
+	la $a0 STR_TRUE
+	j Print_Bool
+	Load_False:
+	la $a0 STR_FALSE
+	Print_Bool:
+	li $v0 4
+	syscall
+	jr $ra
+
+ReadInt:
+	li $v0, 5
+	syscall
+	jr $ra
+
+WriteString:
+	li $v0 4
+	syscall
+	jr $ra
+
+WriteInt:
+	lw $a0, 0($sp)
+	li $v0, 1
+	syscall
+	jr $ra
+
+Quit_Program:
+	li $v0 10 
+	syscall
+
+Out_Of_Bound:
+	la $a0 STR_DYN_CHECK
+	li $v0 4
+	syscall
+	j Quit_Program
+
+DYN_CHECK:
+	bltz $s0 Out_Of_Bound
+	bge $s0 $s1 Out_Of_Bound
+	jr $ra
+
+BZero:
+	addi $s1 $s1 -1
+	sw $zero ($s0)
+	addu $s0 $s0 4
+	bgtz $s1 BZero
+	jr $ra
+
+GetTime:
+	li $v0, 30
+	syscall
+	jr $ra
+
+No_Return:
+	la $a0 STR_NO_RETURN
+	li $v0 4
+	syscall
+	j Quit_Program
+
+main:
+	move $fp $sp
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 0
+	sw $t0, 0($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 1
+	sw $t0, 0($sp)
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $t0, 10
+	sw $t0, 0($sp)
+
+label3:
+	lw $t0, 4($sp)
+	lw $t1, 0($sp)
+        bgt $t0 $t1 label0
+	lw $t0, 8($sp)
+	li $t1, 1
+	add $v0 $t0 $t1
+	sw $v0, 8($sp)
+	lw $t0, 4($sp)
+	li $t1, 5
+        beq $t0 $t1 label1
+        j label2
+
+label1:
+	li $t0, 10
+	sw $t0, 4($sp)
+	add $sp $sp 0
+	add $sp $sp 0
+
+label2:
+	lw $t0, 4($sp)
+	li $t1, 1
+	add $v0 $t0 $t1
+	sw $v0, 4($sp)
+        j label3
+
+label0:
+	add $sp $sp 8
+        j label4
+
+label4:
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 8($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_0
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	add $sp $sp 4
+
+end:
+	li $v0, 10
+	syscall
