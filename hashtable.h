@@ -48,10 +48,18 @@ typedef struct HashTable {
     LinkedList **lists;
     int max_size;                // Taille max de la TOS
     int count;                  // Nombre d'élément dans la table
-	struct HashTable *next;
-    ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...     
+	int size;                   // Taille allouée en octet
+    struct HashTable *next;
+    ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...
+    int quad_index;  
 } HashTable;
 
+
+typedef struct Tree {
+    HashTable* context;
+    HashTable* child;
+    HashTable* sibling;
+} *Tree;
 /**
  * @brief an item and the symbol table where it is located. This structure is returned by the lookup function, it serves to calculate the offset
  * of the item and to know if the item is in a global context or not.
@@ -102,7 +110,7 @@ void newname(Ht_item *item);
  * @param key is the identifier to look for
  * @return a structure which has a pointer to the Item in the TOS, and a pointer to the TOS where the item is found.
  */
-item_table *lookup(char *key);
+item_table *lookup(char *key, HashTable *ctx);
 
 /* prints the symbol table of the current context*/
 void print_ctx();
@@ -116,7 +124,7 @@ void free_stack();
  * @param item this is a structure containing a pointer to the item, and a pointer to its symbol table
  * @return the offset of the item
  */
-int offset(item_table *item);
+int offset(item_table *item, HashTable *ctx);
 
 /**
  * @brief called after an affectation to pop the temporary variables used in the evaluation of the expression

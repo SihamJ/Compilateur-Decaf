@@ -53,17 +53,19 @@
 %start program
 %%
 
-program	:  class id '{' { 	pushctx(CTX_GLOB); 
+program	:  class id '{' { 	pushctx(CTX_GLOB); tmpCount = 0; glob_context = curr_context; gen_q_push();
 							program_name = malloc(strlen($2)+1); 
 							strcpy(program_name, $2);			/* saving class name in a global variable*/
 							add_libs_to_tos(); 					/* Adding the I/O functions to the global symbol table*/
-							glob_context = curr_context;		/* glob_context will point to this context throughout the execution of this program.*/
+									/* glob_context will point to this context throughout the execution of this program.*/
 						}
 
 						
 				GLOBAL '}' { 	/* verifying that we have a main method*/
 								if( ht_search( glob_context,"main") == NULL ) {	yyerror("\nErreur: Pas de méthode main\n"); return 1; }
-								popctx();	return 0;
+								global_code[glob_context->quad_index].op1.u.cst = global_code[nextquad-1].ctx->size;
+								gen_q_pop(curr_context->size);
+									return 0;
 							}
 
 M 		:	%empty 		{	$$ = nextquad; }
@@ -106,7 +108,7 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 
 					'(' P ')' 	{	/* item_table is a structure that has a couple (Ht_item*, HashTable*),
 									returned by the function lookup(char *id) */
-									item_table* var = lookup($2);
+									item_table* var = lookup($2, curr_context);
 
 									/* item is an Ht_item, it contains the attribute p for the items of type method where we store
 									the types of parameters that the method takes.
@@ -123,18 +125,18 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 									if(!verify_returns($8.rtrn, $1)) { yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
 										
 									complete($8.next,nextquad-1); complete($8.rtrn, nextquad-1);
-									char* msg; 	if( (msg = end_func($2, curr_context->count, $5, is_returnval)) != NULL) { yyerror(msg); return 1;}
-									popctx(); 
+									char* msg; 	if( (msg = end_func($2, curr_context->count, $5, is_returnval)) != NULL) { yyerror(msg); return 1;} 
+									 popctx(); 
 								}
 						
 			/* Same as above, except the type is void. We are forced to separate them because of conflicts*/
 			|	voidtype id		{	char *msg; if((msg = add_to_tos($1, $2)) != NULL){ yyerror(msg); return 1; } } 
 							
 			'(' P ')'  block	{ 	if(!verify_returns($7.rtrn, $1)){ yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
-									item_table* var = lookup($2);	var->item->p = $5;
+									item_table* var = lookup($2, curr_context);	var->item->p = $5;
 									complete($7.next,nextquad-1);	complete($7.rtrn, nextquad-1);
 									char* msg;	if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { yyerror(msg); return 1;}
-									popctx(); 	}
+									 popctx(); 	}
 
 /* we store the parameter in the symbol table after verifications*/
 P 			:	Param 	{ $$ = $1; param p = $1;
@@ -149,10 +151,9 @@ Param		:	type id ',' Param	{ 	$$ = get_param($2, $1, $4); }
 										
 			|	type id				{	$$ = get_param($2, $1, NULL);	}
 
-block 		:	'{' { pushctx(CTX_BLOCK); } 
+block 		:	'{' { pushctx(CTX_BLOCK); gen_q_push(); } 
 
-			V S2 '}' { 	/* we retrieve the adresses of the incomplete GOTOs if they exist and pop the stack*/
-						$$ = $4;	gen_q_pop(curr_context->count * 4);   popctx(); }
+			V S2 '}' { 	$$ = pop_block($$, $4);  popctx(); }
 
 S2 			:	S 		{	$$ = $1;}
 			|	%empty 	{	$$.next = NULL; 	$$.rtrn = NULL; 	$$.brk = NULL; 	$$.cntu = NULL; }
@@ -182,7 +183,7 @@ S 			: 	S M statement 	{	complete($1.next, $2); 	$$.cntu = concat($$.cntu,$3.cnt
 
 			| 	statement		{	$$.brk = $1.brk; 	$$.next = $1.next; 	$$.cntu = $1.cntu; 	$$.rtrn = $1.rtrn; }
 
-statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval);
+statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval, curr_context);
 
 												/* Verifying types. returns NULL if successful, error msg otherwise*/
 												char *msg; if( (msg = verify_aff_types($1.type, $3.type, $2, val->item)) != NULL) { yyerror(msg); return 1; }
@@ -198,7 +199,7 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
 
 												// generates a Q_POP quad	
-												int nb = 0; if((nb = pop_tmp())>0) { gen_q_pop(nb*4);}
+												int nb = 0; // if((nb = pop_tmp())>0) { gen_q_pop(nb*4);}
 											}
 
 			/* The method call rules are defined below not here.*/
@@ -214,9 +215,11 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 				block 						{   complete($11.next, nextquad);	complete($11.cntu, nextquad);
 												$$.next = crelist($9); 	$$.next = concat($$.next, $11.brk);	$$.rtrn = $11.rtrn; 		 	
 												gen_increment_and_loopback($2, $9); complete($$.next, nextquad);	
-												gen_q_pop(curr_context->count*4);
+												gen_q_pop(curr_context->size); 
 												$$.next = crelist( nextquad);	quadop qo; qo.type = QO_EMPTY;	
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+												global_code[curr_context->quad_index].op1.u.cst = global_code[curr_context->quad_index].ctx->size; 
+												  
 												popctx(); }
 
 			|	Return return_val ';'		{	$$.rtrn = crelist(nextquad); 
@@ -251,7 +254,7 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 													$3 = val_to_goto($3); 
 												}
 
-												int nb = 0; if((nb = pop_tmp()) > 0) { $3 = pop_if_tmp(nb, $3); }
+												int nb = 0; // if((nb = pop_tmp()) > 0) { $3 = pop_if_tmp(nb, $3); }
 											} 
 			
 				M ElseBlock					{ 	complete($3.t, $6); $$.cntu = $7.cntu; $$.brk = $7.brk; $$.rtrn = $7.rtrn;
@@ -288,13 +291,13 @@ E 			:	expr ',' E 						{ 	$$.p = copy_method_call_arg($1, $3.p);	}
 
 			|	expr 							{	$$.p = copy_method_call_arg($1, NULL);	}
 
-			|	address ','	E 					{	item_table* val = lookup($1+1);
+			|	address ','	E 					{	item_table* val = lookup($1+1, curr_context);
  													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n"); return 1;  }
 													
 													$$.p = get_arg_by_address($1, $3.p, val);  
 												}
 
-			|	address							{	item_table* val = lookup($1+1);
+			|	address							{	item_table* val = lookup($1+1, curr_context);
   													if( val == NULL) {	yyerror("\nErreur: Variable non déclarée\n"); return 1; }
   													
 													$$.p = get_arg_by_address($1, NULL, val);
@@ -334,20 +337,7 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 				M expr			{	if($6.type != BOOL) { yyerror("\nErreur: OR operator with non boolean value"); return 1; }
 									$$.type = BOOL;
 									if($6.result.type != QO_GOTO) { $6 = val_to_goto($6); }
-									int nb = tmpCount - $3; 
-									if(nb > 0) { 
-										for(int i = tmpCount; i > $3; i--){
-											ht_delete(curr_context, num_to_char(i));
-										}
-										tmpCount -= nb; printf("\n%ld\n",tmpCount);
-
-										quadop q; q.type = QO_EMPTY;
-										complete($6.t, nextquad);
-										gen_q_pop(nb*4); $6.t = crelist(nextquad); gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
-										complete($6.f, nextquad); gen_q_pop(nb*4); 
-										$6.f = crelist(nextquad); gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
-										
-									}
+									
 
 									complete($1.f, $5); $$.t = concat($1.t, $6.t); 	$$.f = $6.f; $$.result.type = QO_GOTO;
 								}
@@ -357,9 +347,9 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
 
 												if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-													item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
+													$1.result.u.name = $1.stringval; }
 												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
-													item_table* val = lookup($3.stringval); $3.result.u.offset = offset(val); }
+													$3.result.u.name = $3.stringval; }
 
 												$$.t = crelist(nextquad); 	gencode(qo, $1.result, $3.result, $2, NULL, -1, NULL);
 												$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
@@ -375,10 +365,10 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 													if($5.result.type == QO_GOTO) { $5 = goto_to_val($5); complete($5.t, nextquad); }
 
 													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
-														item_table* val = lookup($5.stringval); $5.result.u.offset = offset(val); }
+														$5.result.u.name = $5.stringval; }
 
 													 if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-														item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
+														$1.result.u.name = $1.stringval; }
 
 													$$.t = crelist(nextquad); 	gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
 													$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
@@ -386,9 +376,9 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												}
 												else {
 													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
-														item_table* val = lookup($5.stringval); $5.result.u.offset = offset(val); }
+														$5.result.u.name = $5.stringval; }
 													if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-														item_table* val = lookup($1.stringval); $1.result.u.offset = offset(val); }
+														$1.result.u.name = $1.stringval; }
 
 													$$.t = crelist(nextquad); 	gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
 													$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
@@ -419,7 +409,7 @@ expr		:	expr add_op expr %prec '+'	{	if($1.type != INT || $3.type != INT){ yyerr
 												$$.result = $1.result; 		$$.type = $1.return_type; 
 												$$.stringval = malloc(strlen($1.result_id)+1); 	strcpy($$.stringval, $1.result_id);}		
 						
-			|	location 					{	item_table *val = lookup($1.stringval);
+			|	location 					{	item_table *val = lookup($1.stringval, curr_context);
 												if(val == NULL){ yyerror("\nErreur: Variable non déclarée\n"); return 1; }
 
 												if(val->table == glob_context) {

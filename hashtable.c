@@ -5,7 +5,7 @@
  HashTable* stack;
 
 unsigned long hash_function(char *str)
-{
+{   
     unsigned long i = 0;
     for (int j = 0; str[j]; j++)
         i += str[j];
@@ -348,20 +348,22 @@ void pushctx(ctx_type type){
 	temp->next = curr_context;
 	curr_context = temp;
     curr_context->type = type;
+    curr_context->quad_index = nextquad;
 }
 
 // pop current context and put it into the stack
 void popctx(){
     HashTable *temp = curr_context;
 	curr_context = curr_context->next;
-    if(stack == NULL){
+    tmpCount = 0;
+ /*   if(stack == NULL){
         stack = temp;
         stack->next = NULL;
     }
     else{
         temp->next = stack;
         stack = temp;
-    }
+    }*/
 }
 
 // called at the end of main to free the TOS stack
@@ -378,13 +380,14 @@ void newname(Ht_item *item){
     item->order = curr_context->count;
     ht_insert(curr_context, item);
     curr_context->count ++;
+    curr_context->size += item->size;
 }
 
-item_table *lookup(char *key){
+item_table *lookup(char *key, HashTable* ctx){
 
     item_table *res = (item_table*) malloc(sizeof(item_table));
 
-    for(HashTable *i=curr_context; i; i = i->next){
+    for(HashTable *i=ctx; i; i = i->next){
         if((res->item = ht_search(i, key)) != NULL){
             res->table = i;
             return res;
@@ -419,30 +422,7 @@ void print_stack(){
 }
 
 
-int offset(item_table *val){
 
-    /* for debugging*/
-    if(val->table == glob_context){
-        fprintf(stderr, "\nErreur debug: You can't retrieve offset of a global variable!\n");
-        exit(1);
-    }
-
-	int out = 0;
-
-    out = 4*(val->table->count - (val->item->order+1));
-
-    if(val->table == curr_context)
-        return out;
-
-    HashTable *temp = curr_context;
-
-    while(temp != val->table && temp != glob_context){
-        out += 4*temp->count;
-        temp = temp->next;
-    }
-
-	return out;
-}
 
 /* Dépile les variables temporaires du context courant, est appelée à la fin de l'évaluation d'une expression */
 int pop_tmp(){
@@ -490,10 +470,11 @@ Ht_item* new_temp(int type){
         a=a/10;
         cpt++;
     }
-    label = malloc(cpt+1);
-    sprintf(label, "%ld",tmpCount);
+    label = malloc(cpt+4);
+    sprintf(label, "%ldtmp",tmpCount);
 
     Ht_item *item = create_item(label, ID_TMP, type);
+    item->size = 4;
     newname(item);
     tmpCount++;
     return item;
@@ -532,4 +513,31 @@ char* get_type_global(int type){
         return "Array";
     else return "NA";
 }
+
+int offset(item_table *val, HashTable* ctx){
+
+    // /* for debugging*/
+    // if(val->table == glob_context){
+    //     fprintf(stderr, "\nErreur debug: You can't retrieve offset of a global variable!\n");
+    //     exit(1);
+    // }
+
+	int out = 0;
+
+    out = 4*(val->table->count - (val->item->order+1));
+
+    if(val->table == ctx)
+        return out;
+
+    HashTable *temp = ctx;
+
+    while(temp != val->table && temp != glob_context){
+        out += 4*temp->count;
+        temp = temp->next;
+    }
+
+	return out;
+}
+
+
 

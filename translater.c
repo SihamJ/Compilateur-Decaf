@@ -20,7 +20,7 @@ void translate() {
 	/* Déclarations des variables globales dans le segment .data  ; "global_dec_count" est un compteur du nb de declarations globales*/
 	fprintf(fout, ".data\n");
 	fprintf(fout, MIPS_MACRO); // Constant String used for 'write_bool'
-	for(int i=0; i<glob_dec_count;i++){
+	for(int i=1; i<glob_dec_count+1;i++){
 		mips_dec_global(global_code[i].op1);
 	}
 	mips_declare_strings();
@@ -63,103 +63,118 @@ void translate() {
 			break;
 		case Q_AFF:
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
-				mips_load_1args(global_code[i].op2);
-				mips_write_stack("$t0", global_code[i].op1.u.offset);
+				mips_load_1args(global_code[i].op2, global_code[i].ctx);
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+				mips_write_stack("$t0", offset(val, global_code[i].ctx));
 			}	
 			else if(global_code[i].op1.type == QO_GLOBAL){
 				if(global_code[i].op1.u.global.type == QO_SCAL){
-					mips_load_1args(global_code[i].op2);
+					mips_load_1args(global_code[i].op2, global_code[i].ctx);
 					mips_store_word("$t0", global_code[i].op1.u.global.name);
 				}
 				else if(global_code[i].op1.u.global.type == QO_TAB){
-					mips_load_2args(global_code[i].op3, global_code[i].op2);
+					mips_load_2args(global_code[i].op3, global_code[i].op2, global_code[i].ctx);
 					fprintf(fout, "\tmove $v0 $t1\n"); // t1 is the value to store, we save it in v0 before DYNAMIC CHECK.
 					mips_tab_put_IdxByReg("$v0", global_code[i].op1.u.global.name,"$t0"); //t0 is the offset
 				}
 			}
 			break;
 		case Q_AFFADD:
-			mips_load_2args(global_code[i].op1, global_code[i].op2);
+			mips_load_2args(global_code[i].op1, global_code[i].op2, global_code[i].ctx);
 			mips_sum("$v0", "$t0", "$t1");
 			// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table *val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
 			break;
 		case Q_AFFSUB:
-			mips_load_2args(global_code[i].op1, global_code[i].op2);
+			mips_load_2args(global_code[i].op1, global_code[i].op2, global_code[i].ctx);
 			mips_sub("$v0", "$t0", "$t1");
 			// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
 			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_sum("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
         	break;
         case Q_SUB:
         	// These two offsets should be deduced/implied in a proper way
-        	mips_load_2args(global_code[i].op2, global_code[i].op3);
+        	mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_sub("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
         	break;
         case Q_MUL:
         	// These two offsets should be deduced/implied in a proper way
-        	mips_load_2args(global_code[i].op2, global_code[i].op3);
+        	mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
         	mips_mult("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
         	break;
         case Q_DIV:
         	// These two offsets should be deduced/implied in a proper way
-        	mips_load_2args(global_code[i].op2, global_code[i].op3);
+        	mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_div("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
 			break;
         case Q_MOD:
         	// These two offsets should be deduced/implied in a proper way
-        	mips_load_2args(global_code[i].op2, global_code[i].op3);
+        	mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
         	mips_mod("$v0", "$t0", "$t1");
         	// I push the result in $vo directly, but we might need to store the result to q0's memory
-			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP)
-        		mips_write_stack("$v0",global_code[i].op1.u.offset);
+			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+        		mips_write_stack("$v0",offset(val, global_code[i].ctx));
+			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
 				mips_store_word("$v0",global_code[i].op1.u.global.name);
         	break;
 		case Q_EQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete EQ\n\n%s",YELLOW,NORMAL);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete EQ\n\n%s",RED,NORMAL);
 					exit(0);
 				}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_eq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_NEQ:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete NEQ\n\n%s",YELLOW,NORMAL);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete NEQ\n\n%s",RED,NORMAL);
 					exit(0);
 				}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_neq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 
@@ -173,47 +188,48 @@ void translate() {
 
 		case Q_LT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LT\n\n%s",YELLOW,NORMAL);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LT\n\n%s",RED,NORMAL);
 					exit(0);
 				}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_lt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GT:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GT\n\n%s",YELLOW,NORMAL);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GT\n\n%s",RED,NORMAL);
 					exit(0);
 				}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_gt("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_LEQ:
 			if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LEQ\n\n%s",YELLOW,NORMAL);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LEQ\n\n%s",RED,NORMAL);
 				exit(0);
 			}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_leq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GEQ:
 		if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GEQ\n\n%s",YELLOW,NORMAL);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GEQ\n\n%s",RED,NORMAL);
 				exit(0);
 			}
-			mips_load_2args(global_code[i].op2, global_code[i].op3);
+			mips_load_2args(global_code[i].op2, global_code[i].op3, global_code[i].ctx);
 			mips_geq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 		case Q_GOTO:
 			if(global_code[i].jump == -1){
-					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GOTO\n\n%s",YELLOW,NORMAL);
+					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete GOTO\n\n%s",RED,NORMAL);
 					exit(0);
 				}
 			mips_jump(global_code[global_code[i].jump].label);
 			break;
 		case Q_ACCESTAB:
-			mips_load_1args(global_code[i].op3);
+			mips_load_1args(global_code[i].op3, global_code[i].ctx);
 			mips_tab_get_IdxByReg("$v0", global_code[i].op2.u.global.name, "$t0");
-			mips_write_stack("$v0", global_code[i].op1.u.offset);
+			item_table* val = lookup(global_code[i].op1.u.name, global_code[i].ctx);
+			mips_write_stack("$v0", offset(val, global_code[i].ctx));
 			break;
 
 		case Q_METHODCALL:
@@ -224,7 +240,7 @@ void translate() {
 			break;
 		case Q_RETURN:
 			if(global_code[i].jump == -1){
-				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete RETURN\n\n%s",YELLOW,NORMAL);
+				fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete RETURN\n\n%s",RED,NORMAL);
 				exit(0);
 			}
 			mips_return(global_code[i]);
@@ -234,6 +250,9 @@ void translate() {
 			break;
 		case Q_ENDFUNC:
 			mips_end_func(global_code[i]);
+		case Q_PUSH:
+			mips_push_stack(global_code[i].op1.u.cst);
+			mips_initialise_stack(global_code[i].op1.u.cst);
 			break;
         default:
         	break;

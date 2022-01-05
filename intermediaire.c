@@ -8,6 +8,8 @@ size_t glob_dec_count;
 size_t str_count;
 string_labels str_labels[100];
 
+
+
 char* new_label(){
   char* label;
   int a = labelCount;
@@ -62,6 +64,7 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
   global_code[nextquad].op3 = op3;
   global_code[nextquad].jump = jump;
   global_code[nextquad].p = p;
+  global_code[nextquad].ctx = curr_context;
 
   if(label != NULL ){
     global_code[nextquad].label = malloc(strlen(label)+1);
@@ -118,7 +121,7 @@ void print_globalcode(){
     else if(global_code[i].op1.type == QO_EMPTY)
       printf("%14s","-");
     else 
-      printf("%s%s%14d%s",YELLOW,BOLD,global_code[i].op1.u.offset,NORMAL);
+      printf("%s%s%14s%s",YELLOW,BOLD,global_code[i].op1.u.name,NORMAL);
     
 
     if(global_code[i].op2.type == QO_CST)
@@ -130,7 +133,7 @@ void print_globalcode(){
     else if(global_code[i].op2.type == QO_EMPTY)
       printf("%10s","-");
     else 
-      printf("%s%s%10d%s",YELLOW,BOLD,global_code[i].op2.u.offset,NORMAL);
+      printf("%s%s%10s%s",YELLOW,BOLD,global_code[i].op2.u.name,NORMAL);
     
 
     if(global_code[i].op3.type == QO_CST)
@@ -142,7 +145,7 @@ void print_globalcode(){
     else if(global_code[i].op3.type == QO_EMPTY)
       printf("%10s","-");
     else 
-      printf("%s%s%10d%s",YELLOW,BOLD,global_code[i].op3.u.offset,NORMAL);
+      printf("%s%s%10s%s",YELLOW,BOLD,global_code[i].op3.u.name,NORMAL);
     
     
     printf("%14s",op_type(global_code[i].type));
@@ -260,6 +263,10 @@ char *op_type(int type){
 
     case Q_POP:
     return ("POP STACK");
+    break;
+
+    case Q_PUSH:
+    return ("PUSH CTX");
     break;
 
     default:

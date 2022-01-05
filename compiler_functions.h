@@ -70,6 +70,7 @@ void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr);
 char* for_declare(char* counter_id, expr_val expr1, expr_val expr2);
 expr_val get_max(char *counter_name, expr_val expr);
 void gen_q_pop(int count);
+void gen_q_push();
 void gen_test_counter(char *counter_name, expr_val expr);
 void gen_increment_and_loopback(char* counter_name, int jump);
 void get_write_string_args(char *label, char*value);
@@ -100,6 +101,6 @@ expr_val goto_to_val(expr_val expr);
 
 expr_val not_op(expr_val expr);
 expr_val pop_if_tmp(int nb, expr_val expr);
-
+expr_val pop_block(expr_val block, expr_val statement);
 expr_val eqop_cst(expr_val expr1, expr_val expr2, int op);
 #endif

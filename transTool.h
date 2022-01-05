@@ -50,9 +50,9 @@ void mips_read_tmp(char *tmp, char *target);
 
 void mips_write_tmp(char *tmp, char *target);
 
-void mips_load_1args(quadop op);
+void mips_load_1args(quadop op, HashTable *ctx);
 
-void mips_load_2args( quadop op1, quadop op2);
+void mips_load_2args( quadop op1, quadop op2, HashTable *ctx);
 
 void mips_beqz(char *target);
 
@@ -142,7 +142,7 @@ void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
 void mips_pop_stack(int offset);
 void mips_method_call(quad q);
 void mips_end_func(quad q);
-int mips_push_args(param p);
+int mips_push_args(param p, HashTable *ctx);
 void mips_return(quad q);
 void mips_declare_strings();
 
@@ -155,5 +155,8 @@ void mips_tab_get(char *buffer_reg, char *tab_name, int offset);
  * @param offset The register containing the offset
  */
 void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
+
+void mips_push_stack(int size);
+void mips_initialise_stack(int size);
 
  #endif

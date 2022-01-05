@@ -20,6 +20,7 @@ char* add_to_tos(int type, char *name ){
     
     /* we store the method in the symbol table*/
     Ht_item *item = create_item(name, ID_METHOD, type);
+    item->size = 0;
     newname(item);
 
     /* The parameters declaration within a method has its specific context
@@ -59,7 +60,7 @@ char* end_func(char *name, int ctx_count, param p, int is_returnval){
     qo.type = QO_CST;
     qo.u.cst = is_returnval;
     char *label = new_endfunc_label(name);
-    if(lookup(label)!=NULL)
+    if(lookup(label, curr_context)!=NULL)
       label = new_label();
     global_code[nextquad-1].label = label;
     global_code[nextquad-1].type = Q_ENDFUNC;
@@ -124,12 +125,9 @@ char* var_declare(declaration *dec, int type){
     
     if(!strcmp(pt->name, next_label_name()))
       labelCount++;
+    Ht_item *item = create_item(pt->name, ID_VAR, type); 
 
-    qo.u.offset = 0;
-    quadop q; q.type = QO_EMPTY;
-    gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
-
-    Ht_item *item = create_item(pt->name, ID_VAR, type);
+    item->size = 4;
     newname(item);
     pt = pt->suiv;
   }
@@ -181,9 +179,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
 
   if(val->table == glob_context) {
     qo->type = QO_GLOBAL;
-    qo->u.global.name = malloc(strlen(l.stringval)+1);
-    strcpy(qo->u.global.name, l.stringval);
-    qo->u.global.size = val->item->size;
+    qo->u.global.name = l.stringval;
 
     if(l.type == ID_VAR) {
       qo->u.global.type = QO_SCAL;
@@ -192,8 +188,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
     else if(l.type == ID_TAB) {
       qo->u.global.type = QO_TAB;
       if(l.index.type == QO_ID || l.index.type == QO_TMP){
-        item_table* val = lookup(l.index_name);
-        l.index.u.offset = offset(val);
+        l.index.u.name = l.index_name;
       }
       *q1 = l.index;
     }
@@ -201,7 +196,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
   /* If location is a local variable, we retrieve the offset from TOS*/
   else {
     qo->type = QO_ID;
-    qo->u.offset = offset(val);
+    qo->u.name = val->item->key;
     q1->type = QO_EMPTY;
   }
 }
@@ -243,7 +238,7 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 
   /* The loop counter has its own context*/
   pushctx(CTX_FOR);
-
+  gen_q_push();
   /* Verifying types */
   if(expr1.type != INT || expr2.type != INT)
     return "\nErreur: le compteur de boucle doit être de type INT\n";
@@ -253,17 +248,18 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
     labelCount++;
 
   /* We declare the loop counter id, push it to the symbol table, and store the initial value expr1 in it*/
-  quadop qo;
-  qo.type = QO_ID;
-  qo.u.offset = 0; quadop q; q.type = QO_EMPTY;
-  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
+  // gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
   Ht_item *item = create_item(counter_id, ID_VAR, INT);
+  item->size = 4;
   newname(item);
 
+  quadop qo;
+  qo.type = QO_ID;
+  qo.u.name = item->key; quadop q; q.type = QO_EMPTY;
+
   if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP){
-    item_table* val = lookup(expr1.stringval);
-    expr1.result.u.offset = offset(val);
+    expr1.result.u.name = expr1.stringval;
   }
 
   gencode(qo, expr1.result, expr1.result, Q_AFF, NULL, -1, NULL); 
@@ -275,19 +271,20 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 // name of the loop counter.
 expr_val get_max(char *counter_name, expr_val expr){
   
-  quadop qo;
-  qo.type = QO_ID;
-  qo.u.offset = 0; quadop q; q.type = QO_EMPTY;
-  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
+  
+  // gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
   char *name = malloc(strlen(counter_name)+5);
   snprintf(name, strlen(counter_name)+5, "%s%s",counter_name, "_max");
   Ht_item *item = create_item(name, ID_VAR, INT);
+  item->size = 4;
   newname(item);
+  quadop qo;
+  qo.type = QO_ID;
+  qo.u.name = item->key; quadop q; q.type = QO_EMPTY;
 
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP ){
-    item_table* val = lookup(expr.stringval);
-    expr.result.u.offset = offset(val);
+    expr.result.u.name = expr.stringval;
   }
   gencode(qo, expr.result, expr.result, Q_AFF, NULL, -1, NULL); 
 
@@ -307,26 +304,23 @@ void gen_q_pop(int count){
 }
 
 void gen_test_counter(char *counter_name, expr_val max){
-  item_table* val = lookup(counter_name);
   quadop qo,q1,q2;
   q1.type = QO_EMPTY;
   qo.type = QO_ID;
-  qo.u.offset = offset(val);
+  qo.u.name = counter_name;
 
-  val = lookup(max.stringval);
-  max.result.u.offset = offset(val);
+  max.result.u.name = max.stringval;
   gencode(q1, qo, max.result, Q_GT, NULL, -1 , NULL);  
 }
 
 void gen_increment_and_loopback(char* counter_name, int jump){
   /* gencode to increment the loop counter*/
-  item_table* val = lookup(counter_name);
   quadop qo, q1;
   qo.type = QO_ID;
   q1.type = QO_CST;
   q1.u.cst = 1;
   /* offset of id is 0 because it's the only variable in the context at this point */
-  qo.u.offset = offset(val);
+  qo.u.name = counter_name;
   gencode(qo, qo, q1, Q_ADD, NULL, -1, NULL);
 
   qo.type = QO_EMPTY;
@@ -382,7 +376,7 @@ int verify_param(param p1, param p2){
 
 char* verify_and_get_type_call(char *id, param p, method_call *m){
 
-  item_table *val = lookup(id);
+  item_table *val = lookup(id, curr_context);
 
   if(val == NULL) 
     return "\nErreur: Méthode non déclarée\n"; 
@@ -413,13 +407,11 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   strcpy(qo.u.string_literal.label, id);
 
   if(m->return_type != VOIDTYPE) { 
-    q1.type = QO_CST; q1.u.cst = m->return_type; 
-    q2.type = QO_TMP; q2.u.offset = 0;
+    
     Ht_item* tmp = new_temp(INT);
-    m->result_id = malloc(strlen(tmp->key)+1);
-    strcpy(m->result_id, tmp->key);
-    quadop q; q.type = QO_EMPTY;
-    gencode(q2, q, q, Q_DECL, NULL, -1, NULL);
+    q1.type = QO_CST; q1.u.cst = m->return_type; 
+    q2.type = QO_TMP; q2.u.name = tmp->key;
+    m->result_id = tmp->key;
    }
   
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
@@ -428,13 +420,8 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
 
     param p = E->p;
     while(p){
-      if(p->type == BOOL){
-        if(p->t != NULL) complete(p->t, nextquad);    // TO DO: A REVOIR
-        if(p->f != NULL) complete(p->f, nextquad);    // TO DO: A REVOIR
-      }
       if( p->arg.type == QO_ID || p->arg.type == QO_TMP){
-        item_table* val = lookup(p->stringval);
-        p->arg.u.offset = offset(val);
+        p->arg.u.name = p->stringval;
         }
        
       p = p->next;
@@ -465,9 +452,10 @@ expr_val gen_global_scalar(location l, item_table* val) {
     q1.u.global.name = malloc(strlen(l.stringval)+1);
     strcpy(q1.u.global.name, l.stringval);	 q1.u.global.size = 4;
     q2.type = QO_EMPTY;
-    quadop qo; qo.type = QO_TMP; qo.u.offset = 0; 
+    
     Ht_item* item = new_temp(val->item->value);
-    gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL); 
+    quadop qo; qo.type = QO_TMP; qo.u.name = item->key;
+    // gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL); 
     gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
     res.stringval = malloc(strlen(item->key)+1);
     strcpy(res.stringval, item->key);
@@ -494,12 +482,11 @@ expr_val gen_access_tab(location l, item_table *val){
   strcpy(qo.u.global.name, l.stringval); 	qo.u.global.size = val->item->size;
 
   Ht_item* item = new_temp(INT);
-  quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.offset = 0;
-  gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
+  quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.name = item->key;
+  // gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
 
   if(l.index.type == QO_ID || l.index.type == QO_TMP){
-    item_table *val = lookup(l.index_name);
-    l.index.u.offset = offset(val);}
+    l.index.u.name = l.index_name; }
 
   gencode(q1, qo, l.index, Q_ACCESTAB, NULL, -1, NULL); 	res.result = q1; 
   res.stringval = malloc(strlen(item->key)+1); strcpy(res.stringval, item->key);
@@ -509,7 +496,7 @@ expr_val gen_access_tab(location l, item_table *val){
 
 expr_val get_local_id(location l, item_table *val){
   expr_val res;
-  quadop qo; 	qo.type = QO_ID; 	qo.u.offset = offset(val); 	res.result = qo;
+  quadop qo; 	qo.type = QO_ID; 	qo.u.name =  l.stringval; 	res.result = qo;
   res.type = val->item->value; 	res.stringval = malloc(strlen(l.stringval)+1);
   strcpy(res.stringval, l.stringval); 
   if(res.type == BOOL){  res.t = NULL; res.f = NULL; }
@@ -518,13 +505,13 @@ expr_val get_local_id(location l, item_table *val){
 
 expr_val unaire(expr_val expr){
   expr_val res;
-  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.offset = 0;
+  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.name = item->key;
   quadop q1; q1.type = QO_EMPTY;
-  gencode(qo, q1, q1, Q_DECL, NULL,-1, NULL);
+  // gencode(qo, q1, q1, Q_DECL, NULL,-1, NULL);
   res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
 
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP) {
-    item_table* val; val = lookup(expr.stringval); expr.result.u.offset = offset(val); }
+    expr.result.u.name = expr.stringval; }
 
   q1.type = QO_CST; 	q1.u.cst = 0;
   gencode(qo, q1, expr.result, Q_SUB, NULL,-1, NULL); 	res.result = qo;
@@ -541,11 +528,11 @@ expr_val eqop(expr_val expr1, int op, expr_val expr2){
   }
 
   if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
-    item_table* val = lookup(expr1.stringval);
-    expr1.result.u.offset = offset(val); }
+
+    expr1.result.u.name = expr1.stringval; }
   if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
-    item_table* val = lookup(expr2.stringval);
-    expr2.result.u.offset = offset(val); }
+
+    expr2.result.u.name =  expr2.stringval; }
 
   res.t = crelist(nextquad); 	gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL);
   res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
@@ -559,11 +546,11 @@ expr_val oprel(expr_val expr1, int op, expr_val expr2){
   quadop qo; 	qo.type = QO_EMPTY; 	qo.u.cst = 0;
 
   if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
-    item_table* val = lookup(expr1.stringval);
-    expr1.result.u.offset = offset(val); }
+
+    expr1.result.u.name = expr1.stringval; }
   if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
-    item_table* val = lookup(expr2.stringval);
-    expr2.result.u.offset = offset(val); }
+
+    expr2.result.u.name = expr2.stringval; }
 
   res.t = crelist(nextquad); 	gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL);
   res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
@@ -571,62 +558,60 @@ expr_val oprel(expr_val expr1, int op, expr_val expr2){
 
 expr_val mul(expr_val expr1, int op, expr_val expr2){
   expr_val res;
-  res.type = INT;	 Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.offset = 0;
+  res.type = INT;	 Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.name = item->key;
 
-  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
-
+  res.stringval = item->key;
+  
   if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
-    item_table* val; val = lookup(expr1.stringval); expr1.result.u.offset = offset(val); 	}
+    expr1.result.u.name = expr1.stringval; 	}
   if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
-    item_table* val; val = lookup(expr2.stringval); expr2.result.u.offset = offset(val); }
+     expr2.result.u.name = expr2.stringval; }
+
   quadop q1; q1.type = QO_EMPTY;
-  gencode(qo, q1, q1, Q_DECL, NULL, -1, NULL);
   gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL); 	res.result = qo;
   return res;
 }
 
 expr_val add(expr_val expr1, int op, expr_val expr2){
   expr_val res;
-  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.offset = 0;
+  res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.name = item->key;
 
-  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
+  res.stringval = item->key;
 
   if(expr1.result.type == QO_ID || expr1.result.type == QO_TMP) {
-    item_table* val; val = lookup(expr1.stringval); expr1.result.u.offset = offset(val); }
+    expr1.result.u.name = expr1.stringval; }
   if(expr2.result.type == QO_ID || expr2.result.type == QO_TMP) {
-    item_table* val; val = lookup(expr2.stringval); expr2.result.u.offset = offset(val); }
+    expr2.result.u.name = expr2.stringval; }
   quadop q1; q1.type = QO_EMPTY;
-  gencode(qo,q1,q1,Q_DECL,NULL,-1, NULL);
-  gencode(qo,expr1.result,expr2.result,op,NULL,-1, NULL); res.result = qo;
+  gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL); res.result = qo;
   return res;
 }
 
 void gen_index_access_tab(location *res, char* name, expr_val index){
 
-  res->type = ID_TAB; res->stringval = malloc(strlen(name)+1);
-  strcpy(res->stringval, name); res->index = index.result; 
+  res->type = ID_TAB; res->stringval = name; res->index = index.result; 
 
   if(index.result.type == QO_TMP) {
-    item_table *val = lookup(index.stringval);
-    index.result.u.offset = offset(val); 
-    quadop qo, q1; qo.type = QO_CST; qo.u.cst = 4;
+    index.result.u.name = index.stringval;
+    quadop qo; qo.type = QO_CST; qo.u.cst = 4;
     gencode(index.result, index.result, qo, Q_MUL, NULL, -1, NULL);
-    res->index_name = malloc(strlen(index.stringval)+1);	strcpy(res->index_name, index.stringval); 
+    res->index.type = QO_TMP;
+    res->index_name = index.stringval; 
     res->index = index.result;
   }
   else if(index.result.type == QO_ID){
-    quadop qo;	qo.type = QO_TMP;	qo.u.offset = 0;	Ht_item *item = new_temp(INT);
-    quadop q1;	q1.type = QO_EMPTY;
-    gencode(qo, q1, q1, Q_DECL, NULL, -1, NULL);
-    item_table *val = lookup(index.stringval);
-    index.result.u.offset = offset(val);
-    gencode(qo, index.result, q1, Q_AFF, NULL, -1, NULL);
-    q1.type = QO_CST; q1.u.cst = 4;
-    gencode(qo, qo, q1, Q_MUL, NULL, -1, NULL);
-    res->index_name = malloc(strlen(item->key)+1);	strcpy(res->index_name, item->key); 
+    Ht_item *item = new_temp(INT);
+    quadop qo;	qo.type = QO_TMP;	qo.u.name = item->key;
+    quadop q1;	q1.type = QO_CST; q1.u.cst = 4;
+
+    index.result.u.name = index.stringval;
+    gencode(qo, index.result, q1, Q_MUL, NULL, -1, NULL);
+    res->index.type = QO_TMP;
+    res->index_name = item->key; 
     res->index = qo;
   }
   else if(index.result.type == QO_CST){
+    res->index.type = QO_CST;
     res->index.u.cst = 4*index.result.u.cst;
   }						
 }
@@ -657,15 +642,14 @@ param copy_method_call_arg(expr_val expr, param list){
   param p = (param) malloc(sizeof(struct param));
 
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP){
-    item_table* val = lookup(expr.stringval); 
-    expr.result.u.offset = offset(val);
-    p->stringval = malloc(strlen(expr.stringval)+1);
-    strcpy(p->stringval, expr.stringval);
+    expr.result.u.name = expr.stringval;
+    p->stringval = expr.stringval;
   }
   else if(expr.result.type == QO_GOTO){
     expr = goto_to_val(expr);
-    p->stringval = malloc(strlen(expr.stringval)+1);
-    strcpy(p->stringval, expr.stringval);
+    complete(expr.t, nextquad);
+    expr.result.u.name = expr.stringval;
+    p->stringval = expr.stringval;
   }
   
   p->type = expr.type; p->arg = expr.result; p->next = list; 	p->byAddress = 0;
@@ -685,7 +669,7 @@ param get_arg_by_address(char* str, param list, item_table* val){
     qo.type = QO_GLOBAL; qo.u.global.name = name; qo.u.global.type = QO_SCAL;
   }
   else{
-    qo.type = QO_ID; qo.u.offset = offset(val);
+    qo.type = QO_ID; qo.u.name = name;
   }
   p->stringval = name;
   p->type = val->item->value; p->arg = qo; p->next = list; p->byAddress = 1;
@@ -695,8 +679,8 @@ param get_arg_by_address(char* str, param list, item_table* val){
 expr_val val_to_goto(expr_val expr){
 
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP) {
-    item_table *val = lookup(expr.stringval);
-    expr.result.u.offset = offset(val);
+
+    expr.result.u.name = expr.stringval;
   }
 
   quadop qo, q; q.type = QO_EMPTY;  qo.type = QO_CST; qo.u.cst = true; 
@@ -716,15 +700,14 @@ expr_val val_to_goto(expr_val expr){
 
 expr_val goto_to_val (expr_val expr) {
 
-  expr_val res;
-  quadop q, qo, q1; q.type = QO_EMPTY; qo.type = QO_TMP; qo.u.offset = 0; q1.type = QO_CST; q1.u.cst = true;
-  Ht_item* tmp = new_temp(expr.type);
+  expr_val res; Ht_item* tmp = new_temp(expr.type);
+  quadop q, qo, q1; q.type = QO_EMPTY; qo.type = QO_TMP; qo.u.name = tmp->key; q1.type = QO_CST; q1.u.cst = true;
+  
   res.stringval = malloc(strlen(tmp->key)+1);
   strcpy(res.stringval, tmp->key);
 
   
   complete(expr.t, nextquad);
-  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
   gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
   
 
@@ -733,7 +716,6 @@ expr_val goto_to_val (expr_val expr) {
 
   q1.u.cst = false;
   complete(expr.f, nextquad);
-  gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
   gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
 
   res.result = qo; res.type = expr.type;
@@ -747,13 +729,11 @@ expr_val not_op(expr_val expr){
   expr_val res; res.type = BOOL;
   Ht_item* item = new_temp(BOOL);
 
-  quadop qo, q1, q2; q2.type = QO_EMPTY; qo.type = QO_TMP;  qo.u.offset = 0; 	q1.type = QO_CST; 	q1.u.cst = true;	
-
-  gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL);
+  quadop qo, q1, q2; q2.type = QO_EMPTY; qo.type = QO_TMP;  qo.u.name = item->key; 	q1.type = QO_CST; 	q1.u.cst = true;	
   
   if(expr.result.type == QO_ID || expr.result.type == QO_TMP){
-    item_table *val = lookup(expr.stringval);
-    expr.result.u.offset = offset(val);
+
+    expr.result.u.name = expr.stringval;
   }
 
   gencode(qo, q1, expr.result, Q_SUB, NULL, -1, NULL);
@@ -843,3 +823,28 @@ expr_val eqop_cst(expr_val expr1, expr_val expr2, int op){
   return res;
 }
 
+void gen_q_push(){
+  quadop qo, q; qo.type = QO_CST; q.type = QO_EMPTY;
+  gencode(qo, q, q, Q_PUSH, NULL, -1, NULL);
+}
+
+expr_val pop_block(expr_val block, expr_val statement){
+
+  block = statement; 
+
+  if(block.brk != NULL) {
+  complete(block.brk, nextquad);	gen_q_pop(curr_context->size); block.brk = crelist(nextquad); quadop q; q.type = QO_EMPTY;
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
+
+  if(block.next!= NULL) {
+  complete(block.next, nextquad); gen_q_pop(curr_context->size); block.next = crelist(nextquad); quadop q; q.type = QO_EMPTY;
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL);}
+
+  if(block.cntu != NULL){
+    complete(block.cntu, nextquad); gen_q_pop(curr_context->size); block.cntu = crelist(nextquad); quadop q; q.type = QO_EMPTY;
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+  }
+  gen_q_pop(curr_context->size);
+  global_code[curr_context->quad_index].op1.u.cst = global_code[curr_context->quad_index].ctx->size;
+  return block;
+}

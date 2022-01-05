@@ -12,7 +12,7 @@ void mips_dec_global(quadop q){
 	else{
 		// problèmes avec strcat ...
 		int size = (q.u.global.size/4)-1;
-		char str[size*3+2];
+		char* str = malloc(size*3 + 2);
 		str[0] = '0';
 		int i = 1;
 		while(i<size*3){
@@ -108,25 +108,32 @@ void mips_destroy_tmp_vals(int count) {
     tmp_reg_count-=count;
 }
 
-void mips_load_1args(quadop op) {
-	if (op.type == QO_ID || op.type == QO_TMP)
-		mips_read_stack("$t0", op.u.offset);
+void mips_load_1args(quadop op, HashTable* ctx) {
+	if (op.type == QO_ID || op.type == QO_TMP){
+		item_table* val = lookup(op.u.name, ctx);
+		mips_read_stack("$t0", offset(val, ctx));
+	}
+
 	else if (op.type == QO_GLOBAL)
 		mips_load_word("$t0", op.u.global.name);
 	else if (op.type == QO_CST)
 		mips_load_immediate("$t0", op.u.cst);
 }
 
-void mips_load_2args( quadop op1, quadop op2) {
-	if (op1.type == QO_ID || op1.type == QO_TMP)
-    	mips_read_stack("$t0", op1.u.offset);
+void mips_load_2args( quadop op1, quadop op2, HashTable* ctx) {
+	if (op1.type == QO_ID || op1.type == QO_TMP){
+		item_table* val = lookup(op1.u.name, ctx);
+		mips_read_stack("$t0", offset(val, ctx));
+	}
 	else if (op1.type == QO_GLOBAL)
 		mips_load_word("$t0", op1.u.global.name);
 	else if (op1.type == QO_CST)
 		mips_load_immediate("$t0", op1.u.cst);
 
-	if (op2.type == QO_ID || op2.type == QO_TMP)
-    	mips_read_stack("$t1", op2.u.offset);
+	if (op2.type == QO_ID || op2.type == QO_TMP){
+		item_table* val = lookup(op2.u.name, ctx);
+		mips_read_stack("$t1", offset(val, ctx));
+	}
 	else if (op2.type == QO_GLOBAL)
 		mips_load_word("$t1", op2.u.global.name);
 	else if (op2.type == QO_CST)
@@ -392,10 +399,10 @@ void mips_method_call(quad q){
 	int size = 0;
 	// push args in stack and return the number of parameters in size so we can pop them after jal
 	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString") && strcmp(q.op1.u.string_literal.label,"ReadInt"))
-		size = mips_push_args(q.p);
+		size = mips_push_args(q.p, q.ctx);
 
 	// if we are calling WriteString, the argument is in the declared labels
-	if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
+	else if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
 		fprintf(fout,"\n\tla $a0 %s\n",q.p->arg.u.string_literal.label);
 	}
 
@@ -419,28 +426,33 @@ void mips_method_call(quad q){
 	// if there is a return value, we save it to the corresponding offset
 	if(q.op2.type == QO_CST){
 		fprintf(fout,"\tbeqz $v1 No_Return\n"); // verif dynamique for return value
-		mips_write_stack("$v0", q.op3.u.offset);
+		item_table *val = lookup(q.op3.u.name, q.ctx);
+		mips_write_stack("$v0", offset(val,q.ctx));
 	}
 	
 	// if we called ReadInt, we store the value in the corresponding location
 	if(!strcmp(q.op1.u.string_literal.label,"ReadInt")){
-		if(q.p->arg.type == QO_ID)
-			mips_write_stack("$v0", q.p->arg.u.offset);
+		if(q.p->arg.type == QO_ID){
+			item_table *val = lookup(q.p->arg.u.name, q.ctx);
+			mips_write_stack("$v0", offset(val,q.ctx));
+		}
 		else if(q.p->arg.type == QO_GLOBAL && q.p->arg.u.global.type == QO_SCAL)
 			fprintf(fout,"\tsw $v0 %s\n",q.p->arg.u.global.name);
 	}
 
 }
 
-int mips_push_args(param p){
+int mips_push_args(param p, HashTable *ctx){
 	int size = 0;
 
 	while(p!=NULL){
-		if(p->arg.type == QO_ID || p->arg.type == QO_TMP)
-		// we add the offset of ra + fp + the args that were pushed before
-			mips_read_stack("$t0",p->arg.u.offset+(size+2)*4); 
+		if(p->arg.type == QO_ID || p->arg.type == QO_TMP){
+		// reading arguments from stack, we add the offset of ra + fp + the args that were pushed before
+		item_table* val = lookup(p->arg.u.name, ctx);
+			mips_read_stack("$t0",offset(val, ctx)+(size+2)*4); 
+		}
 		else if(p->arg.type == QO_GLOBAL){
-				mips_load_word("$t0", p->arg.u.global.name);
+			mips_load_word("$t0", p->arg.u.global.name);
 			// can't be an array!
 		}
 		else if(p->arg.type == QO_CST)
@@ -472,7 +484,8 @@ void mips_return(quad q){
 			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP){
-			mips_read_stack("$v0", q.op1.u.offset);
+			item_table* val = lookup(q.op1.u.name, q.ctx);
+			mips_read_stack("$v0", offset(val, q.ctx));
 			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_GLOBAL){
@@ -491,5 +504,17 @@ void mips_declare_strings(){
 	while(i<str_count){
 		mips_decl_string(str_labels[i].label, str_labels[i].value);
 		i++;
+	}
+}
+
+void mips_push_stack(int size){
+	fprintf(fout, "\tsub $sp $sp %d\n",size);
+}
+
+void mips_initialise_stack(int size){
+	size -= 4;
+	for (int i=0; i <= size; i+=4){
+		mips_load_immediate("$t0", 0);
+		mips_write_stack("$t0",i);
 	}
 }

@@ -77,8 +77,8 @@ int main(int argc, char* argv[]){
 
         add_labels();    
 
-        if(tos)
-            print_stack();
+       // if(tos)
+           // print_stack();
         
         if(inter)
             print_globalcode();
@@ -87,7 +87,7 @@ int main(int argc, char* argv[]){
         if(fout != stdout)
             fclose(fout);
 
-        free_stack();
+      //  free_stack();
         exit(EXIT_SUCCESS);
     }
 }

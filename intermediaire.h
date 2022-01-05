@@ -5,6 +5,9 @@
 #include "token.h"
 #include "text_formating.h"
 
+typedef struct HashTable HashTable;
+extern HashTable* curr_context;
+
 typedef enum quadop_type{
     QO_CST, QO_ID, QO_TMP, QO_GLOBAL, QO_EMPTY, QO_CSTSTR, QO_GOTO
   } quadop_type;
@@ -17,7 +20,7 @@ typedef enum global_type{
   } global_type;
 
 typedef enum quad_type{
-    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_SEQ, Q_SNE, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_FUNC, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP
+    Q_DECL, Q_ADD, Q_SUB, Q_MUL, Q_DIV, Q_MOD, Q_GOTO, Q_EQ, Q_NEQ, Q_LT, Q_GT, Q_LEQ, Q_GEQ, Q_SEQ, Q_SNE, Q_AFF, Q_AFFADD, Q_AFFSUB, Q_FUNC, Q_SYSCALL, Q_ENDFUNC, Q_METHODCALL, Q_ACCESTAB, Q_RETURN, Q_POP, Q_PUSH
   } quad_type;
 
 /**
@@ -41,6 +44,7 @@ typedef struct quadop {
   union {
     int cst;
     int offset;         // si ID ou TMP
+    char* name;         // si ID ou TMP
     struct global{
       char *name;
       int size;
@@ -94,6 +98,7 @@ typedef struct quad{
   char *label; // label à placer avant le quad dans le mips (pour une méthode par exemple)
   int jump; // index du label dans le tableau des quad où effectuer le GOTO, -1 si pas de jump à effectuer
   param p;  // si method call
+  struct HashTable* ctx;
 } quad;
 
 

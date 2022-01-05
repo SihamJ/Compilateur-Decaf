@@ -1,19 +1,26 @@
-class ForModificationCompteur {
+class IfEnSequence {
 
     void main ()
     {
-        int s;
-        s = 0;
-        for i = 1, 10
+        int a, b, c;
+        a = 57; b = 17; c = 42;
+        if (a > b)
         {
-            s += 1;
-            if (i == 5)
-            {
-                i = 10;
-            }
+            int t;
+            t = a; a = b; b = t;
         }
-        WriteInt (s);
-        WriteString ("=5\n");
+        if (a > c)
+        {
+            int t;
+            t = a; a = c; c = t;
+        }
+        if (b > c)
+        {
+            int t;
+            t = b; b = c; c = t;
+        }
+        WriteBool (a <= b); WriteString ("=true\n");
+        WriteBool (b <= c); WriteString ("=true\n");
     }
 
 }
