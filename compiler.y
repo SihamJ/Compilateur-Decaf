@@ -132,11 +132,12 @@ method_decl	:		type id 	{	/* We add id to the TOS and push a new context for the
 			/* Same as above, except the type is void. We are forced to separate them because of conflicts*/
 			|	voidtype id		{	char *msg; if((msg = add_to_tos($1, $2)) != NULL){ yyerror(msg); return 1; } } 
 							
-			'(' P ')'  block	{ 	if(!verify_returns($7.rtrn, $1)){ yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
-									item_table* var = lookup($2, curr_context);	var->item->p = $5;
-									complete($7.next,nextquad-1);	complete($7.rtrn, nextquad-1);
+			'(' P ')'  			{	item_table* var = lookup($2, curr_context);	var->item->p = $5; }
+			
+				block			{ 	if(!verify_returns($8.rtrn, $1)){ yyerror("\nErreur: Méthode avec faux type de retour\n"); return 1; }
+									complete($8.next,nextquad-1);	complete($8.rtrn, nextquad-1);
 									char* msg;	if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { yyerror(msg); return 1;}
-									 popctx(); 	}
+									popctx(); 	}
 
 /* we store the parameter in the symbol table after verifications*/
 P 			:	Param 	{ $$ = $1; param p = $1;
