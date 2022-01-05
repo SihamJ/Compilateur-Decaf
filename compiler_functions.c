@@ -629,10 +629,12 @@ void complete_for_block(expr_val *statement, char* counter, expr_val b, int mark
   complete(b.next, nextquad);	complete(b.cntu, nextquad);
   statement->next = crelist(marker); 	statement->next = concat(statement->next, b.brk); statement->rtrn = b.rtrn; 		 	
   gen_increment_and_loopback(counter, marker);
-  complete(statement->next, nextquad);	
-  gen_q_pop(curr_context->count*4);
-  statement->next = crelist( nextquad);
-  quadop qo; qo.type = QO_EMPTY;	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+  if(curr_context->count > 0){
+    complete(statement->next, nextquad);	
+    gen_q_pop(curr_context->count*4);
+    statement->next = crelist( nextquad);
+    quadop qo; qo.type = QO_EMPTY;	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+  }
   
 }
 
@@ -818,6 +820,7 @@ expr_val pop_block(expr_val block, expr_val statement){
 
   block = statement; 
 
+  if(curr_context->size > 0){
   if(block.brk != NULL) {
   complete(block.brk, nextquad);	gen_q_pop(curr_context->size); block.brk = crelist(nextquad); quadop q; q.type = QO_EMPTY;
   gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
@@ -829,6 +832,7 @@ expr_val pop_block(expr_val block, expr_val statement){
   if(block.cntu != NULL){
     complete(block.cntu, nextquad); gen_q_pop(curr_context->size); block.cntu = crelist(nextquad); quadop q; q.type = QO_EMPTY;
   gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+  }
   }
   gen_q_pop(curr_context->size);
   global_code[curr_context->quad_index].op1.u.cst = global_code[curr_context->quad_index].ctx->size;
