@@ -1,0 +1,971 @@
+.data
+
+STR_TRUE: .asciiz "true"
+	STR_FALSE: .asciiz "false"
+STR_DYN_CHECK: .asciiz "**** Index Out Of Bound"
+STR_NO_RETURN: .asciiz "**** Non void method does not reach a return statement"
+	in: .word 0, 0, 0, 0
+	in_SIZE: .word 16
+	t0: .word 0, 0, 0, 0
+	t0_SIZE: .word 16
+	t1: .word 0, 0, 0, 0
+	t1_SIZE: .word 16
+	str_0: .asciiz "="
+	str_1: .asciiz "\n"
+	str_2: .asciiz "="
+	str_3: .asciiz "\n"
+	str_4: .asciiz "="
+	str_5: .asciiz "\n"
+	str_6: .asciiz "="
+	str_7: .asciiz "\n"
+
+.text
+
+.globl main
+
+j main
+
+WriteBool:
+	lw $a0, 0($sp)
+	beqz $a0 Load_False
+	Load_True:
+	la $a0 STR_TRUE
+	j Print_Bool
+	Load_False:
+	la $a0 STR_FALSE
+	Print_Bool:
+	li $v0 4
+	syscall
+	jr $ra
+
+ReadInt:
+	li $v0, 5
+	syscall
+	jr $ra
+
+WriteString:
+	li $v0 4
+	syscall
+	jr $ra
+
+WriteInt:
+	lw $a0, 0($sp)
+	li $v0, 1
+	syscall
+	jr $ra
+
+Quit_Program:
+	li $v0 10 
+	syscall
+
+Out_Of_Bound:
+	la $a0 STR_DYN_CHECK
+	li $v0 4
+	syscall
+	j Quit_Program
+
+DYN_CHECK:
+	bltz $s0 Out_Of_Bound
+	bge $s0 $s1 Out_Of_Bound
+	jr $ra
+
+BZero:
+	addi $s1 $s1 -1
+	sw $zero ($s0)
+	addu $s0 $s0 4
+	bgtz $s1 BZero
+	jr $ra
+
+GetTime:
+	li $v0, 30
+	syscall
+	jr $ra
+
+No_Return:
+	la $a0 STR_NO_RETURN
+	li $v0 4
+	syscall
+	j Quit_Program
+	la $s0 in
+	li $s1 4
+	jal BZero
+	la $s0 t0
+	li $s1 4
+	jal BZero
+	li $t0, 0
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+main:
+	move $fp $sp
+	sub $sp $sp 200
+	li $t0, 0
+	sw $t0, 0($sp)
+	li $t0, 0
+	sw $t0, 4($sp)
+	li $t0, 0
+	sw $t0, 8($sp)
+	li $t0, 0
+	sw $t0, 12($sp)
+	li $t0, 0
+	sw $t0, 16($sp)
+	li $t0, 0
+	sw $t0, 20($sp)
+	li $t0, 0
+	sw $t0, 24($sp)
+	li $t0, 0
+	sw $t0, 28($sp)
+	li $t0, 0
+	sw $t0, 32($sp)
+	li $t0, 0
+	sw $t0, 36($sp)
+	li $t0, 0
+	sw $t0, 40($sp)
+	li $t0, 0
+	sw $t0, 44($sp)
+	li $t0, 0
+	sw $t0, 48($sp)
+	li $t0, 0
+	sw $t0, 52($sp)
+	li $t0, 0
+	sw $t0, 56($sp)
+	li $t0, 0
+	sw $t0, 60($sp)
+	li $t0, 0
+	sw $t0, 64($sp)
+	li $t0, 0
+	sw $t0, 68($sp)
+	li $t0, 0
+	sw $t0, 72($sp)
+	li $t0, 0
+	sw $t0, 76($sp)
+	li $t0, 0
+	sw $t0, 80($sp)
+	li $t0, 0
+	sw $t0, 84($sp)
+	li $t0, 0
+	sw $t0, 88($sp)
+	li $t0, 0
+	sw $t0, 92($sp)
+	li $t0, 0
+	sw $t0, 96($sp)
+	li $t0, 0
+	sw $t0, 100($sp)
+	li $t0, 0
+	sw $t0, 104($sp)
+	li $t0, 0
+	sw $t0, 108($sp)
+	li $t0, 0
+	sw $t0, 112($sp)
+	li $t0, 0
+	sw $t0, 116($sp)
+	li $t0, 0
+	sw $t0, 120($sp)
+	li $t0, 0
+	sw $t0, 124($sp)
+	li $t0, 0
+	sw $t0, 128($sp)
+	li $t0, 0
+	sw $t0, 132($sp)
+	li $t0, 0
+	sw $t0, 136($sp)
+	li $t0, 0
+	sw $t0, 140($sp)
+	li $t0, 0
+	sw $t0, 144($sp)
+	li $t0, 0
+	sw $t0, 148($sp)
+	li $t0, 0
+	sw $t0, 152($sp)
+	li $t0, 0
+	sw $t0, 156($sp)
+	li $t0, 0
+	sw $t0, 160($sp)
+	li $t0, 0
+	sw $t0, 164($sp)
+	li $t0, 0
+	sw $t0, 168($sp)
+	li $t0, 0
+	sw $t0, 172($sp)
+	li $t0, 0
+	sw $t0, 176($sp)
+	li $t0, 0
+	sw $t0, 180($sp)
+	li $t0, 0
+	sw $t0, 184($sp)
+	li $t0, 0
+	sw $t0, 188($sp)
+	li $t0, 0
+	sw $t0, 192($sp)
+	li $t0, 0
+	sw $t0, 196($sp)
+	li $t0, 0
+	li $t1, 11
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 in($t0)
+	li $t0, 4
+	li $t1, 12
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 in($t0)
+	li $t0, 8
+	li $t1, 21
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 in($t0)
+	li $t0, 12
+	li $t1, 22
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 in($t0)
+	li $t0, 0
+	sw $t0, 196($sp)
+	li $t0, 0
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 188($sp)
+	lw $t0, 188($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 184($sp)
+	lw $t0, 184($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 184($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 180($sp)
+	lw $t0, 180($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 176($sp)
+	lw $t0, 176($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 176($sp)
+	lw $t0, 176($sp)
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 172($sp)
+	lw $t0, 184($sp)
+	lw $t1, 172($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t0($t0)
+	li $t0, 0
+	sw $t0, 196($sp)
+	li $t0, 1
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 168($sp)
+	lw $t0, 168($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 164($sp)
+	lw $t0, 164($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 164($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 160($sp)
+	lw $t0, 160($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 156($sp)
+	lw $t0, 156($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 156($sp)
+	lw $t0, 156($sp)
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 152($sp)
+	lw $t0, 164($sp)
+	lw $t1, 152($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t0($t0)
+	li $t0, 1
+	sw $t0, 196($sp)
+	li $t0, 0
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 148($sp)
+	lw $t0, 148($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 144($sp)
+	lw $t0, 144($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 144($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 140($sp)
+	lw $t0, 140($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 136($sp)
+	lw $t0, 136($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 136($sp)
+	lw $t0, 136($sp)
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 132($sp)
+	lw $t0, 144($sp)
+	lw $t1, 132($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t0($t0)
+	li $t0, 1
+	sw $t0, 196($sp)
+	li $t0, 1
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 128($sp)
+	lw $t0, 128($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 124($sp)
+	lw $t0, 124($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 124($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 120($sp)
+	lw $t0, 120($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 116($sp)
+	lw $t0, 116($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 116($sp)
+	lw $t0, 116($sp)
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 112($sp)
+	lw $t0, 124($sp)
+	lw $t1, 112($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t0($t0)
+	li $t0, 0
+	sw $t0, 196($sp)
+	li $t0, 0
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 108($sp)
+	lw $t0, 108($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 104($sp)
+	lw $t0, 104($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 104($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 100($sp)
+	lw $t0, 100($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 96($sp)
+	lw $t0, 96($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 96($sp)
+	lw $t0, 96($sp)
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t0($t0)
+	sw $v0, 92($sp)
+	lw $t0, 104($sp)
+	lw $t1, 92($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t1($t0)
+	li $t0, 0
+	sw $t0, 196($sp)
+	li $t0, 1
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 88($sp)
+	lw $t0, 88($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 84($sp)
+	lw $t0, 84($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 84($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 80($sp)
+	lw $t0, 80($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 76($sp)
+	lw $t0, 76($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 76($sp)
+	lw $t0, 76($sp)
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t0($t0)
+	sw $v0, 72($sp)
+	lw $t0, 84($sp)
+	lw $t1, 72($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t1($t0)
+	li $t0, 1
+	sw $t0, 196($sp)
+	li $t0, 0
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 68($sp)
+	lw $t0, 68($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 64($sp)
+	lw $t0, 64($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 64($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 60($sp)
+	lw $t0, 60($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 56($sp)
+	lw $t0, 56($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 56($sp)
+	lw $t0, 56($sp)
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t0($t0)
+	sw $v0, 52($sp)
+	lw $t0, 64($sp)
+	lw $t1, 52($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t1($t0)
+	li $t0, 1
+	sw $t0, 196($sp)
+	li $t0, 1
+	sw $t0, 192($sp)
+	li $t0, 2
+	lw $t1, 192($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 48($sp)
+	lw $t0, 48($sp)
+	lw $t1, 196($sp)
+	add $v0 $t0 $t1
+	sw $v0, 44($sp)
+	lw $t0, 44($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 44($sp)
+	li $t0, 2
+	lw $t1, 196($sp)
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 40($sp)
+	lw $t0, 40($sp)
+	lw $t1, 192($sp)
+	add $v0 $t0 $t1
+	sw $v0, 36($sp)
+	lw $t0, 36($sp)
+	li $t1, 4
+	mult $t0 $t1
+	mflo $v0
+	sw $v0, 36($sp)
+	lw $t0, 36($sp)
+	move $s0 $t0
+	lw $s1 t0_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t0($t0)
+	sw $v0, 32($sp)
+	lw $t0, 44($sp)
+	lw $t1, 32($sp)
+	move $v0 $t1
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	sw $v0 t1($t0)
+	li $t0, 0
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t1($t0)
+	sw $v0, 28($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 36($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_0
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 0
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 24($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 32($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_1
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 4
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t1($t0)
+	sw $v0, 20($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 28($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_2
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 4
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 16($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 24($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_3
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 8
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t1($t0)
+	sw $v0, 12($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 20($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_4
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 8
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 8($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 16($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_5
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 12
+	move $s0 $t0
+	lw $s1 t1_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 t1($t0)
+	sw $v0, 4($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 12($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_6
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	li $t0, 12
+	move $s0 $t0
+	lw $s1 in_SIZE
+	move $t2 $ra
+	jal DYN_CHECK
+	move $ra $t2
+	lw $v0 in($t0)
+	sw $v0, 0($sp)
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	lw $t0, 8($sp)
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	li $v1, 0
+	jal WriteInt
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	move $t0 $ra
+	sub $sp $sp 4
+	sw $t0 ($sp)
+	move $t0 $fp
+	sub $sp $sp 4
+	sw $t0 ($sp)
+
+	la $a0 str_7
+	li $v1, 0
+	jal WriteString
+	lw $t0, 0($sp)
+	move $fp $t0
+	add $sp $sp 4
+	lw $t0, 0($sp)
+	move $ra $t0
+	add $sp $sp 4
+	add $sp $sp 200
+
+end:
+	li $v0, 10
+	syscall
+	add $sp $sp 48

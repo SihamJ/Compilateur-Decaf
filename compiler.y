@@ -64,7 +64,7 @@ program	:  class id '{' { 	pushctx(CTX_GLOB); tmpCount = 0; glob_context = curr_
 				GLOBAL '}' { 	/* verifying that we have a main method*/
 								if( ht_search( glob_context,"main") == NULL ) {	yyerror("\nErreur: Pas de méthode main\n"); return 1; }
 								global_code[glob_context->quad_index].op1.u.cst = global_code[nextquad-1].ctx->size;
-								gen_q_pop(curr_context->size);
+								gen_q_pop(curr_context->size); popctx();
 									return 0;
 							}
 
@@ -199,8 +199,7 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 												// in the mips translater, we have to differentiate between | = | += | -= |  
 												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);}
 
-												// generates a Q_POP quad	
-												int nb = 0; // if((nb = pop_tmp())>0) { gen_q_pop(nb*4);}
+												
 											}
 
 			/* The method call rules are defined below not here.*/
@@ -255,7 +254,7 @@ statement 	:	location assign_op expr ';' {	item_table* val = lookup($1.stringval
 													$3 = val_to_goto($3); 
 												}
 
-												int nb = 0; // if((nb = pop_tmp()) > 0) { $3 = pop_if_tmp(nb, $3); }
+												
 											} 
 			
 				M ElseBlock					{ 	complete($3.t, $6); $$.cntu = $7.cntu; $$.brk = $7.brk; $$.rtrn = $7.rtrn;

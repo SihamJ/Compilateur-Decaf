@@ -745,15 +745,7 @@ expr_val not_op(expr_val expr){
   return res;
 }
 
-expr_val pop_if_tmp(int nb, expr_val expr){
-  quadop qo; qo.type = QO_EMPTY;
-  complete(expr.t, nextquad); gen_q_pop(nb*4); 
-  expr.t = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-  
-  complete(expr.f, nextquad); gen_q_pop(nb*4); 
-  expr.f = crelist(nextquad); gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-  return expr;
-}
+
 
 // avec un peu d'optimisation..
 expr_val eqop_cst(expr_val expr1, expr_val expr2, int op){

@@ -3,6 +3,7 @@
  HashTable* curr_context;
  HashTable* glob_context;
  HashTable* stack;
+ 
 
 unsigned long hash_function(char *str)
 {   
@@ -47,7 +48,7 @@ static LinkedList *linkedlist_insert(LinkedList *list, Ht_item *item)
     LinkedList *node = allocate_list();
     node->item = item;
     node->next = NULL;
-    temp->next = node;
+    temp->next->next = node;
 
     return list;
 }
@@ -187,22 +188,24 @@ void ht_insert(HashTable *table, Ht_item *item)
 
         // Insert directly
         table->items[index] = item;
+     //   printf("\nsegf %s \n",item->key);
     }
 
     else
     {
         //update value
-        if (strcmp(current_item->key, item->key) == 0)
-        {
+        if (strcmp(current_item->key, item->key) == 0){
             table->items[index]->value = item->value;
             return;
         }
 
         else
         {
+
             // Collision
             handle_collision(table, index, item);
-            return;
+           
+            return;    
         }
     }
 }
@@ -218,10 +221,12 @@ Ht_item *ht_search(HashTable *table, char *key)
     // Ensure that we move to items which are not NULL
     while (item != NULL)
     {
-        if (strcmp(item->key, key) == 0)
+        if (strcmp(item->key, key) == 0){
             return item;
-        if (head == NULL)
+        }
+        if (head == NULL){
             return NULL;
+        }
         item = head->item;
         head = head->next;
     }
@@ -312,7 +317,7 @@ void print_table(HashTable *table)
     {
         if (table->items[i])
         {
-            printf("%s\033[1m%20s\033[0m |%s %4sIndex: %d |  %4sType: %s | ",YELLOW, table->items[i]->key,NORMAL,"", table->items[i]->order,"", get_type_id(table->items[i]->value));
+            printf("%s\033[1m%12s\033[0m |%s %4sIndex: %d |  %4sType: %s | ",YELLOW, table->items[i]->key,NORMAL,"", table->items[i]->order,"", get_type_id(table->items[i]->value));
             if(table->items[i]->id_type == ID_TAB)
                 printf("%10sArray | %4ssize: %d ","", "", table->items[i]->size/4);
             else if(table->items[i]->id_type == ID_METHOD)
@@ -327,7 +332,7 @@ void print_table(HashTable *table)
                 LinkedList *head = table->lists[i];
                 while (head)
                 {
-                    printf("\033[1m%20s\033[0m | %4sIndex: %d | %4sType:%s | ", head->item->key,"", head->item->order,"", get_type_id(head->item->value));
+                    printf("\033[1m%12s\033[0m | %4sIndex: %d | %4sType:%s | ", head->item->key,"", head->item->order,"", get_type_id(head->item->value));
                     if(head->item->id_type == ID_TAB)
                         printf("%4sArray | %4ssize: %d ","","", head->item->size/4);
                     else if(head->item->id_type == ID_METHOD)
@@ -356,14 +361,17 @@ void popctx(){
     HashTable *temp = curr_context;
 	curr_context = curr_context->next;
     tmpCount = 0;
- /*   if(stack == NULL){
-        stack = temp;
+
+    HashTable *ht = create_table();
+    *ht = *temp;
+    if(stack == NULL){
+        stack = ht;
         stack->next = NULL;
     }
     else{
-        temp->next = stack;
-        stack = temp;
-    }*/
+        ht->next = stack;
+        stack = ht;
+    }
 }
 
 // called at the end of main to free the TOS stack

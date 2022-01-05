@@ -76,13 +76,14 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
 
         add_labels();    
-
-       // if(tos)
-           // print_stack();
+        
+        if(tos)
+            print_stack();
         
         if(inter)
             print_globalcode();
 
+        
         translate();
         if(fout != stdout)
             fclose(fout);

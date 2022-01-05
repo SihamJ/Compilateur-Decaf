@@ -178,14 +178,6 @@ void translate() {
 			mips_neq("$v0", "$t0", "$t1", global_code[global_code[i].jump].label);
 			break;
 
-		case Q_SEQ:
-			// TODO
-			break;
-
-		case Q_SNE:
-			// TODO
-			break;
-
 		case Q_LT:
 			if(global_code[i].jump == -1){
 					fprintf(stderr,"\n\n%sParsing successful but can't translate to MIPS, incomplete LT\n\n%s",RED,NORMAL);

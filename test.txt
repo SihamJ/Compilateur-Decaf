@@ -1,76 +1,22 @@
-class Quicksort {
-    // ce quicksort vous est offert par Alexandre Vogel
-    int tab[1000];
-    
-    void init_tab ()
+class AccesTableauExpression {
+    int in [4];
+    int t0 [4];
+    int t1 [4];
+    void main ()
     {
-        for i = 0, 999
-        {
-            tab[i] = (17*i + 42) % 1000;
-        }
-    }
-    
-    boolean verif_result ()
-    {
-        for i = 0, 998
-        {
-            if (tab[i] >= tab[i+1])
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-    
-    void swap (int i, int j)
-    {
-        int tmp;
-        tmp = tab[i];
-        tab[i] = tab[j];
-        tab[j] = tmp;
-    }
-    
-    int partition (int lo, int hi)
-    {
-        int pivot, i;
-    
-        pivot = tab[hi];
-        i = lo - 1;
-    
-        for j = lo, hi
-        {
-            if ( tab[j] < pivot)
-            {
-                i += 1;
-                swap(i, j);
-            }
-        }
-        i += 1;
-       swap(i, hi);
-            
-        return i;
-    }
-    
-    void qsort (int lo, int hi)
-    {
-        int p;
-    
-        if (lo >= hi || lo < 0)
-        {
-            return;
-        }
-    
-        p = partition(lo, hi);
-    
-       qsort(lo, p-1);
-       qsort(p+1, hi);
-    }
-    
-    void main()
-    {
-        init_tab();
-        qsort(0, 1000*12 - 1);
-        WriteBool (verif_result ());
-        WriteString ("=true\n");
+        int i, j;
+        in[0] = 11; in[1] = 12; in[2] = 21; in[3] = 22;
+        i = 0; j = 0; t0[2*j+i] = in[2*i+j];
+        i = 0; j = 1; t0[2*j+i] = in[2*i+j];
+        i = 1; j = 0; t0[2*j+i] = in[2*i+j];
+        i = 1; j = 1; t0[2*j+i] = in[2*i+j];
+        i = 0; j = 0; t1[2*j+i] = t0[2*i+j];
+        i = 0; j = 1; t1[2*j+i] = t0[2*i+j];
+        i = 1; j = 0; t1[2*j+i] = t0[2*i+j];
+        i = 1; j = 1; t1[2*j+i] = t0[2*i+j];
+        WriteInt (t1[0]); WriteString ("="); WriteInt (in[0]); WriteString ("\n");
+        WriteInt (t1[1]); WriteString ("="); WriteInt (in[1]); WriteString ("\n");
+        WriteInt (t1[2]); WriteString ("="); WriteInt (in[2]); WriteString ("\n");
+        WriteInt (t1[3]); WriteString ("="); WriteInt (in[3]); WriteString ("\n");
     }
 }
