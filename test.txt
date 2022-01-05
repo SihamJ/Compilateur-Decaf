@@ -1,22 +1,40 @@
-class AccesTableauExpression {
-    int in [4];
-    int t0 [4];
-    int t1 [4];
+class AppelsImbriquesEtReification {
+    // suggéré par Siham Janati et son groupe
+    boolean isPrime(int a)
+    {
+        if(a == 0 || a == 1)
+        {
+            return false;
+        }
+        for i = 3, a/2
+        {
+            if(a % i == 0)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    int boolToInt(boolean a)
+    {
+        if (a) { return 1; } else { return 0;  }
+    }
+    int binaryToDecimal(boolean a, boolean b, boolean c, boolean d){
+        return boolToInt(a)*2*2*2 + boolToInt(b)*2*2 +
+               boolToInt(c)*2 + boolToInt(d);
+    }
     void main ()
     {
-        int i, j;
-        in[0] = 11; in[1] = 12; in[2] = 21; in[3] = 22;
-        i = 0; j = 0; t0[2*j+i] = in[2*i+j];
-        i = 0; j = 1; t0[2*j+i] = in[2*i+j];
-        i = 1; j = 0; t0[2*j+i] = in[2*i+j];
-        i = 1; j = 1; t0[2*j+i] = in[2*i+j];
-        i = 0; j = 0; t1[2*j+i] = t0[2*i+j];
-        i = 0; j = 1; t1[2*j+i] = t0[2*i+j];
-        i = 1; j = 0; t1[2*j+i] = t0[2*i+j];
-        i = 1; j = 1; t1[2*j+i] = t0[2*i+j];
-        WriteInt (t1[0]); WriteString ("="); WriteInt (in[0]); WriteString ("\n");
-        WriteInt (t1[1]); WriteString ("="); WriteInt (in[1]); WriteString ("\n");
-        WriteInt (t1[2]); WriteString ("="); WriteInt (in[2]); WriteString ("\n");
-        WriteInt (t1[3]); WriteString ("="); WriteInt (in[3]); WriteString ("\n");
+        int a;
+        int b;
+        int c;
+        a = 19;
+        b = 6;
+        c = binaryToDecimal (isPrime(a),
+                             isPrime(b) == isPrime(a) && b > 5,
+                             ! isPrime(a) == isPrime(b),
+                             ( ! isPrime(b) || a < 10 ) == ! isPrime(a) );
+        WriteInt(c);
+        WriteString("=10\n");
     }
 }

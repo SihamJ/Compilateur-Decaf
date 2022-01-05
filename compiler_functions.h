@@ -93,7 +93,7 @@ expr_val add(expr_val expr1, int op, expr_val expr2);
 void gen_index_access_tab(location *res, char* name, expr_val index);
 expr_val get_string_literal(char* str);
 void complete_for_block(expr_val *statement, char* counter, expr_val b, int marker);
-param copy_method_call_arg(expr_val expr, param list);
+param copy_method_call_arg(expr_val expr, param list, int marker);
 param get_arg_by_address(char* str, param list, item_table* val);
 expr_val val_to_goto(expr_val expr);
 

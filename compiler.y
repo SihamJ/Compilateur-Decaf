@@ -287,14 +287,17 @@ method_call :	id '(' E ')' 				{	char *msg;
 												gen_method_call($1, NULL, &$$); }
 
 //	 E is a list of parameters of a method call 
-E 			:	expr ',' E 						{ 	$$.p = copy_method_call_arg($1, $3.p);	}
+E 			:	expr 					{ if ($1.result.type == QO_GOTO) $1 = goto_to_val($1); } 
 
-			|	expr 							{	$$.p = copy_method_call_arg($1, NULL);	}
+			',' M E 					{ 	$$.p = copy_method_call_arg($1, $5.p, $4);	}
 
-			|	address ','	E 					{	item_table* val = lookup($1+1, curr_context);
+			|	expr 					{ if ($1.result.type == QO_GOTO) $1 = goto_to_val($1);
+											$$.p = copy_method_call_arg($1, NULL, -1); }
+
+			|	address ','	M E 				{	item_table* val = lookup($1+1, curr_context);
  													if( val == NULL) {yyerror("\nErreur: Variable non déclarée\n"); return 1;  }
 													
-													$$.p = get_arg_by_address($1, $3.p, val);  
+													$$.p = get_arg_by_address($1, $4.p, val);  
 												}
 
 			|	address							{	item_table* val = lookup($1+1, curr_context);

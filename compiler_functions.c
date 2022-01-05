@@ -401,7 +401,7 @@ char* verify_and_get_type_call(char *id, param p, method_call *m){
 void gen_method_call(char *id, expr_val *E, method_call *m){
 
   quadop qo,q1,q2; 
- 
+  
   qo.type = QO_CSTSTR;
   qo.u.string_literal.label = malloc(strlen(id)+1);
   strcpy(qo.u.string_literal.label, id);
@@ -423,10 +423,9 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
       if( p->arg.type == QO_ID || p->arg.type == QO_TMP){
         p->arg.u.name = p->stringval;
         }
-       
+      if(p->t && global_code[p->t->addr].jump == -1) complete(p->t, nextquad);
       p = p->next;
     }
-    
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
@@ -637,7 +636,7 @@ void complete_for_block(expr_val *statement, char* counter, expr_val b, int mark
   
 }
 
-param copy_method_call_arg(expr_val expr, param list){
+param copy_method_call_arg(expr_val expr, param list, int marker){
 
   param p = (param) malloc(sizeof(struct param));
 
@@ -645,15 +644,11 @@ param copy_method_call_arg(expr_val expr, param list){
     expr.result.u.name = expr.stringval;
     p->stringval = expr.stringval;
   }
-  else if(expr.result.type == QO_GOTO){
-    expr = goto_to_val(expr);
-    complete(expr.t, nextquad);
-    expr.result.u.name = expr.stringval;
-    p->stringval = expr.stringval;
-  }
-  
+  if(expr.type == BOOL && expr.t)
+    complete(expr.t, marker);
+
   p->type = expr.type; p->arg = expr.result; p->next = list; 	p->byAddress = 0;
-  if(expr.type == BOOL) { p->t = expr.t; p->f = expr.f;}
+  if(expr.type == BOOL) { p->t = expr.t; }
   return p;
 
   
@@ -703,8 +698,7 @@ expr_val goto_to_val (expr_val expr) {
   expr_val res; Ht_item* tmp = new_temp(expr.type);
   quadop q, qo, q1; q.type = QO_EMPTY; qo.type = QO_TMP; qo.u.name = tmp->key; q1.type = QO_CST; q1.u.cst = true;
   
-  res.stringval = malloc(strlen(tmp->key)+1);
-  strcpy(res.stringval, tmp->key);
+  res.stringval = tmp->key;
 
   
   complete(expr.t, nextquad);
@@ -713,7 +707,7 @@ expr_val goto_to_val (expr_val expr) {
 
   res.t = crelist(nextquad);
   gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
-
+  printf("\n res.t = %d\n",res.t->addr);
   q1.u.cst = false;
   complete(expr.f, nextquad);
   gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
@@ -741,7 +735,7 @@ expr_val not_op(expr_val expr){
 
   res.stringval = malloc(strlen(item->key)+1);
   strcpy(res.stringval, item->key);
-
+  res.t = NULL; res.f = NULL;
   return res;
 }
 
