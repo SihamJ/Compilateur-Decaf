@@ -36,7 +36,7 @@
 %type <m> method_call
 
 %type <loc> location
-%type <intval> int_literal assign_op type M oprel eq_op add_op mul_op TMP
+%type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
 %type <p> Param P
 %type <l> literal
@@ -77,8 +77,6 @@ G 		:	%empty		{	$$ = crelist(nextquad); 	quadop qo;	 qo.type = QO_EMPTY;
 
 Max		:	%empty		{;}
 
-TMP		:	%empty		{$$ = tmpCount;}
-
 GLOBAL 		: MD		{;}
 			| FD MD 	{;}
 
@@ -92,12 +90,20 @@ field_decl	:	type glob_id ';' 		{ 	/* we push the global variables into the TOS
 										}
 														
 
-glob_id	:	id '[' int_literal ']' ',' glob_id	{	if($3 <= 0) { yyerror("\nErreur: Taille du tableau déclarée 
-																			inférieure ou égale à 0\n");	return 1; }
+glob_id	:	id '[' int_literal ']' ',' glob_id	{
+													if($3 <= 0) { 
+														yyerror ("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");	
+														return 1; }
+
 													$$ = get_declarations($1, NULL, QO_TAB, $3*4);	}
-		|	id '[' int_literal ']'				{	if($3 <= 0) { yyerror("\nErreur: Taille du tableau déclarée 
-																			inférieure ou égale à 0\n");	return 1; }
-													$$ = get_declarations($1, NULL, QO_TAB, $3*4);	}
+
+		|	id '[' int_literal ']'				{
+													if($3 <= 0) { 
+														yyerror ("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");	
+														return 1; }
+
+													$$ = get_declarations($1, NULL, QO_TAB, $3*4);	
+												}
 
 		|	id									{	$$ = get_declarations($1, NULL, QO_SCAL, 4); 	}
 
@@ -323,7 +329,9 @@ statement 	:	location assign_op expr ';' {
 													gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
 												}
 
-												else if ($3.result.type == QO_ID || $3.result.type == QO_TMP || $3.result.type == QO_GLOBAL) { 
+												else if (	$3.result.type == QO_ID 
+															|| $3.result.type == QO_TMP 
+															|| $3.result.type == QO_GLOBAL) { 
 													$3 = val_to_goto($3); 
 												}	
 											} 
@@ -331,7 +339,7 @@ statement 	:	location assign_op expr ';' {
 				M ElseBlock					{
 											 	complete($3.t, $6); 	$$.cntu = $7.cntu; 		
 												$$.brk = $7.brk; 		$$.rtrn = $7.rtrn;
-												// completion of GOTOs will difer whether there is an Else Block or not
+												// completion of GOTOs will be different if there is an Else Block
 												if(!$7.isElseBlock) { 
 													$$.next = concat($3.f, $7.next); 
 												}
@@ -350,7 +358,7 @@ ElseBlock	:	block 						{
 			|	block G Else M block		{
 												$$.isElseBlock = $4; 					$$.elseGoto = $2;	
 												$$.next = concat($1.next, $5.next); 	$$.rtrn = concat($1.rtrn, $5.rtrn);
-												$$.cntu = concat($1.cntu, $5.cntu); 	$$.brk = concat($1.cntu, $5.cntu);
+												$$.cntu = concat($1.cntu, $5.cntu); 	$$.brk = concat($1.brk, $5.brk);
 											}
 
 return_val	:	expr 						{ 	$$ = $1; }
@@ -451,7 +459,7 @@ expr		:	expr add_op expr %prec '+'	{
 									$$.t = $5.t; 			$$.result.type = QO_GOTO; 
 								}
 
-			|	expr or TMP 	{
+			|	expr or 	 	{
 									if($1.type != BOOL) { 
 										yyerror("\nErreur: OR operator with non boolean value"); 
 										return 1; }
@@ -460,15 +468,15 @@ expr		:	expr add_op expr %prec '+'	{
 								}
 			
 				M expr			{
-									if($6.type != BOOL) { 
+									if($5.type != BOOL) { 
 										yyerror("\nErreur: OR operator with non boolean value"); 
 										return 1; }
 
 									$$.type = BOOL;
-									if($6.result.type != QO_GOTO) { $6 = val_to_goto($6); }
+									if($5.result.type != QO_GOTO) { $5 = val_to_goto($5); }
 
-									complete($1.f, $5); 	$$.t = concat($1.t, $6.t); 	
-									$$.f = $6.f; 			$$.result.type = QO_GOTO;
+									complete($1.f, $4); 	$$.t = concat($1.t, $5.t); 	
+									$$.f = $5.f; 			$$.result.type = QO_GOTO;
 								}
 
 			|	expr oprel expr	%prec '<' 	{
@@ -476,53 +484,21 @@ expr		:	expr add_op expr %prec '+'	{
 													yyerror("\nErreur: REL OP non entière"); 
 													return 1; }
 
-												$$.type = BOOL;			quadop qo; 	
-												qo.type = QO_EMPTY; 	qo.u.cst = 0;
-
-												if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-													$1.result.u.name = $1.stringval; }
-												if($3.result.type == QO_ID || $3.result.type == QO_TMP) {
-													$3.result.u.name = $3.stringval; }
-
-												$$.t = crelist(nextquad); 	gencode(qo, $1.result, $3.result, $2, NULL, -1, NULL);
-												$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-												$$.result.type = QO_GOTO;
+												$$ = oprel($1, $2, $3);
 											}
 
 			|	expr eq_op 					{	if($1.result.type == QO_GOTO) { $1 = goto_to_val($1); } }
 			
-				M expr %prec eq				{	if($1.type != $5.type ) { 
+				M expr %prec eq				{
+												if($1.type != $5.type ) { 
 													yyerror("\nErreur: Comparaison de types différents"); 
 													return 1; }
 
-												quadop qo; 	qo.type = QO_EMPTY;
-												
-												if($1.type == BOOL) {
-													if($5.result.type == QO_GOTO) { $5 = goto_to_val($5); 
-																					complete($5.t, nextquad); 
-																					}
+												if($5.result.type == QO_GOTO) { $5 = goto_to_val($5); complete($5.t, nextquad); }
 
-													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
-														$5.result.u.name = $5.stringval; }
+												if($1.type == BOOL && $1.t != NULL) { complete($1.t, $4); }
 
-													 if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-														$1.result.u.name = $1.stringval; }
-
-													$$.t = crelist(nextquad); 	  gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
-													$$.f = crelist(nextquad); 	  gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-													if($1.t) complete($1.t, $4);
-												}
-												else {
-													if($5.result.type == QO_ID || $5.result.type == QO_TMP) {
-														$5.result.u.name = $5.stringval; }
-													if($1.result.type == QO_ID || $1.result.type == QO_TMP) {
-														$1.result.u.name = $1.stringval; }
-
-													$$.t = crelist(nextquad); 	gencode(qo, $1.result, $5.result, $2, NULL, -1, NULL);
-													$$.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-												}
-
-												$$.type = BOOL;	$$.result.type = QO_GOTO;
+												$$ = oprel($1, $2, $5);
 											}
 
 			|	'-' expr %prec NEG 			{

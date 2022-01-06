@@ -103,4 +103,5 @@ expr_val not_op(expr_val expr);
 expr_val pop_if_tmp(int nb, expr_val expr);
 expr_val pop_block(expr_val block, expr_val statement);
 expr_val eqop_cst(expr_val expr1, expr_val expr2, int op);
+expr_val bool_eqop(expr_val *expr1, int op, expr_val *expr2, int marker);
 #endif
