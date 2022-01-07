@@ -315,7 +315,7 @@ void print_table(HashTable *table)
     int j = 0;
     for (int i = 0; i < table->max_size; i++)
     {
-        if (table->items[i])
+        if (table->items[i] && table->items[i]->id_type != ID_TMP)
         {
             printf("%s\033[1m%12s\033[0m |%s %4sIndex: %d |  %4sType: %s | ",YELLOW, table->items[i]->key,NORMAL,"", table->items[i]->order,"", get_type_id(table->items[i]->value));
             if(table->items[i]->id_type == ID_TAB)
@@ -328,15 +328,20 @@ void print_table(HashTable *table)
                 printf("%10sParam ","");
             if (table->lists[i])
             {
-                printf(" => list => ");
+                printf("\n");
                 LinkedList *head = table->lists[i];
                 while (head)
                 {
-                    printf("\033[1m%12s\033[0m | %4sIndex: %d | %4sType:%s | ", head->item->key,"", head->item->order,"", get_type_id(head->item->value));
+                    printf("%s\033[1m%12s\033[0m |%s %4sIndex: %d | %4sType:%s | ",YELLOW, head->item->key,NORMAL,"", head->item->order,"", get_type_id(head->item->value));
                     if(head->item->id_type == ID_TAB)
-                        printf("%4sArray | %4ssize: %d ","","", head->item->size/4);
+                        printf("%10sArray | %4ssize: %d ","","", head->item->size/4);
                     else if(head->item->id_type == ID_METHOD)
                         printf("%10sMethod ","");
+                    else if(table->items[i]->id_type == ID_VAR)
+                        printf("%10sScalar ","");
+                    else if(table->items[i]->id_type == ID_PARAM)
+                        printf("%10sParam ","");
+                    printf("\n");
                     head = head->next;
                 }
             }
@@ -445,14 +450,6 @@ int pop_tmp(){
     return nb;
 }
 
-void pop_nb_tmp(int nb){
-    for (int i = 0, j = 0; i < curr_context->max_size, j < nb ; i++){
-        if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
-            ht_delete(curr_context, curr_context->items[i]->key);  
-            tmpCount--; j++;
-        }
-    }
-}
 
 char* num_to_char(int nb){
 
@@ -523,12 +520,6 @@ char* get_type_global(int type){
 }
 
 int offset(item_table *val, HashTable* ctx){
-
-    // /* for debugging*/
-    // if(val->table == glob_context){
-    //     fprintf(stderr, "\nErreur debug: You can't retrieve offset of a global variable!\n");
-    //     exit(1);
-    // }
 
 	int out = 0;
 

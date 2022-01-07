@@ -18,9 +18,9 @@
 	long intval;
 	char *stringval;
 	expr_val expr;
-	block b;
+	statement s;
 	method_call m;
-	list next;
+	list gt;
 	literal l;
 	declaration decl;
 	location loc;
@@ -31,14 +31,15 @@
 %token <stringval> id string_literal ReadInt address
 %token class If Else For Return Break Continue 
 
-%type <expr> expr return_val E statement block S2 S Max ElseBlock
-%type <next> G
+%type <expr> expr return_val Max 
+%type <gt> G
+%type <s> statement block S2 S ElseBlock
 %type <m> method_call
 
 %type <loc> location
 %type <intval> int_literal assign_op type M oprel eq_op add_op mul_op
 %type <decl> B glob_id 
-%type <p> Param P
+%type <p> Param P Arg
 %type <l> literal
 
 %left or
@@ -126,14 +127,14 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 									var->item->p = $5;
 								}
 
-					block		{	// We verify that return exists. Generates just a warning if -Cafeine option is used
+					block		{	// We verify that return exists. Generates a warning if -Cafeine option is used
 									 int is_returnval=0; 
 									 if($8.rtrn == NULL) { 
 										 yywarning("\nWarning: Méthode de type non Void sans Return");  }
 									 else {	is_returnval = 1;	}
 
 									// verifying return types
-									if(!verify_returns($8.rtrn, $1)) { 
+									if(is_returnval && !verify_returns($8.rtrn, $1)) { 
 										yyerror("\nErreur: Méthode avec faux type de retour\n");  
 										return 1; }
 									complete($8.next,nextquad-1); 	complete($8.rtrn, nextquad-1);
@@ -154,10 +155,11 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 			'(' P ')'  			{	item_table* var = lookup($2, curr_context);		var->item->p = $5; }
 			
 				block			{
-								 	if( !verify_returns($8.rtrn, $1) ) { 
+								 	if($8.rtrn != NULL && !verify_returns($8.rtrn, $1) ) { 
 										yyerror("\nErreur: Méthode avec faux type de retour\n"); 
 										return 1; }
 
+									// nextquad-1 is always pop stack for the end of the block
 									complete($8.next,nextquad-1);	complete($8.rtrn, nextquad-1);
 									char* msg;	
 									if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { 
@@ -166,7 +168,7 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 									popctx(); 	
 								}
 
-/* we store the parameter in the symbol table after verifications*/
+						// we store the parameters in the symbol table after verifications
 P 			:	Param 	{
 						 	$$ = $1; 	param p = $1;
 							while(p) {	
@@ -188,7 +190,7 @@ Param		:	type id ',' Param	{ 	$$ = get_param($2, $1, $4); 	}
 
 block 		:	'{' 	{ 	pushctx(CTX_BLOCK); 	 gen_q_push(); 		} 
 
-			V S2 '}' 	{ 	$$ = pop_block($$, $4);  popctx(); 			}
+			V S2 '}' 	{ 	$$ = $4; $$ = pop_block($$, $4);  popctx(); 		}
 
 S2 			:	S 		{	$$ = $1;	}
 
@@ -235,6 +237,7 @@ S 			: 	S M statement 	{
 								}
 
 statement 	:	location assign_op expr ';' {
+												initialise_lists(&$$);
 												item_table* val = lookup($1.stringval, curr_context);
 
 												// Verifying types. returns NULL if successful, error msg otherwise
@@ -247,19 +250,19 @@ statement 	:	location assign_op expr ';' {
 												quadop qo,q1,q2;	get_location(&qo, &q1, val, $1);
 
 												// from true/false list to value
-												 if($3.result.type == QO_GOTO) { bool_affectation(qo, q1, &$$, &$3);	}
+												 if($3.result.type == QO_GOTO) { $3 = goto_to_val($3);	complete($3.t, nextquad); }
 												
 												// in the mips translater, we have to differentiate between | = | += | -= |  
-												 else { gencode(qo,$3.result,q1,$2, NULL,-1, NULL);	}
+												 gencode(qo,$3.result,q1,$2, NULL,-1, NULL);	
 											}
 
-											// The method call rules are defined below
- 		|	method_call	';'					{ 	; }
+											
+ 		|	method_call	';'					{ 	initialise_lists(&$$); }
 
 		|	For id '=' expr ',' expr Max	{  	// this function verifies types, declares ID, and the necessary affectations and copy of values
 												char* msg;
 												if( (msg = for_declare($2, $4, $6)) != NULL) { yyerror(msg); return 1;}
-												// TO DO : review
+												// Max is %empty. it is an expression that only serves us for doing a copy of the max counter value
 												$7 = get_max($2, $6);
 											} 
 				M  							{	gen_test_counter($2, $7); } 
@@ -270,7 +273,7 @@ statement 	:	location assign_op expr ';' {
 												$$.rtrn = $11.rtrn; 		 		gen_increment_and_loopback($2, $9); 
 												complete($$.next, nextquad);		gen_q_pop(curr_context->size); 
 												$$.next = crelist( nextquad);		quadop qo; qo.type = QO_EMPTY;	
-
+												$$.brk = NULL;
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
 
 												// Now that we know the context size, we go back to PUSH_CTX quad and update its value
@@ -280,15 +283,17 @@ statement 	:	location assign_op expr ';' {
 											}
 
 			|	Return return_val ';'		{
+												initialise_lists(&$$);
 												// we return $2.result and we store the return type in qo for later verification of types
 												$$.rtrn = crelist(nextquad); 	quadop qo,q1;		qo.type = QO_CST;
 												qo.u.cst = $2.type; 			q1.type = QO_EMPTY;
-												if($2.type == BOOL) { 
-													complete($2.t, nextquad); complete($2.f, nextquad);	}
+												if($2.type == QO_GOTO) { 
+													$2 = goto_to_val($2);	complete($2.t, nextquad);}
 												gencode($2.result, qo, q1, Q_RETURN, NULL, -1, NULL); 
 											}
 
-			|	Break ';'					{ 
+			|	Break ';'					{
+											 	initialise_lists(&$$);
 												// we verify that this break statement is within a FOR loop
 												if(!is_a_parent(CTX_FOR)) { 
 													yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n"); 
@@ -299,6 +304,7 @@ statement 	:	location assign_op expr ';' {
 											}
 
 			|	Continue ';'				{
+												initialise_lists(&$$);
 												// we verify that this continue statement is within a FOR loop
 												if(!is_a_parent(CTX_FOR)) { 
 													yyerror("\nErreur: Continue; doit être au sein d'une boucle FOR\n");
@@ -366,16 +372,16 @@ return_val	:	expr 						{ 	$$ = $1; }
 
 
 											//  we verifiy the parameters of the method call and generate the quad								
-method_call :	id '(' E ')' 				{
+method_call :	id '(' Arg ')' 				{
 												char *msg;
-												if((msg = verify_and_get_type_call($1, $3.p, &$$)) != NULL) { 
+												if((msg = verify_and_get_type_call($1, $3, &$$)) != NULL) { 
 													yyerror(msg); return 1; }
 
 												if(!strcmp($1,"WriteString")) {
-													get_write_string_args($3.p->arg.u.string_literal.label, 
-																		  $3.p->arg.u.string_literal.value); }
+													get_write_string_args($3->arg.u.string_literal.label, 
+																		  $3->arg.u.string_literal.value); }
 
-												gen_method_call($1, &$3, &$$); 
+												gen_method_call($1, $3, &$$); 
 											}
 
 			|	id '(' ')'					{
@@ -387,22 +393,22 @@ method_call :	id '(' E ')' 				{
 											}
 
 										//	 E is a list of parameters of a method call 
-E 			:	expr 					{ 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }  }
+Arg 		:	expr 					{ 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }  }
 
-			',' M E 					{ 	$$.p = copy_method_call_arg($1, $5.p, $4);	}
+			',' M Arg 					{ 	$$ = copy_method_call_arg($1, $5, $4);	}
 
 			|	expr 					{
 										 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }
 
-											$$.p = copy_method_call_arg($1, NULL, -1); 
+											$$ = copy_method_call_arg($1, NULL, -1); 
 										}
 
-			|	address ','	M E 		{	// address is an id starting with '&' 
+			|	address ','	M Arg 		{	// address is an id starting with '&' 
 											item_table* val = lookup($1+1, curr_context);
 											if( val == NULL) {
 												yyerror("\nErreur: Variable non déclarée\n"); 	return 1;  }
 											
-											$$.p = get_arg_by_address($1, $4.p, val);  
+											$$ = get_arg_by_address($1, $4, val);  
 										}
 
 			|	address					{	
@@ -410,7 +416,7 @@ E 			:	expr 					{ 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }  }
 											if( val == NULL) {	
 												yyerror("\nErreur: Variable non déclarée\n"); 	return 1; }
 											
-											$$.p = get_arg_by_address($1, NULL, val);
+											$$ = get_arg_by_address($1, NULL, val);
 										}
 
 

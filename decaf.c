@@ -18,8 +18,10 @@ void version(char *m1, char* f1, char* m2, char *f2, char* m3, char *f3, char *m
 int main(int argc, char* argv[]){
 
     warning = 0;
-    
-    if(argc < 4 && strcmp(argv[1],"-version")){
+    if(argc == 1){
+        usage(argv[0]);
+    }
+    else if(argc < 4 && strcmp(argv[1],"-version")){
         usage(argv[0]);
     }
 
@@ -69,7 +71,7 @@ int main(int argc, char* argv[]){
         curr_context = NULL;
         str_count = 0;
         
-     //   yydebug=1;
+        // yydebug=1;
         int t = yyparse();
 
         if(t!=0)
@@ -88,7 +90,7 @@ int main(int argc, char* argv[]){
         if(fout != stdout)
             fclose(fout);
 
-      //  free_stack();
+        free_stack();
         exit(EXIT_SUCCESS);
     }
 }
@@ -97,14 +99,14 @@ int main(int argc, char* argv[]){
 void usage(char *name){
     fprintf(stderr, "\n%s%8sUsage: %s <source> -o <dest> [-tos] [-i]\n",YELLOW,"",name);
     fprintf(stderr, "%8sUsage: %s -version \n\n%s","",name,NORMAL);
-    fprintf(stderr, "\n%8s <source>: Fichier source à compiler\n%8s-o <dest>: Spécifie le nom du fichier produit en assembleur MIPS (stdout pour sortie standard)\n%8s-tos: Affiche la table des symboles dans la sortie standard\n%8sAffiche le code intermédiaire\n%8s-version: Affiche les membres du groupe\n","","","","","");
+    fprintf(stderr, "\n%8s<source>\tFichier source à compiler\n%8s-o <dest>\tSpécifie le nom du fichier produit en assembleur MIPS (stdout pour sortie standard)\n%8s-tos\t\tAffiche la table des symboles\n%8s-i\t\tAffiche le code intermédiaire\n%8s-version\tAffiche les membres du groupe\n\n","","","","","");
     exit(0);
 }
 
 void version(char *m1, char* f1, char* m2, char *f2, char* m3, char *f3, char *m4, char*f4, char* v){
     printf("\n%8sMembres:\n","");
     printf("\n%8s\033[1m%s  -  %s  -  %s  -  %s\033[0m \n","",m1,m2,m3,m4);
-    printf("%8s%s\033[1m%s\033[0m          .  %s\033[1m%s\033[0m          .  %s\033[1m%s\033[0m         .  %s\033[1m%s\033[0m%s\n\n","",YELLOW,f1,YELLOW,f2,YELLOW,f3, YELLOW,f4, NORMAL);
+    printf("%8s%s\033[1m%s\033[0m          .  %s\033[1m%s\033[0m          .  %s\033[1m%s\033[0m         .  %s\033[1m%s\033[0m%s\n\n","",CYAN,f1,YELLOW,f2,CYAN,f3, CYAN,f4, NORMAL);
     if(v!=NULL){
         printf("\n%8s%s version: \033[1m%s\033[0m\n","", BLUE, v);
     }

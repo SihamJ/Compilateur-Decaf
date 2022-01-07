@@ -106,25 +106,19 @@ typedef struct expr_val {
     quadop result;
     char *stringval;
     int type;		// type of result operand: INT / BOOL / STRING
-    int booltype;
     list t;  		// true
-    list f;   		// false
-    list next;		
-    list brk; 		// break
-    list cntu; 		// continue
-    list rtrn;		// return
-    param p;
-    int isElseBlock;
-    list elseGoto;
+    list f;   	// false
   } expr_val;
 
 
-typedef struct block {
+typedef struct statement {
   list next;		
   list brk; 		// break
   list cntu; 		// continue
   list rtrn;		// return
-} block;
+  list elseGoto;
+  int isElseBlock; 
+} statement;
 
 typedef struct method_call {
   quadop result;

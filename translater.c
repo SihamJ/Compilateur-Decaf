@@ -13,6 +13,7 @@ FILE *source;
 
 void translate() {
 	
+	HashTable *ctx;
 	
 	if(fout == stdout)
 		printf("\n# _________________________ MIPS START ________________________# \n\n\n");
@@ -55,6 +56,7 @@ void translate() {
 		switch (global_code[i].type)
         {
 		case Q_FUNC:
+			// ctx = global_code[i].ctx;
 			fprintf(fout,"\tmove $fp $sp\n");
 			break;
 		case Q_DECL:
@@ -238,11 +240,13 @@ void translate() {
 			mips_return(global_code[i]);
 			break;
 		case Q_POP:
+			// ctx = ctx->next;
 			mips_pop_stack(global_code[i].op1.u.cst);
 			break;
 		case Q_ENDFUNC:
 			mips_end_func(global_code[i]);
 		case Q_PUSH:
+			// ctx = global_code[i].ctx;
 			mips_push_stack(global_code[i].op1.u.cst);
 			mips_initialise_stack(global_code[i].op1.u.cst);
 			break;

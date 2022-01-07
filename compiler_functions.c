@@ -28,6 +28,7 @@ char* add_to_tos(int type, char *name ){
     */
     pushctx(CTX_METHOD);
     quadop qo; qo.type = QO_EMPTY;
+    global_code[nextquad].ctx = curr_context;
     gencode(qo, qo, qo, Q_FUNC, name, -1, NULL);
 
     return NULL;
@@ -36,7 +37,7 @@ char* add_to_tos(int type, char *name ){
 
 int verify_returns(list rtrn, int type){
   while(rtrn){
-    if(global_code[rtrn->addr].op2.u.cst != type)
+    if(rtrn->addr<nextquad && global_code[rtrn->addr].op2.u.cst != type)
       return 0;
     rtrn = rtrn->suiv;
   }
@@ -201,39 +202,6 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
   }
 }
 
-// if op1 is an element in array, we have the index in op3. otherwise, op3 is empty.
-// this is done by get_location()
-void bool_affectation(quadop op1, quadop op3, expr_val *s, expr_val *expr){
-  /*
-    If the affectation is of bOOL type, we have to create two quads. One is for false affectation (0) and
-    the other one for true (1). The rules on expr already generate incomplete GOTOs. At this stage we complete
-    them with the address of the 2 quads we generated. The true attribute of expr is completed with the adress
-    of the true affectation, and the false attribute is completed with the address of the false affectation.
-  */
-
-  /* True affectation */
-  quadop op2;
-  op2.type = QO_CST;
-  op2.u.cst = true;
-  complete(expr->t, nextquad);
-  
-  gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL); 	
-
-  /* To skip false affectation. Incomplete GOTO because we don't know yet where to skip.
-    We add it to res.next
-  */
-  op2.type = QO_EMPTY;
-  s->next = crelist(nextquad);
-  gencode(op2, op2, op2, Q_GOTO, NULL, -1, NULL);
-
-  /* False affectation*/
-  op2.type = QO_CST;	
-  op2.u.cst = false;		
-  complete(expr->f, nextquad);											
-  gencode(op1, op2, op3, Q_AFF, NULL, -1, NULL);	
-}
-
-
 char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 
   /* The loop counter has its own context*/
@@ -270,21 +238,20 @@ expr_val get_max(char *counter_name, expr_val expr){
   
   // gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
 
-  char *name = malloc(strlen(counter_name)+5);
-  snprintf(name, strlen(counter_name)+5, "%s%s",counter_name, "_max");
+  char *name = malloc(strlen(counter_name)+7);
+  snprintf(name, strlen(counter_name)+7, "0_%s%s",counter_name, "_max");
   Ht_item *item = create_item(name, ID_VAR, INT);
   item->size = 4;
   newname(item);
   quadop qo;
-  qo.type = QO_ID;
+  qo.type = QO_TMP;
   qo.u.name = item->key; quadop q; q.type = QO_EMPTY;
 
   gencode(qo, expr.result, expr.result, Q_AFF, NULL, -1, NULL); 
 
   expr_val max;
   max.result = qo;
-  max.stringval = malloc(strlen(item->key)+1);
-  strcpy(max.stringval, item->key);
+  max.stringval = item->key;
 
   return max;
 }
@@ -391,7 +358,7 @@ char* verify_and_get_type_call(char *id, param p, method_call *m){
  * @param E arguments passed to the method
  * @param m this structure has a result quadop where we will store the return value (q2), to pass it to expr in case there is an affectation
  */
-void gen_method_call(char *id, expr_val *E, method_call *m){
+void gen_method_call(char *id, param par, method_call *m){
 
   quadop qo,q1,q2; 
   
@@ -409,9 +376,9 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
   
   else { q1.type = QO_EMPTY; q2.type = QO_EMPTY; }
 
-  if(E != NULL){
+  if(par != NULL){
 
-    param p = E->p;
+    param p = par;
     while(p){
       if( p->arg.type == QO_ID || p->arg.type == QO_TMP){
         p->arg.u.name = p->stringval;
@@ -419,7 +386,7 @@ void gen_method_call(char *id, expr_val *E, method_call *m){
       if(p->t && global_code[p->t->addr].jump == -1) complete(p->t, nextquad);
       p = p->next;
     }
-    gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, E->p);
+    gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, par);
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
   }
@@ -592,20 +559,6 @@ expr_val get_string_literal(char* str){
   return res;
 }
 
-// not used, adds too much abstraction to the code, hard to understand
-void complete_for_block(expr_val *statement, char* counter, expr_val b, int marker){
-  complete(b.next, nextquad);	complete(b.cntu, nextquad);
-  statement->next = crelist(marker); 	statement->next = concat(statement->next, b.brk); statement->rtrn = b.rtrn; 		 	
-  gen_increment_and_loopback(counter, marker);
-  if(curr_context->count > 0){
-    complete(statement->next, nextquad);	
-    gen_q_pop(curr_context->count*4);
-    statement->next = crelist( nextquad);
-    quadop qo; qo.type = QO_EMPTY;	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
-  }
-  
-}
-
 param copy_method_call_arg(expr_val expr, param list, int marker){
 
   param p = (param) malloc(sizeof(struct param));
@@ -619,7 +572,6 @@ param copy_method_call_arg(expr_val expr, param list, int marker){
   p->type = expr.type; p->arg = expr.result; p->next = list; 	p->byAddress = 0;
   if(expr.type == BOOL) { p->t = expr.t; }
   return p;
-
   
 }
 
@@ -770,12 +722,13 @@ expr_val eqop_cst(expr_val expr1, expr_val expr2, int op){
 
 void gen_q_push(){
   quadop qo, q; qo.type = QO_CST; q.type = QO_EMPTY;
+  global_code[nextquad].ctx = curr_context;
   gencode(qo, q, q, Q_PUSH, NULL, -1, NULL);
 }
 
-expr_val pop_block(expr_val block, expr_val statement){
+statement pop_block(statement block, statement s){
 
-  block = statement; 
+  block = s; 
 
   if(curr_context->size > 0){
     if(block.brk != NULL) {
@@ -793,4 +746,8 @@ expr_val pop_block(expr_val block, expr_val statement){
   gen_q_pop(curr_context->size);
   global_code[curr_context->quad_index].op1.u.cst = curr_context->size;
   return block;
+}
+
+void initialise_lists(statement *s){
+  s->brk = NULL;  s->cntu = NULL; s->rtrn = NULL; s->next = NULL; s->elseGoto = NULL;
 }
