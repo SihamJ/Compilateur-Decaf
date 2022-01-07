@@ -3,7 +3,7 @@
  HashTable* curr_context;
  HashTable* glob_context;
  HashTable* stack;
- 
+ int count;
 
 unsigned long hash_function(char *str)
 {   
@@ -349,8 +349,62 @@ void print_table(HashTable *table)
         }
     }
     if(j==0)
-        printf("%20sEMPTY CONTEXT","");
+        printf("%20sNO DECLARATIONS IN THIS CONTEXT","");
     printf("\n\n");
+}
+
+/*
+typedef struct Ht_item {
+    char *key;      // identificateur
+    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
+    int value;      // type (INT / BOOL / VOIDTYPE)
+	int order;      // ordre d'insértion dans la TOS
+    int size;       // si tableau, sinon 4
+    param p;        // si l'item est une méthode, param est une liste des paramètres et leurs types
+} Ht_item;
+
+typedef struct LinkedList {
+    Ht_item *item;
+    struct LinkedList *next;
+} LinkedList;
+
+typedef struct HashTable {
+    Ht_item **items;
+    LinkedList **lists;
+    int max_size;                // Taille max de la TOS
+    int count;                  // Nombre d'élément dans la table
+	int size;                   // Taille allouée en octet
+    struct HashTable *next;
+    ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...
+    int quad_index;  
+} HashTable; */
+
+
+void free_tables(){
+    HashTable* t = curr_context;
+    HashTable* pt;
+    while(t){
+        pt = t->next;
+        for(int i=0; i<t->max_size; i++){
+            if(t->items[i]){
+                free(t->items[i]->key);
+                free(t->items[i]->p);
+                free(t->items[i]);
+            }
+        }
+        free(t->items);
+        for(int i=0; i<t->max_size; i++){
+            if(t->lists[i]) {
+                free(t->lists[i]->item->key);
+                free(t->lists[i]->item->p);
+                free(t->lists[i]->item);
+                free(t->lists[i]);
+            }
+            free(t->lists);
+        }
+        free(t);
+        t = pt;
+    }
 }
 
 void pushctx(ctx_type type){
@@ -409,61 +463,21 @@ item_table *lookup(char *key, HashTable* ctx){
     return NULL;
 }
 
- void print_ctx(){
-    printf("\n\tTABLES DES SYMBOLES:\n\n");
-	int count = 0;
-    for (HashTable *i=curr_context; i; i = i->next){
-        printf("\tContext n° %d:",count++);
-        print_table(i);
-        printf("\n");
-    }
-    printf("\n");
-}
 
-void print_stack(){
-    printf("\n\t%s\e[4m\033[1mTABLES DES SYMBOLES\033[0m\e[0m\n\n%s",CYAN,NORMAL);
-	int count = 1;
-    for (HashTable *i=stack; i; i = i->next){
-        if(count == 1){
-        printf("\t\033[1mGLOBAL CONTEXT:\033[0m"); count++;}
-        else
-        printf("\t\033[1mCONTEXT %d:\033[0m",count++);
-        print_table(i);
-        printf("\n");
-    }
-    printf("\n\t%s\033[1m___________________________  FIN  TOS  __________________________\033[0m%s\n\n",CYAN,NORMAL);
-}
+void print_ctx(){
+    //printf("\n\tTABLES DES SYMBOLES:\n\n");
+	if(count == 0)
+        printf("\n\t%s\e[4m\033[1mTABLES DES SYMBOLES\033[0m\e[0m\n\n%s",CYAN,NORMAL);
 
+    if(curr_context == glob_context)
+        printf("\t\033[1mGLOBAL CONTEXT:\033[0m");
+    else
+        printf("\t\033[1mCONTEXT %d:\033[0m",count);
 
-
-
-/* Dépile les variables temporaires du context courant, est appelée à la fin de l'évaluation d'une expression */
-int pop_tmp(){
-    int nb = 0;
-    for (int i = 0; i < curr_context->max_size; i++){
-        if(curr_context->items[i] && curr_context->items[i]->id_type == ID_TMP){
-            ht_delete(curr_context, curr_context->items[i]->key);  
-            nb++;          
-        }
-    }
-    tmpCount = 0;
-    return nb;
-}
-
-
-char* num_to_char(int nb){
-
-    char* label;
-    int a = nb;
-    int cpt = 1;
-    while(a){
-        a=a/10;
-        cpt++;
-    }
-    label = malloc(cpt+1);
-    sprintf(label, "%d",nb);
-    
-    return label;
+    print_table(curr_context);
+    count++;
+    if(curr_context->next == NULL)
+        printf("\n\t%s\033[1m___________________________  FIN  TOS  __________________________\033[0m%s\n\n",CYAN,NORMAL);
 }
 
 Ht_item* new_temp(int type){
@@ -483,21 +497,6 @@ Ht_item* new_temp(int type){
     newname(item);
     tmpCount++;
     return item;
-}
-
-param reverse_list(param p){
-    param prev,curr, next;
-    curr = p;
-    prev = NULL;
-    next = NULL;
-
-    while(curr != NULL){
-        next = curr->next;
-        curr->next = prev;
-        prev = curr;
-        curr = next;
-    }
-    return prev;
 }
 
 char* get_type_id(int type){

@@ -55,11 +55,6 @@ typedef struct HashTable {
 } HashTable;
 
 
-typedef struct Tree {
-    HashTable* context;
-    HashTable* child;
-    HashTable* sibling;
-} *Tree;
 /**
  * @brief an item and the symbol table where it is located. This structure is returned by the lookup function, it serves to calculate the offset
  * of the item and to know if the item is in a global context or not.
@@ -68,6 +63,7 @@ typedef struct item_table {
     Ht_item *item;
     HashTable *table;
 } item_table;
+
 
 /* HashTable functions */
 unsigned long hash_function(char *str);
@@ -86,7 +82,7 @@ void ht_insert(HashTable *table, Ht_item *item);
 Ht_item *ht_search(HashTable *table, char *key);
 void ht_delete(HashTable *table, char *key);
 void print_table(HashTable *table);
-
+void free_tables();
 
 /**
  * @brief create a new temporary variable and adds it to the TOS
@@ -115,10 +111,6 @@ item_table *lookup(char *key, HashTable *ctx);
 /* prints the symbol table of the current context*/
 void print_ctx();
 
-/* prints all the symbol tables pushed into the stack*/
-void print_stack();
-void free_stack();
-
 /**
  * @brief calculates the offset of an item in relation to the current context (curr_context is a global variable pointing to the current TOS)
  * @param item this is a structure containing a pointer to the item, and a pointer to its symbol table
@@ -131,16 +123,11 @@ int offset(item_table *item, HashTable *ctx);
  * @return the number of variable to pop
  */
 int pop_tmp(); 
-char* num_to_char(int nb);
-void pop_nb_tmp(int nb);
-
-param reverse_list(param p);    // not used anymore
 
 char* get_type_global(int type); // used for printing the symbol table
 char* get_type_id(int type);    // used for printing the symbol table
 
 extern HashTable* curr_context; // pointer to the current context
 extern HashTable* glob_context; // pointer to the global context
-extern HashTable* stack;        // stack of symbol tables where the popped ones are stored, used for printing the TOS at the end of the program
 
 #endif

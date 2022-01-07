@@ -81,6 +81,7 @@ list crelist(int addr){
 }
 
 list concat(list n1, list n2){
+
   if(n1 == NULL && n2 == NULL)
     return NULL;
   else if(n1 == NULL)
@@ -97,9 +98,7 @@ list concat(list n1, list n2){
 
 void complete(list n, int addr){
   while(n != NULL){
-    if(n->addr < nextquad && global_code[n->addr].jump == -1)
-
-        global_code[n->addr].jump = addr;
+    global_code[n->addr].jump = addr;
     n = n->suiv;
   }
 }
@@ -365,3 +364,9 @@ void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, cha
   nextquad++;
 }
 
+void free_global_code(){
+  for(int i=0; i<nextquad; i++){
+    free(global_code[i].label);
+    free(global_code[i].p);
+  }
+}

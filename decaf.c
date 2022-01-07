@@ -10,6 +10,8 @@ extern int yyparse();
 extern int yylex();
 extern int yydebug;
 extern int warning;
+extern int tos;
+extern int count;
 extern FILE* fout;
 extern FILE* src;
 void usage(char *name);
@@ -17,7 +19,7 @@ void version(char *m1, char* f1, char* m2, char *f2, char* m3, char *f3, char *m
 
 int main(int argc, char* argv[]){
 
-    warning = 0;
+    warning = 0; count = 0; tos = 0;
     if(argc == 1){
         usage(argv[0]);
     }
@@ -51,7 +53,6 @@ int main(int argc, char* argv[]){
         }
 
         int i = 4;
-        bool tos = false;
         bool inter = false;
 
         while(i < argc){
@@ -79,18 +80,18 @@ int main(int argc, char* argv[]){
 
         add_labels();    
         
-        if(tos)
-            print_stack();
-        
         if(inter)
             print_globalcode();
 
-        
         translate();
+
         if(fout != stdout)
             fclose(fout);
 
-        free_stack();
+        
+        free_tables();
+        free_global_code();
+
         exit(EXIT_SUCCESS);
     }
 }

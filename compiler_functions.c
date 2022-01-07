@@ -37,7 +37,7 @@ char* add_to_tos(int type, char *name ){
 
 int verify_returns(list rtrn, int type){
   while(rtrn){
-    if(rtrn->addr<nextquad && global_code[rtrn->addr].op2.u.cst != type)
+    if(global_code[rtrn->addr].op2.u.cst != type)
       return 0;
     rtrn = rtrn->suiv;
   }
@@ -67,7 +67,6 @@ char* end_func(char *name, int ctx_count, param p, int is_returnval){
     global_code[nextquad-1].type = Q_ENDFUNC;
     global_code[nextquad-1].op2 = qo;
   }
-  tmpCount = 0;
   return NULL;
 }
 
@@ -87,8 +86,7 @@ char* field_declare(declaration *dec, int type){
       labelCount++;
     
     /* declaration of the global id in the quad */
-    qo.u.global.name = malloc(strlen(pt->name + 1));
-    strcpy(qo.u.global.name, pt->name);
+    qo.u.global.name = pt->name;
     qo.u.global.size = pt->size;
     qo.u.global.type = pt->type;
     quadop q; q.type = QO_EMPTY;
@@ -109,13 +107,13 @@ char* field_declare(declaration *dec, int type){
     pt = pt->suiv;
 	}
 
+  free(pt);
   return NULL;
 }
 
 char* var_declare(declaration *dec, int type){
 
   quadop qo;
-  /* pointer to browse the list of IDs*/
   declaration *pt = dec;
   qo.type = QO_ID;
   
@@ -133,13 +131,13 @@ char* var_declare(declaration *dec, int type){
     pt = pt->suiv;
   }
 
+  free(pt);
   return NULL;
 }
                   
 declaration get_declarations(char *name, declaration *next, int type, int size){
   declaration var;
-  var.name = malloc((strlen(name)+1)); 
-  strcpy(var.name, name);
+  var.name = name;
   var.size = size;
   var.suiv = next;
   var.type = type;
@@ -151,8 +149,7 @@ param get_param(char* name, int type, param next){
   param p = (param) malloc(sizeof(struct param));
   p->type = type;
   p->next = next;
-  p->stringval = malloc(strlen(name)+1);
-  strcpy(p->stringval, name);
+  p->stringval = name;
   return p;
 }
 
@@ -194,7 +191,7 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
       *q1 = l.index;
     }
   }
-  /* If location is a local variable, we retrieve the offset from TOS*/
+  // If location is a local variable, we retrieve the name
   else {
     qo->type = QO_ID;
     qo->u.name = val->item->key;
@@ -205,9 +202,8 @@ void get_location(quadop* qo, quadop* q1, item_table* val, location l){
 char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
 
   /* The loop counter has its own context*/
-  pushctx(CTX_FOR);
-  gen_q_push();
-  /* Verifying types */
+  pushctx(CTX_FOR);     gen_q_push();
+
   if(expr1.type != INT || expr2.type != INT)
     return "\nErreur: le compteur de boucle doit être de type INT\n";
 
@@ -215,8 +211,7 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
   if(!strcmp(counter_id, next_label_name()))
     labelCount++;
 
-  /* We declare the loop counter id, push it to the symbol table, and store the initial value expr1 in it*/
-  // gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
+  /* We declare the loop counter id and store the initial value expr1 in it*/
 
   Ht_item *item = create_item(counter_id, ID_VAR, INT);
   item->size = 4;
@@ -230,31 +225,24 @@ char* for_declare(char* counter_id, expr_val expr1, expr_val expr2){
   return NULL;
 }
 
-// we store the max value of the for loop counter in a new ID. 
-// In this context, giving it a name won't be a problem as long as it's different from the 
-// name of the loop counter.
+
 expr_val get_max(char *counter_name, expr_val expr){
   
-  
-  // gencode(qo, q, q, Q_DECL, NULL, -1, NULL);
-
   char *name = malloc(strlen(counter_name)+7);
   snprintf(name, strlen(counter_name)+7, "0_%s%s",counter_name, "_max");
+
   Ht_item *item = create_item(name, ID_VAR, INT);
-  item->size = 4;
-  newname(item);
-  quadop qo;
-  qo.type = QO_TMP;
-  qo.u.name = item->key; quadop q; q.type = QO_EMPTY;
+  item->size = 4;             newname(item);
+  quadop qo, q;               qo.type = QO_TMP;
+  qo.u.name = item->key;      q.type = QO_EMPTY;
 
   gencode(qo, expr.result, expr.result, Q_AFF, NULL, -1, NULL); 
 
-  expr_val max;
-  max.result = qo;
-  max.stringval = item->key;
+  expr_val max;     max.result = qo;    max.stringval = item->key;
 
   return max;
 }
+
 
 void gen_q_pop(int count){
   quadop q, qo; qo.type = QO_EMPTY;
@@ -289,24 +277,8 @@ void gen_increment_and_loopback(char* counter_name, int jump){
 }
 
 void get_write_string_args(char *label, char*value){
-  str_labels[str_count-1].label = malloc(strlen(label)+1);
- // strcpy(str_labels[str_count-1].label,label);
-  str_labels[str_count-1].value = malloc(strlen(value)+1);
- // strcpy(str_labels[str_count-1].value,value);
-
-  int i=0;
-  while(label[i]!='\0'){
-    str_labels[str_count-1].label[i] = label[i];
-    i++;
-  }
-  str_labels[str_count-1].label[i] = '\0';
-
-   i=0;
-  while(value[i]!='\0'){
-    str_labels[str_count-1].value[i] = value[i];
-    i++;
-  }
-  str_labels[str_count-1].value[i] = '\0';
+  str_labels[str_count-1].label = label;
+  str_labels[str_count-1].value = value;
 }
 
 /* Utile pour savoir si un break ou un continue est bien au sein d'une boucle for */
@@ -317,21 +289,23 @@ int is_a_parent(ctx_type type){
             return true;
         pt = pt->next;
     }
+    free(pt);
     return false;
 }
+
 
 int verify_param(param p1, param p2){
     while(p1 != NULL && p2 != NULL){
         if(p1->type != p2->type || p1->byAddress != p2->byAddress){
-            return 0;
+            return false;
         }
         p1=p1->next;
         p2=p2->next;
     }
     if(p1 != NULL || p2 != NULL){
-        return 0;
+        return false;
     }
-    return 1;
+    return true;
 }
 
 char* verify_and_get_type_call(char *id, param p, method_call *m){
@@ -363,8 +337,7 @@ void gen_method_call(char *id, param par, method_call *m){
   quadop qo,q1,q2; 
   
   qo.type = QO_CSTSTR;
-  qo.u.string_literal.label = malloc(strlen(id)+1);
-  strcpy(qo.u.string_literal.label, id);
+  qo.u.string_literal.label = id;
 
   if(m->return_type != VOIDTYPE) { 
     
@@ -390,9 +363,8 @@ void gen_method_call(char *id, param par, method_call *m){
   } else {
     gencode(qo,q1,q2, Q_METHODCALL, NULL, -1, NULL);
   }
-  
-  m->result = q2;
 
+  m->result = q2;
 
 }
 
@@ -408,16 +380,13 @@ expr_val get_literal(literal l){
 expr_val gen_global_scalar(location l, item_table* val) {
   expr_val res;
     quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
-    q1.u.global.name = malloc(strlen(l.stringval)+1);
-    strcpy(q1.u.global.name, l.stringval);	 q1.u.global.size = 4;
+    q1.u.global.name = l.stringval;	 q1.u.global.size = 4;
     q2.type = QO_EMPTY;
     
     Ht_item* item = new_temp(val->item->value);
     quadop qo; qo.type = QO_TMP; qo.u.name = item->key;
-    // gencode(qo, q2, q2, Q_DECL, NULL, -1, NULL); 
     gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
-    res.stringval = malloc(strlen(item->key)+1);
-    strcpy(res.stringval, item->key);
+    res.stringval = item->key;
     res.type = val->item->value;
     res.result = qo;
     return res;
@@ -434,21 +403,16 @@ char* verify_location_access(location l, item_table* val){
 
 expr_val gen_access_tab(location l, item_table *val){
 
-  expr_val res;
-  res.type = val->item->value;
-  quadop qo; 		qo.type = QO_GLOBAL; 	qo.u.global.type = QO_TAB;
-  qo.u.global.name = malloc(strlen(l.stringval)+1);
-  strcpy(qo.u.global.name, l.stringval); 	qo.u.global.size = val->item->size;
+  expr_val res;     res.type = val->item->value;
+  quadop qo; 		    qo.type = QO_GLOBAL; 	        qo.u.global.type = QO_TAB;
+  qo.u.global.name = l.stringval;   	            qo.u.global.size = val->item->size;
 
   Ht_item* item = new_temp(INT);
-  quadop q1,q2; q2.type=QO_EMPTY;	 q1.type = QO_TMP; 		q1.u.name = item->key;
-  // gencode(q1, q2, q2, Q_DECL, NULL, -1, NULL);
+  quadop q1, q2;    q2.type = QO_EMPTY;	    q1.type = QO_TMP; 		q1.u.name = item->key;
 
-  if(l.index.type == QO_ID || l.index.type == QO_TMP){
-    l.index.u.name = l.index_name; }
 
   gencode(q1, qo, l.index, Q_ACCESTAB, NULL, -1, NULL); 	res.result = q1; 
-  res.stringval = malloc(strlen(item->key)+1); strcpy(res.stringval, item->key);
+  res.stringval = item->key;
 
   return res;
 }
@@ -456,8 +420,7 @@ expr_val gen_access_tab(location l, item_table *val){
 expr_val get_local_id(location l, item_table *val){
   expr_val res;
   quadop qo; 	qo.type = QO_ID; 	qo.u.name =  l.stringval; 	res.result = qo;
-  res.type = val->item->value; 	res.stringval = malloc(strlen(l.stringval)+1);
-  strcpy(res.stringval, l.stringval); 
+  res.type = val->item->value; 	res.stringval = l.stringval;
   if(res.type == BOOL){  res.t = NULL; res.f = NULL; }
   return res;
 }
@@ -489,24 +452,12 @@ expr_val unaire(expr_val expr){
   res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.name = item->key;
   quadop q1; q1.type = QO_EMPTY;
 
-  res.stringval = malloc(strlen(item->key)+1); 	strcpy(res.stringval, item->key);
+  res.stringval = item->key;
 
   q1.type = QO_CST; 	q1.u.cst = 0;
   gencode(qo, q1, expr.result, Q_SUB, NULL,-1, NULL); 	res.result = qo;
   return res;
 }
-
-expr_val eqop(expr_val expr1, int op, expr_val expr2){
-
-  expr_val res;
-
-  quadop qo; 	qo.type = QO_EMPTY;
-
-  res.t = crelist(nextquad); 	gencode(qo, expr1.result, expr2.result, op, NULL, -1, NULL);
-  res.f = crelist(nextquad); 	gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL);
-  return res;
-}
-
 
 
 expr_val oprel(expr_val expr1, int op, expr_val expr2){
@@ -554,8 +505,7 @@ expr_val get_string_literal(char* str){
   expr_val res;
   res.type = STRING; 	res.result.type = QO_CSTSTR;
   res.result.u.string_literal.label = new_str();
-  res.result.u.string_literal.value = malloc(strlen(str)+1);
-  strcpy(res.result.u.string_literal.value, str);
+  res.result.u.string_literal.value = str;
   return res;
 }
 
@@ -578,16 +528,15 @@ param copy_method_call_arg(expr_val expr, param list, int marker){
 param get_arg_by_address(char* str, param list, item_table* val){
 
   param p = (param) malloc(sizeof(struct param));
-  char *name = malloc(strlen(str)); strcpy(name, str+1); 
   
   quadop qo; 
   if(val->table == glob_context){
-    qo.type = QO_GLOBAL; qo.u.global.name = name; qo.u.global.type = QO_SCAL;
+    qo.type = QO_GLOBAL; qo.u.global.name = str; qo.u.global.type = QO_SCAL;
   }
   else{
-    qo.type = QO_ID; qo.u.name = name;
+    qo.type = QO_ID; qo.u.name = str;
   }
-  p->stringval = name;
+  p->stringval = str;
   p->type = val->item->value; p->arg = qo; p->next = list; p->byAddress = 1;
   return p;
 }
@@ -611,10 +560,10 @@ expr_val val_to_goto(expr_val expr){
 
 expr_val goto_to_val (expr_val expr) {
 
-  expr_val res; Ht_item* tmp = new_temp(expr.type);
-  quadop q, qo, q1; q.type = QO_EMPTY; qo.type = QO_TMP; qo.u.name = tmp->key; q1.type = QO_CST; q1.u.cst = true;
-  
-  res.stringval = tmp->key;
+  Ht_item* tmp = new_temp(expr.type);
+  expr_val res;             quadop q, qo, q1;           q.type = QO_EMPTY;    
+  q1.type = QO_CST;         q1.u.cst = true;            qo.type = QO_TMP;    
+  qo.u.name = tmp->key;     res.stringval = tmp->key;
 
   
   complete(expr.t, nextquad);
@@ -623,7 +572,6 @@ expr_val goto_to_val (expr_val expr) {
 
   res.t = crelist(nextquad);
   gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
-  printf("\n res.t = %d\n",res.t->addr);
   q1.u.cst = false;
   complete(expr.f, nextquad);
   gencode(qo, q1, q, Q_AFF, NULL, -1, NULL);
@@ -644,81 +592,11 @@ expr_val not_op(expr_val expr){
   gencode(qo, q1, expr.result, Q_SUB, NULL, -1, NULL);
   res.result = qo;
 
-  res.stringval = malloc(strlen(item->key)+1);
-  strcpy(res.stringval, item->key);
+  res.stringval = item->key;
   res.t = NULL; res.f = NULL;
   return res;
 }
 
-
-
-// avec un peu d'optimisation..
-expr_val eqop_cst(expr_val expr1, expr_val expr2, int op){
-
-  expr_val res; res.type = BOOL; 
-  
-  if(op == Q_EQ){
-    
-    if(expr1.result.type == QO_CST) {
-      if(expr2.result.type == QO_CST){
-        if(expr1.result.u.cst == expr2.result.u.cst) {
-          res.result.type = QO_CST; res.result.u.cst = true; }
-        else { res.result.type = QO_CST; res.result.u.cst = false; }	
-      }
-      else {
-        if(expr1.result.u.cst == true)	
-          res = expr2;
-        else if(expr1.result.u.cst == false){
-          res.t = expr2.f; res.f = expr2.t; res.result.type = QO_GOTO;
-        }
-      }
-    }
-    else if(expr2.result.type == QO_CST) {
-      if(expr2.result.u.cst == true) 
-        res = expr1;
-      else if(expr2.result.u.cst == false) {
-        res.t = expr1.f; res.f = expr1.t; res.result.type = QO_GOTO;
-      }
-    }
-    // if none of the above conditions are fulfilled, we need to return it (i.e -1)
-    else {
-      res.result.type = QO_CST; res.result.u.cst = -1;
-    }
-  }
-  else if(op == Q_NEQ){
-    
-    if(expr1.result.type == QO_CST) {
-      if(expr2.result.type == QO_CST){
-        if(expr1.result.u.cst == expr2.result.u.cst) {
-          res.result.type = QO_CST; res.result.u.cst = false; }
-        else { 
-          res.result.type = QO_CST; res.result.u.cst = true; }	
-      }
-      else {
-        if(expr1.result.u.cst == false)	
-          res = expr2;
-        else if(expr1.result.u.cst == true){
-          res.t = expr2.f; res.f = expr2.t; res.result.type = QO_GOTO;
-        }
-      }
-    }
-    else if(expr2.result.type == QO_CST) {
-      if(expr2.result.u.cst == false) 
-        res = expr1; 
-      else if(expr2.result.u.cst == true) {
-        res.t = expr1.f; res.f = expr1.t;  res.result.type = QO_GOTO;
-    }
-    }
-    // if none of the above conditions are fulfilled, we need to return it (i.e -1)
-    else { 
-      res.result.type = QO_CST; res.result.u.cst = -1;
-    }
-  
-  }
-  
-  // res.type = BOOL; 
-  return res;
-}
 
 void gen_q_push(){
   quadop qo, q; qo.type = QO_CST; q.type = QO_EMPTY;
