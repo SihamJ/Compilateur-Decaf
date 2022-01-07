@@ -48,10 +48,9 @@ typedef struct HashTable {
     LinkedList **lists;
     int max_size;                // Taille max de la TOS
     int count;                  // Nombre d'élément dans la table
-	int size;                   // Taille allouée en octet
+	int size;                   // Taille utilisée en octet 
     struct HashTable *next;
     ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...
-    int quad_index;  
 } HashTable;
 
 

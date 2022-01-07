@@ -79,7 +79,6 @@ program	:  class id '{' {
 								if( ht_search( glob_context,"main") == NULL ) {	
 									yyerror("\nErreur: Pas de méthode main\n"); 
 									return 1; }
-								global_code[glob_context->quad_index].op1.u.cst = curr_context->size;
 								gen_q_pop(curr_context->size); 
 								if(tos) { print_ctx(); }
 								popctx();
@@ -153,13 +152,14 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 									if(is_returnval && !verify_returns($8.rtrn, $1)) { 
 										yyerror("\nErreur: Méthode avec faux type de retour\n");  
 										return 1; }
-									complete($8.next,nextquad-1); 	complete($8.rtrn, nextquad-1);
-									free($8.next);	free($8.rtrn);
 
-									char* msg; 	
-									if( (msg = end_func($2, curr_context->count, $5, is_returnval)) != NULL ) { 
-										yyerror(msg); return 1; } 
-									if(tos) { print_ctx(); }
+									int index;
+									if(global_code[nextquad-1].type == Q_POP) { index = nextquad-1; }
+									else { index = nextquad; }
+
+									complete($8.next,index);	complete($8.rtrn, index);	free($8.next); free($8.rtrn);
+
+									end_func($2, index);	if(tos) { print_ctx(); }
 									popctx(); 
 								}
 						
@@ -169,19 +169,24 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 										yyerror(msg); return 1; } 
 								} 
 							
-			'(' P ')'  			{	item_table* val = lookup($2, curr_context);		val->item->p = $5; 	free(val); }
+			'(' P ')'  			{	if(!strcmp($2, "main") && $5 != NULL){
+      									yyerror("\nErreur: Main ne prends pas de paramètres\n"); 	return 1; }
+									item_table* val = lookup($2, curr_context);		val->item->p = $5; 	free(val); 
+								}
 			
 				block			{
 								 	if($8.rtrn != NULL && !verify_returns($8.rtrn, $1) ) { 
 										yyerror("\nErreur: Méthode avec faux type de retour\n"); 
 										return 1; }
 
-									// nextquad-1 is always pop stack for the end of the block
-									complete($8.next,nextquad-1);	complete($8.rtrn, nextquad-1);	free($8.next); free($8.rtrn);
-									char* msg;	
-									if( (msg = end_func($2, curr_context->count, $5, 0)) != NULL) { 
-										yyerror(msg); return 1;	}
-									if(tos) { print_ctx(); }
+									// if nextquad-1 is pop stack for the end of the block, we replace it with END_FUNC because we pop using $fp
+									int index;
+									if(global_code[nextquad-1].type == Q_POP) { index = nextquad-1; }
+									else { index = nextquad; }
+
+									complete($8.next,index);	complete($8.rtrn, index);	free($8.next); free($8.rtrn);
+
+									end_func($2, index);	if(tos) { print_ctx(); }	
 									popctx(); 	
 								}
 
@@ -296,7 +301,7 @@ statement 	:	location assign_op expr ';' {
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
 
 												// Now that we know the context size, we go back to PUSH_CTX quad and update its value
-												global_code[curr_context->quad_index].op1.u.cst = curr_context->size; 
+												 
 												if(tos) { print_ctx(); }
 												popctx(); 
 											}

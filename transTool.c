@@ -29,17 +29,8 @@ void mips_dec_global(quadop q){
 	}
 }
 
-void mips_init_array(quadop q) {
-	// Double Test if it's a Array, just to be sure
-	if(q.u.global.type == QO_TAB) {
-		fprintf(fout, "\tla $s0 %s\n", q.u.global.name);
-		fprintf(fout, "\tli $s1 %d\n",  q.u.global.size/4);
-		fprintf(fout, "\tjal BZero\n");
-	}
-}
-
 void mips_label(char *name, int n) {
-	fprintf(fout, "%8s%s%d:\n","",name, n);
+	fprintf(fout, "\t%s%d:\n",name, n);
 }
 
 void mips_load_immediate(char *reg, int val) {
@@ -140,15 +131,6 @@ void mips_load_2args( quadop op1, quadop op2, HashTable* ctx) {
 		mips_load_immediate("$t1", op2.u.cst);
 }
 
-/*void mips_beqz(char *target) {
-	fprintf(fout,"beqz $t0 true%d\n", branch_count);
-	mips_instruction(MIPS_FALSE);
-	mips_jump("false",branch_count);
-	mips_label("true",branch_count);
-	mips_instruction(MIPS_TRUE);
-	mips_label("false",branch_count);
-	branch_count++;
-}*/
 
 // if target != null, copy result from $v0 to target
 void mips_sum(char *target, char *addL, char *addR) {
@@ -221,7 +203,7 @@ void mips_eq(char *target, char *eqL, char *eqR, char *label) {
         mips_load_from_addr("$t0", eqL);
     if (strcmp("$t1", eqR))
         mips_load_from_addr("$t1", eqR);
-	fprintf(fout,"%8sbeq $t0 $t1 %s\n", "",label);
+	fprintf(fout,"\tbeq $t0 $t1 %s\n",label);
 }
 
 void mips_seq(char *target, char *eqL, char *eqR) {
@@ -237,7 +219,7 @@ void mips_neq(char *target, char *neqL, char *neqR, char *label) {
         mips_load_from_addr("$t0", neqL);
     if (strcmp("$t1", neqR))
         mips_load_from_addr("$t1", neqR);
-	fprintf(fout,"%8sbne $t0 $t1 %s\n","", label);
+	fprintf(fout,"\tbne $t0 $t1 %s\n", label);
 }
 
 void mips_sne(char *target, char *eqL, char *eqR) {
@@ -253,7 +235,7 @@ void mips_lt(char *target, char *ltL, char *ltR, char *label) {
         mips_load_from_addr("$t0", ltL);
     if (strcmp("$t1", ltR))
         mips_load_from_addr("$t1", ltR);
-	fprintf(fout,"%8sblt $t0 $t1 %s\n", "",label);
+	fprintf(fout,"\tblt $t0 $t1 %s\n",label);
 }
 
 void mips_gt(char *target, char *gtL, char *gtR, char *label) {
@@ -261,7 +243,7 @@ void mips_gt(char *target, char *gtL, char *gtR, char *label) {
         mips_load_from_addr("$t0", gtL);
     if (strcmp("$t1", gtR))
         mips_load_from_addr("$t1", gtR);
-	fprintf(fout,"%8sbgt $t0 $t1 %s\n","", label);
+	fprintf(fout,"\tbgt $t0 $t1 %s\n", label);
 }
 
 void mips_leq(char *target, char *leqL, char *leqR, char *label) {
@@ -269,7 +251,7 @@ void mips_leq(char *target, char *leqL, char *leqR, char *label) {
         mips_load_from_addr("$t0", leqL);
     if (strcmp("$t1", leqR))
         mips_load_from_addr("$t1", leqR);
-	fprintf(fout,"%8sble $t0 $t1 %s\n","", label);
+	fprintf(fout,"\tble $t0 $t1 %s\n", label);
 }
 
 void mips_geq(char *target, char *geqL, char *geqR, char *label) {
@@ -277,59 +259,17 @@ void mips_geq(char *target, char *geqL, char *geqR, char *label) {
         mips_load_from_addr("$t0", geqL);
     if (strcmp("$t1", geqR))
         mips_load_from_addr("$t1", geqR);
-	fprintf(fout,"%8sbge $t0 $t1 %s\n", "",label);
+	fprintf(fout,"\tbge $t0 $t1 %s\n",label);
 }
 
 void mips_jump(char *label){
-	fprintf(fout,"%8sj %s\n","",label);
+	fprintf(fout,"\tj %s\n",label);
 }
 
 void mips_syscall(int num){
 	fprintf(fout, "\tli $v0, %d\n",num);
 	fprintf(fout,"\tsyscall\n");
 }
-/** The abstraction of "For" and "While" should be the same.
-* (Looping the content in its block based on the value of a boolean. 
-* @param block_content The content to loop
-* @param condition_reg The register holding the boolean value
-*/
-/*void mips_loop(char *condition_reg, const char *block_content) {
-	mips_label("loop", branch_count);
-	fprintf(fout, "bnez %s, endloop%d\n", condition_reg, branch_count);
-	mips_instruction(block_content);
-	mips_jump("loop", branch_count);
-	mips_label("loop", branch_count);
-}
-
-/**
- * Control structure if-else
- * 
- * @param condition_reg The condition register
- * @param blk_if_content The content in "if's block"
- * @param blk_el_content The content in "else's block", if this value is NULL, 
- * 							none "else" block will be generated
- */
-/*void mips_if_else(char *condition_reg, const char* blk_if_content, const char * blk_el_content) {
-	if (blk_el_content != NULL) {
-		fprintf(fout, "beqz %s, else%d\n", condition_reg, branch_count);
-		mips_instruction(blk_if_content);
-		mips_jump("endif", branch_count);
-		mips_label("else", branch_count);
-		mips_instruction(blk_el_content);
-		mips_label("endif", branch_count);
-	} else {
-		fprintf(fout, "beqz %s, endif%d\n", condition_reg, branch_count);
-		mips_instruction(blk_if_content);
-		mips_label("endif", branch_count);
-	}
-}*/
-
-// /**
-//  * @brief Declare a table
-//  */
-// void declare_tab(char *tab_name, int size) {
-// 	fprintf(fout, ".data\n%s: .word %d\n", tab_name, size);
-// }
 
 /**
  * @brief Save the value in the buffer to the target table at a specified offset
@@ -342,7 +282,7 @@ void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
-	fprintf(fout, "%8ssw %s %s+%d\n","", buffer_reg, tab_name, offset);
+	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
 }
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
@@ -388,7 +328,7 @@ void mips_decl_string(char *varName, char *value) {
 	fprintf(fout, "\t%s: .asciiz %s\n",varName, value);
 }
 
-void mips_method_call(quad q){
+void mips_method_call(quad q, HashTable *ctx){
 
 	// we save $ra and $fp in the stack
 	fprintf(fout, "\tmove $t0 $ra\n");
@@ -399,7 +339,7 @@ void mips_method_call(quad q){
 	int size = 0;
 	// push args in stack and return the number of parameters in size so we can pop them after jal
 	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString") && strcmp(q.op1.u.string_literal.label,"ReadInt"))
-		size = mips_push_args(q.p, q.ctx);
+		size = mips_push_args(q.p, ctx);
 
 	// if we are calling WriteString, the argument is in the declared labels
 	else if(!strcmp(q.op1.u.string_literal.label,"WriteString")){
@@ -426,15 +366,15 @@ void mips_method_call(quad q){
 	// if there is a return value, we save it to the corresponding offset
 	if(q.op2.type == QO_CST){
 		fprintf(fout,"\tbeqz $v1 No_Return\n"); // verif dynamique for return value
-		item_table *val = lookup(q.op3.u.name, q.ctx);
-		mips_write_stack("$v0", offset(val,q.ctx));
+		item_table *val = lookup(q.op3.u.name, ctx);
+		mips_write_stack("$v0", offset(val,ctx));
 	}
 	
 	// if we called ReadInt, we store the value in the corresponding location
 	if(!strcmp(q.op1.u.string_literal.label,"ReadInt")){
 		if(q.p->arg.type == QO_ID){
-			item_table *val = lookup(q.p->arg.u.name, q.ctx);
-			mips_write_stack("$v0", offset(val,q.ctx));
+			item_table *val = lookup(q.p->arg.u.name, ctx);
+			mips_write_stack("$v0", offset(val,ctx));
 		}
 		else if(q.p->arg.type == QO_GLOBAL && q.p->arg.u.global.type == QO_SCAL)
 			fprintf(fout,"\tsw $v0 %s\n",q.p->arg.u.global.name);
@@ -465,17 +405,7 @@ int mips_push_args(param p, HashTable *ctx){
 	return size;
 }
 
-
-void mips_end_func(quad q){
-
-	// we pop from the stack local variables of the method 
-	fprintf(fout,"\taddi $s0 $s0 %d\n",q.op1.u.cst);
-	fprintf(fout,"\tsub $t0 $fp $sp\n");
-	fprintf(fout,"\tadd $sp $sp $t0\n");
-	fprintf(fout,"\tjr $ra\n");
-}
-
-void mips_return(quad q){
+void mips_return(quad q, HashTable *ctx){
 
 	/* if there is a return value, we store it in $vo and indicate in $v1 that there is one*/
 	if(q.op2.type != QO_EMPTY){
@@ -484,8 +414,8 @@ void mips_return(quad q){
 			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_ID || q.op1.type == QO_TMP){
-			item_table* val = lookup(q.op1.u.name, q.ctx);
-			mips_read_stack("$v0", offset(val, q.ctx));
+			item_table* val = lookup(q.op1.u.name, ctx);
+			mips_read_stack("$v0", offset(val, ctx));
 			mips_load_immediate("$v1",1);
 		}
 		else if(q.op1.type == QO_GLOBAL){
@@ -496,7 +426,7 @@ void mips_return(quad q){
 		}
 	}
 	/* we jump to the end of the function label*/
-	fprintf(fout,"%8sj %s\n","",global_code[q.jump].label);
+	fprintf(fout,"\tj %s\n",global_code[q.jump].label);
 }
 
 void mips_declare_strings(){

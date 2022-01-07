@@ -353,33 +353,6 @@ void print_table(HashTable *table)
     printf("\n\n");
 }
 
-/*
-typedef struct Ht_item {
-    char *key;      // identificateur
-    int id_type;    // variable (ID_VAR) ou méthode (ID_METHODE) ou temporaire (ID_TMP) ou paramètre de méthode (ID_PARAM) ou tableau (ID_TAB)
-    int value;      // type (INT / BOOL / VOIDTYPE)
-	int order;      // ordre d'insértion dans la TOS
-    int size;       // si tableau, sinon 4
-    param p;        // si l'item est une méthode, param est une liste des paramètres et leurs types
-} Ht_item;
-
-typedef struct LinkedList {
-    Ht_item *item;
-    struct LinkedList *next;
-} LinkedList;
-
-typedef struct HashTable {
-    Ht_item **items;
-    LinkedList **lists;
-    int max_size;                // Taille max de la TOS
-    int count;                  // Nombre d'élément dans la table
-	int size;                   // Taille allouée en octet
-    struct HashTable *next;
-    ctx_type type;                   // Type du contexte courrant: Méthode, boucle for, condition If, etc ...
-    int quad_index;  
-} HashTable; */
-
-
 void free_tables(){
     HashTable* t = curr_context;
     HashTable* pt;
@@ -412,7 +385,6 @@ void pushctx(ctx_type type){
 	temp->next = curr_context;
 	curr_context = temp;
     curr_context->type = type;
-    curr_context->quad_index = nextquad;
 }
 
 // pop current context and put it into the stack

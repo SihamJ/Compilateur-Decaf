@@ -64,7 +64,11 @@ void gencode(quadop op1, quadop op2, quadop op3, quad_type t, char *label, int j
   global_code[nextquad].op3 = op3;
   global_code[nextquad].jump = jump;
   global_code[nextquad].p = p;
-  global_code[nextquad].ctx = curr_context;
+
+  if(t == Q_PUSH || t == Q_FUNC || t == Q_POP || t == Q_ENDFUNC)
+    global_code[nextquad].ctx = curr_context;
+  else
+    global_code[nextquad].ctx = NULL;
 
   if(label != NULL ){
     global_code[nextquad].label = malloc(strlen(label)+1);

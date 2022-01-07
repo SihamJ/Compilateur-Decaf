@@ -44,29 +44,31 @@ int verify_returns(list rtrn, int type){
   return 1;
 }
 
-char* end_func(char *name, int ctx_count, param p, int is_returnval){
+char* end_func(char *name, int index){
 
   if(!strcmp(name, "main")){
-    if(p != NULL){
-      return "\nErreur: Main ne prends pas de paramètres\n";
-    }
     quadop qo; 
     qo.type = QO_CST; 
     qo.u.cst = 10; 
     gencode(qo,qo,qo, Q_SYSCALL, "end", -1, NULL);
   }
-
-  else{
-    quadop qo;
-    qo.type = QO_CST;
-    qo.u.cst = is_returnval;
+  else {
     char *label = new_endfunc_label(name);
-    if(lookup(label, curr_context)!=NULL)
+
+    if(lookup(label, curr_context) != NULL)
       label = new_label();
-    global_code[nextquad-1].label = label;
-    global_code[nextquad-1].type = Q_ENDFUNC;
-    global_code[nextquad-1].op2 = qo;
+    // replacing the previous quad which can only be a pop_stack for the end of block
+    // we don't need it anymore, we pop using $fp
+    if(global_code[index].type == Q_POP) {
+      global_code[index].label = label;
+      global_code[index].type = Q_ENDFUNC;
+    }
+    else {
+      quadop q; q.type = QO_EMPTY;
+      gencode(q, q, q, Q_ENDFUNC, label, -1, NULL);
+    }
   }
+
   return NULL;
 }
 
@@ -599,15 +601,17 @@ expr_val not_op(expr_val expr){
 
 
 void gen_q_push(){
-  quadop qo, q; qo.type = QO_CST; q.type = QO_EMPTY;
+  quadop q; q.type = QO_EMPTY;
   global_code[nextquad].ctx = curr_context;
-  gencode(qo, q, q, Q_PUSH, NULL, -1, NULL);
+  gencode(q, q, q, Q_PUSH, NULL, -1, NULL);
 }
 
 statement pop_block(statement block, statement s){
 
   block = s; 
 
+  // if there are variable to pop from the block context.
+  // for return, we don't need this, we pop in end_func using $fp
   if(curr_context->size > 0){
     if(block.brk != NULL) {
       complete(block.brk, nextquad);	gen_q_pop(curr_context->size); block.brk = crelist(nextquad); quadop q; q.type = QO_EMPTY;
@@ -620,9 +624,10 @@ statement pop_block(statement block, statement s){
     if(block.cntu != NULL){
       complete(block.cntu, nextquad); gen_q_pop(curr_context->size); block.cntu = crelist(nextquad); quadop q; q.type = QO_EMPTY;
       gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
+
+    gen_q_pop(curr_context->size);
   }
-  gen_q_pop(curr_context->size);
-  global_code[curr_context->quad_index].op1.u.cst = curr_context->size;
+  
   return block;
 }
 

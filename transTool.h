@@ -140,10 +140,9 @@ void tab_get(char *buffer_reg, char *tab_name, int offset);
 void tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
 
 void mips_pop_stack(int offset);
-void mips_method_call(quad q);
-void mips_end_func(quad q);
+void mips_method_call(quad q, HashTable *ctx);
 int mips_push_args(param p, HashTable *ctx);
-void mips_return(quad q);
+void mips_return(quad q, HashTable *ctx);
 void mips_declare_strings();
 
 void mips_tab_get(char *buffer_reg, char *tab_name, int offset);
