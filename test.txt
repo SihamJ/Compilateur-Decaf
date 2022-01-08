@@ -1,12 +1,15 @@
-class Test {
-    void main(){
-        boolean a;
-        a = true;
-        WriteString("0=");
-        if (a == true)
-        {
-            WriteString("0");
-        }
-        WriteString("\n");
+class MasquageGlobale {
+    int _glob_b;
+    void f (int b)
+    {
+        b = 42;
+    }
+    void main ()
+    {
+        int __glob_b;
+       __glob_b = 17;
+        f (0);
+        WriteInt (__glob_b);
+        WriteString ("=17\n");
     }
 }

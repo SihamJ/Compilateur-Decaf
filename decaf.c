@@ -83,10 +83,11 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
 
         add_labels();    
-        
+        useless_gotos();
+
         if(inter){
             print_globalcode();
-           /* new_cfg();
+       /*     new_cfg();
             get_base_blocks();
             set_base_blocks();
             print_base_blocks();*/

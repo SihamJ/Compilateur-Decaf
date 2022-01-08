@@ -83,6 +83,9 @@ char* field_declare(declaration *dec, int type){
     /* verifying that the ID does not already exist in the current context*/
     if( ht_search(glob_context, pt->name) != NULL ) 
       return "\nErreur: Identificateur déjà déclaré\n";
+    else if(strlen(pt->name) > 7 && !strncmp(pt->name, "__glob_",7)){
+      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+    }
 
     if(!strcmp(pt->name, next_label_name()))
       labelCount++;
@@ -123,7 +126,7 @@ char* var_declare(declaration *dec, int type){
 
     if( ht_search(curr_context, pt->name) != NULL ) 
       return "\nErreur: Identificateur déjà déclaré\n";
-    
+
     if(!strcmp(pt->name, next_label_name()))
       labelCount++;
     Ht_item *item = create_item(pt->name, ID_VAR, type); 
@@ -427,14 +430,14 @@ expr_val get_local_id(location l, item_table *val){
   expr_val res;
   quadop qo; 	qo.type = QO_ID; 	qo.u.name =  l.stringval; 	res.result = qo;
   res.type = val->item->value; 	res.stringval = l.stringval;
-  if(res.type == BOOL){  res.t = NULL; res.f = NULL; }
+  res.t = NULL; res.f = NULL; 
   return res;
 }
 
 expr_val add(expr_val expr1, int op, expr_val expr2){
   expr_val res;
   res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.name = item->key;
-
+  res.t = NULL; res.f = NULL;
   res.stringval = item->key;
 
   quadop q1; q1.type = QO_EMPTY;
@@ -445,7 +448,7 @@ expr_val add(expr_val expr1, int op, expr_val expr2){
 expr_val mul(expr_val expr1, int op, expr_val expr2){
   expr_val res;
   res.type = INT;	 Ht_item* item = new_temp(INT); 	quadop qo; 	qo.type = QO_TMP; 	qo.u.name = item->key;
-
+  res.t = NULL; res.f = NULL;
   res.stringval = item->key;
   
   quadop q1; q1.type = QO_EMPTY;
@@ -457,7 +460,7 @@ expr_val unaire(expr_val expr){
   expr_val res;
   res.type = INT; 	Ht_item* item = new_temp(INT); 	quadop qo;	 qo.type = QO_TMP;	 qo.u.name = item->key;
   quadop q1; q1.type = QO_EMPTY;
-
+  res.t = NULL; res.f = NULL;
   res.stringval = item->key;
 
   q1.type = QO_CST; 	q1.u.cst = 0;

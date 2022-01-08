@@ -7,13 +7,14 @@ dep5=IOfunctions
 dep6=text_formating
 dep7=compiler_functions
 dep8=CFG
+dep9=optimizer
 
 all: decaf
 
-decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o $(dep5).o $(dep6).o $(dep7).o #$(dep8).o
+decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o $(dep5).o $(dep6).o $(dep7).o $(dep8).o $(dep9).o
 	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
-$(dep).o : $(dep).c $(dep).h $(dep2).h token.h #$(dep8).h
+$(dep).o : $(dep).c $(dep).h $(dep2).h token.h 
 	$(CC) -c -g $(dep).c
 
 $(dep2).o : $(dep2).c $(dep2).h $(dep).h token.h $(dep6).h
@@ -34,8 +35,11 @@ $(dep6).o : $(dep6).c $(dep6).h
 $(dep7).o : $(dep7).c $(dep7).h $(dep).h $(dep2).h token.h
 	$(CC) -c -g $(dep7).c
 
-#$(dep8).o : $(dep).c $(dep).h $(dep8).h $(dep6).h
-# $(CC) -c -g $(dep8).c
+$(dep8).o : $(dep8).c $(dep).h $(dep8).h $(dep6).h
+	$(CC) -c -g $(dep8).c
+
+$(dep9).o : $(dep9).c $(dep).h $(dep9).h $(dep6).h
+	$(CC) -c -g $(dep9).c
 
 *.y : $(dep).h $(dep2).h $(dep5).h $(dep6).h token.h $(dep7).h 
 *.lex : $(dep).h token.h 
@@ -53,6 +57,7 @@ $(dep4).c : $(dep4).h $(dep).h $(dep6).h $(dep2).h
 $(dep5).c : $(dep5).h 
 $(dep6).c : $(dep6).h 
 $(dep7).c : $(dep7).h $(dep).h $(dep2).h token.h
+$(dep8).c : $(dep8).h $(dep).h $(dep6).h
 
 doc:
 	bison --report=all --report-file=$(prefixe).output \

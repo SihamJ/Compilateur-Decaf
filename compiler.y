@@ -261,7 +261,10 @@ S 			: 	S M statement 	{
 statement 	:	location assign_op expr ';' {
 												initialise_lists(&$$);
 												item_table* val = lookup($1.stringval, curr_context);
-
+												if(val == NULL){
+													yyerror("Erreur: Variable non déclarée\n");
+													return 1;
+												}
 												// Verifying types. returns NULL if successful, error msg otherwise
 												char *msg; 
 												if( (msg = verify_aff_types($1.type, $3.type, $2, val->item)) != NULL) { 

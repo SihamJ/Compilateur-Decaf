@@ -67,7 +67,7 @@ void translate() {
 			else if(global_code[i].op1.type == QO_GLOBAL){
 				if(global_code[i].op1.u.global.type == QO_SCAL){
 					mips_load_1args(global_code[i].op2, ctx);
-					mips_store_word("$t0", global_code[i].op1.u.global.name);
+					mips_store_word("$t0", add_diez(global_code[i].op1.u.global.name));
 				}
 				else if(global_code[i].op1.u.global.type == QO_TAB){
 					mips_load_2args(global_code[i].op3, global_code[i].op2, ctx);
@@ -85,7 +85,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0",add_diez(global_code[i].op1.u.global.name));
 			break;
 		case Q_AFFSUB:
 			mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
@@ -96,7 +96,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0",add_diez(global_code[i].op1.u.global.name));
 			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way
@@ -108,7 +108,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0",add_diez(global_code[i].op1.u.global.name));
         	break;
         case Q_SUB:
         	// These two offsets should be deduced/implied in a proper way
@@ -120,7 +120,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
         	break;
         case Q_MUL:
         	// These two offsets should be deduced/implied in a proper way
@@ -132,7 +132,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
         	break;
         case Q_DIV:
         	// These two offsets should be deduced/implied in a proper way
@@ -144,7 +144,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
 			break;
         case Q_MOD:
         	// These two offsets should be deduced/implied in a proper way
@@ -156,7 +156,7 @@ void translate() {
         		mips_write_stack("$v0",offset(val, ctx));
 			}
 			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",global_code[i].op1.u.global.name);
+				mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
         	break;
 		case Q_EQ:
 			if(global_code[i].jump == -1){
@@ -256,6 +256,9 @@ void translate() {
 			ctx = global_code[i].ctx;
 			mips_push_stack(ctx->size);
 			mips_initialise_stack(ctx->size);
+			break;
+
+		case Q_DELETED:
 			break;
         default:
         	break;

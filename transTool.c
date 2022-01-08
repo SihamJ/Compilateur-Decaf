@@ -8,7 +8,7 @@ static int branch_count = 0;
 
 void mips_dec_global(quadop q){
 	if(q.u.global.type == QO_SCAL)
-		fprintf(fout, "\t%s: %s %d\n", q.u.global.name,".word", 0);
+		fprintf(fout, "\t%s: %s %d\n", add_diez(q.u.global.name),".word", 0);
 	else{
 		// problèmes avec strcat ...
 		int size = (q.u.global.size/4)-1;
@@ -23,7 +23,7 @@ void mips_dec_global(quadop q){
 		}
 		str[i] ='\0';
 
-		fprintf(fout, "\t%s: %s %s\n",q.u.global.name, ".word", str);
+		fprintf(fout, "\t%s: %s %s\n",add_diez(q.u.global.name), ".word", str);
 		// Save constant value length for Dynamic Check
 		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size);
 	}
@@ -105,8 +105,9 @@ void mips_load_1args(quadop op, HashTable* ctx) {
 		mips_read_stack("$t0", offset(val, ctx));
 	}
 
-	else if (op.type == QO_GLOBAL)
-		mips_load_word("$t0", op.u.global.name);
+	else if (op.type == QO_GLOBAL){
+		mips_load_word("$t0", add_diez(op.u.global.name));
+	}
 	else if (op.type == QO_CST)
 		mips_load_immediate("$t0", op.u.cst);
 }
@@ -117,7 +118,7 @@ void mips_load_2args( quadop op1, quadop op2, HashTable* ctx) {
 		mips_read_stack("$t0", offset(val, ctx));
 	}
 	else if (op1.type == QO_GLOBAL)
-		mips_load_word("$t0", op1.u.global.name);
+		mips_load_word("$t0", add_diez(op1.u.global.name));
 	else if (op1.type == QO_CST)
 		mips_load_immediate("$t0", op1.u.cst);
 
@@ -126,7 +127,7 @@ void mips_load_2args( quadop op1, quadop op2, HashTable* ctx) {
 		mips_read_stack("$t1", offset(val, ctx));
 	}
 	else if (op2.type == QO_GLOBAL)
-		mips_load_word("$t1", op2.u.global.name);
+		mips_load_word("$t1", add_diez(op2.u.global.name));
 	else if (op2.type == QO_CST)
 		mips_load_immediate("$t1", op2.u.cst);
 }
@@ -282,7 +283,7 @@ void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
 	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
-	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, tab_name, offset);
+	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, add_diez(tab_name), offset);
 }
 /* pass offset by register*/
 void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
@@ -294,7 +295,7 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
-	fprintf(fout, "\tsw %s %s(%s)\n",buffer_reg, tab_name, offset_reg);
+	fprintf(fout, "\tsw %s %s(%s)\n",buffer_reg, add_diez(tab_name), offset_reg);
 }
 
 /**
@@ -309,7 +310,7 @@ void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
-	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, tab_name, offset);
+	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, add_diez(tab_name), offset);
 }
 /* pass offset by register*/
 void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
@@ -321,7 +322,7 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
-	fprintf(fout, "\tlw %s %s(%s)\n", buffer_reg, tab_name, offset_reg);
+	fprintf(fout, "\tlw %s %s(%s)\n", buffer_reg, add_diez(tab_name), offset_reg);
 }
 
 void mips_decl_string(char *varName, char *value) {
@@ -377,7 +378,7 @@ void mips_method_call(quad q, HashTable *ctx){
 			mips_write_stack("$v0", offset(val,ctx));
 		}
 		else if(q.p->arg.type == QO_GLOBAL && q.p->arg.u.global.type == QO_SCAL)
-			fprintf(fout,"\tsw $v0 %s\n",q.p->arg.u.global.name);
+			fprintf(fout,"\tsw $v0 %s\n",add_diez(q.p->arg.u.global.name));
 	}
 
 }
@@ -392,7 +393,7 @@ int mips_push_args(param p, HashTable *ctx){
 			mips_read_stack("$t0",offset(val, ctx)+(size+2)*4); 
 		}
 		else if(p->arg.type == QO_GLOBAL){
-			mips_load_word("$t0", p->arg.u.global.name);
+			mips_load_word("$t0", add_diez(p->arg.u.global.name));
 			// can't be an array!
 		}
 		else if(p->arg.type == QO_CST)
@@ -420,7 +421,7 @@ void mips_return(quad q, HashTable *ctx){
 		}
 		else if(q.op1.type == QO_GLOBAL){
 			if(q.op1.u.global.type == QO_SCAL){
-				mips_load_word("$v0", q.op1.u.global.name);
+				mips_load_word("$v0", add_diez(q.op1.u.global.name));
 				mips_load_immediate("$v1",1);
 			}
 		}
@@ -445,6 +446,13 @@ void mips_initialise_stack(int size){
 	size -= 4;
 	for (int i=0; i <= size; i+=4){
 		mips_load_immediate("$t0", 0);
-		mips_write_stack("$t0",i);
+		mips_write_stack("$t0", i);
 	}
 }
+
+char* add_diez(char *name){
+	char* res = malloc(strlen(name)+8);
+	strcpy(res, "__glob_");
+	strcpy(res+7,name);
+	return res;
+} 

@@ -113,8 +113,10 @@ void print_globalcode(){
   
   for (int i=0; i<nextquad; i++){
     printf("%2d",i);
+    if(global_code[i].type == Q_DELETED)
+       printf("%s",RED);
     printf("%8s", get_type_oper(global_code[i].op1.type));
-      
+    
     if(global_code[i].op1.type == QO_CST)
       printf("%s%s%14d%s", CYAN,BOLD, global_code[i].op1.u.cst, NORMAL);
     else if(global_code[i].op1.type == QO_CSTSTR)
@@ -167,6 +169,8 @@ void print_globalcode(){
       printf("%8d\n",global_code[i].jump);
     else
       printf("%8s\n","-");
+
+    printf("%s",NORMAL);
   }
   printf("\n");
 }
@@ -277,6 +281,10 @@ char *op_type(int type){
     return ("PUSH CTX");
     break;
 
+    case Q_DELETED:
+    return ("DELETED");
+    break;
+
     default:
      	break;
         }
@@ -311,67 +319,7 @@ void add_labels(){
 }
 
 
-int delete_quad(int index){
-  
-  if(index >= nextquad){
-    fprintf(stderr,"\n l'index à supprimer est supérieur à la taille du tableau\n");
-    return 0;
-  }
-  while(index < nextquad){
-    global_code[index] = global_code[index+1];
-    index++;
-  }
-  return 1;
-}
 
-void delete_quad_list(list n){
-  while(n){
-    delete_quad(n->addr);
-    n=n->suiv;
-  }
-}
-
-int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
-  if(index >= nextquad){
-    fprintf(stderr,"\nIndex de quad à remplacer vide\n");
-    return 0;
-  }
-  global_code[index].type = t;
-  global_code[index].op1 = op1;
-  global_code[index].op2 = op2;
-  global_code[index].op3 = op3;
-  global_code[index].jump = jump;
-  global_code[index].p = p;
-
-  if(label != NULL ){
-    global_code[index].label = malloc(strlen(label)+1);
-    strcpy(global_code[index].label, label);
-  }
-  return 1;
-  }
-
-// sometimes I'm good at making jokes, here is an example (or the one above):
-void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
-  
-  int i = nextquad;
-  while(i != index){
-    global_code[i] = global_code[i-1];
-    i--;
-  }
-
-  global_code[index].type = t;
-  global_code[index].op1 = op1;
-  global_code[index].op2 = op2;
-  global_code[index].op3 = op3;
-  global_code[index].jump = jump;
-  global_code[index].p = p;
-
-  if(label != NULL ){
-    global_code[index].label = malloc(strlen(label)+1);
-    strcpy(global_code[index].label, label);
-  }
-  nextquad++;
-}
 
 void free_global_code(){
   for(int i=0; i<nextquad; i++){

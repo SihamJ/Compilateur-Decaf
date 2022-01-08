@@ -109,10 +109,11 @@ void get_base_blocks(){
 }
 
 int is_jump(quad_type type){
-  if(type == Q_EQ || type == Q_NEQ || type == Q_LT || type == Q_GT || type == Q_LEQ || type == Q_GEQ || type == Q_METHODCALL || type == Q_GOTO || type == Q_ENDFUNC || type == Q_SYSCALL )
+  if(type == Q_EQ || type == Q_NEQ || type == Q_LT || type == Q_GT || type == Q_LEQ || type == Q_GEQ || type == Q_GOTO || type == Q_SYSCALL )
     return 1;
   return 0;
 }
+
 
 int is_start(quad_type type){
   if(type == Q_FUNC || type == Q_PUSH)
