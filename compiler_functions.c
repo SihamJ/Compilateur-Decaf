@@ -84,7 +84,7 @@ char* field_declare(declaration *dec, int type){
     if( ht_search(glob_context, pt->name) != NULL ) 
       return "\nErreur: Identificateur déjà déclaré\n";
     else if(strlen(pt->name) > 7 && !strncmp(pt->name, "__glob_",7)){
-      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local. Utilisez glob\n";
     }
 
     if(!strcmp(pt->name, next_label_name()))
@@ -236,7 +236,7 @@ expr_val get_max(char *counter_name, expr_val expr){
   char *name = malloc(strlen(counter_name)+7);
   snprintf(name, strlen(counter_name)+7, "0_%s%s",counter_name, "_max");
 
-  Ht_item *item = create_item(name, ID_VAR, INT);
+  Ht_item *item = create_item(name, ID_TMP, INT);
   item->size = 4;             newname(item);
   quadop qo, q;               qo.type = QO_TMP;
   qo.u.name = item->key;      q.type = QO_EMPTY;

@@ -60,7 +60,7 @@
  */
 #define MIPS_LIB_GET_TIME "\nGetTime:\n\tli $v0, 30\n\tsyscall\n\tjr $ra\n"
 
-#define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\n\tSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"**** Index Out Of Bound\"\nSTR_NO_RETURN: .asciiz \"**** Non void method does not reach a return statement\"\n"
+#define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\nSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"**** Index Out Of Bound\"\nSTR_NO_RETURN: .asciiz \"**** control reaches end of non-void function\"\n"
 
 /**
 * Assuming the value to print is stored in the stack
@@ -81,9 +81,8 @@
 
 #define MIPS_NO_RETURN "\nNo_Return:\n\tla $a0 STR_NO_RETURN\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
 
-// #define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
 
-#define MIPS_QUIT_PROGRAM "\nQuit_Program:\n\tli $v0 10 \n\tsyscall\n"
+#define MIPS_QUIT_PROGRAM "\nQuit_Program:\n\tli $v0, 10 \n\tsyscall\n"
 
 /**
  * @brief bzero() fuction in Mips
@@ -94,5 +93,11 @@
 
 #define MIPS_BZERO "\nBZero:\n\taddi $s1 $s1 -1\n\tsw $zero ($s0)\n\taddu $s0 $s0 4\n\tbgtz $s1 BZero\n\tjr $ra\n"
 
+/**
+ * @brief generates a random number
+ */
+#define MIPS_RANDOM "\nRandom:\n\tlw $a1, 0($sp)\n\tli $v0, 42\n\tsyscall\n\tmove $v0, $a0\n\tli $v1, 1\n\tjr $ra\n"
+
+#define MIPS_EXIT "\nExit:\n\tlw $a0, 0($sp)\n\tli $v0, 17\n\tsyscall\n"
 
 #endif

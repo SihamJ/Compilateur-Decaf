@@ -5,6 +5,7 @@
 #include "hashtable.h"
 #include "translater.h"
 #include "text_formating.h"
+#include "optimizer.h"
 #include "CFG.h"
 
 extern int yyparse();
@@ -56,7 +57,7 @@ int main(int argc, char* argv[]){
             usage(argv[0]);
         }
 
-        int i = 4;
+        int i = 4; int opti = 0;
         bool inter = false;
 
         while(i < argc){
@@ -66,8 +67,10 @@ int main(int argc, char* argv[]){
             else if(!strcmp(argv[i],"-i"))
                 inter = true;
            
-            else if(!strcmp(argv[i],"-Cafeine"))
+            else if(!strcmp(argv[i],"-W"))
                 warning = 1;
+            else if(!strcmp(argv[i],"-Cafeine"))
+                opti = 1;
             else
                 usage(argv[0]);
             i++;
@@ -83,15 +86,18 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
 
         add_labels();    
-        useless_gotos();
-
-        if(inter){
-            print_globalcode();
-       /*     new_cfg();
-            get_base_blocks();
-            set_base_blocks();
-            print_base_blocks();*/
+        
+        if(opti){
+            optimize();
+            new_cfg();
+            get_basic_blocks();
+            set_basic_blocks();
+            print_basic_blocks();
         }
+
+        if(inter)
+            print_globalcode();
+        
 
         translate();
 

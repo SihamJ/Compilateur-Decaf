@@ -3,7 +3,7 @@ dep=intermediaire
 dep2=hashtable
 dep3=translater
 dep4=transTool
-dep5=IOfunctions
+dep5=library
 dep6=text_formating
 dep7=compiler_functions
 dep8=CFG
@@ -38,7 +38,7 @@ $(dep7).o : $(dep7).c $(dep7).h $(dep).h $(dep2).h token.h
 $(dep8).o : $(dep8).c $(dep).h $(dep8).h $(dep6).h
 	$(CC) -c -g $(dep8).c
 
-$(dep9).o : $(dep9).c $(dep).h $(dep9).h $(dep6).h
+$(dep9).o : $(dep9).c $(dep).h $(dep8).h $(dep6).h
 	$(CC) -c -g $(dep9).c
 
 *.y : $(dep).h $(dep2).h $(dep5).h $(dep6).h token.h $(dep7).h 
@@ -58,6 +58,7 @@ $(dep5).c : $(dep5).h
 $(dep6).c : $(dep6).h 
 $(dep7).c : $(dep7).h $(dep).h $(dep2).h token.h
 $(dep8).c : $(dep8).h $(dep).h $(dep6).h
+$(dep9).c : $(dep9).h $(dep8).h $(dep).h $(dep6).h
 
 doc:
 	bison --report=all --report-file=$(prefixe).output \

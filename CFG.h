@@ -28,11 +28,11 @@ void add_block(block b);
 
 block new_block(int start, int end);
 
-void get_base_blocks();
+void get_basic_blocks();
 
-void set_base_blocks();
+void set_basic_blocks();
 
-void print_base_blocks();
+void print_basic_blocks();
 
 int is_jump(quad_type type);
 

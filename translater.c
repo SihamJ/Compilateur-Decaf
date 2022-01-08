@@ -43,6 +43,8 @@ void translate() {
 	//fprintf(fout, "%s", MIPS_BZERO);
 	fprintf(fout, "%s", MIPS_LIB_GET_TIME);
 	fprintf(fout, "%s", MIPS_NO_RETURN);
+	fprintf(fout, "%s", MIPS_RANDOM);
+	fprintf(fout, "%s", MIPS_EXIT);
 	
 	for (int i = glob_dec_count+1; i < nextquad; i++) {
 		if(global_code[i].label != NULL)

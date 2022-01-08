@@ -1,4 +1,4 @@
-#include "IOfunctions.h"
+#include "library.h"
 
 void add_libs_to_tos(){
 
@@ -38,6 +38,23 @@ void add_libs_to_tos(){
         p_read_int->next = NULL;
         item_table* var4 = lookup("ReadInt", curr_context);
         var4->item->p = p_read_int;
-        
+
+        Ht_item *item5 = create_item("Random", ID_METHOD, INT);
+        newname(item5);
+        param p_random = (struct param*) malloc(sizeof(struct param));
+        p_random->type = INT;
+        p_random->byAddress = 0;
+        p_random->next = NULL;
+        item_table* var5 = lookup("Random", curr_context);
+        var5->item->p = p_random;
+
+        Ht_item *item6 = create_item("Exit", ID_METHOD, VOIDTYPE);
+        newname(item6);
+        param p_exit = (struct param*) malloc(sizeof(struct param));
+        p_exit->type = INT;
+        p_exit->byAddress = 0;
+        p_exit->next = NULL;
+        item_table* var6 = lookup("Exit", curr_context);
+        var6->item->p = p_exit;
 
 }

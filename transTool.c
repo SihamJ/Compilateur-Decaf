@@ -339,7 +339,7 @@ void mips_method_call(quad q, HashTable *ctx){
 
 	int size = 0;
 	// push args in stack and return the number of parameters in size so we can pop them after jal
-	if(q.p!=NULL && strcmp(q.op1.u.string_literal.label,"WriteString") && strcmp(q.op1.u.string_literal.label,"ReadInt"))
+	if(q.p != NULL && strcmp(q.op1.u.string_literal.label,"WriteString") && strcmp(q.op1.u.string_literal.label,"ReadInt"))
 		size = mips_push_args(q.p, ctx);
 
 	// if we are calling WriteString, the argument is in the declared labels

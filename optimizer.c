@@ -33,6 +33,11 @@ void delete_quad_list(list n){
   }
 }
 
+int delete_block(int start, int end){
+  for(int i=start; i<=end; i++)
+    delete_quad(i);
+}
+
 int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
   if(index >= nextquad){
     fprintf(stderr,"\nIndex de quad à remplacer vide\n");
@@ -52,7 +57,11 @@ int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, cha
   return 1;
   }
 
-void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
+void optimize(){
+  useless_gotos();
+}
+
+/* void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
   
   int i = nextquad;
   while(i != index){
@@ -72,4 +81,5 @@ void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, cha
     strcpy(global_code[index].label, label);
   }
   nextquad++;
-}
+}*/
+

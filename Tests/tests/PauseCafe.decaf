@@ -1,17 +1,10 @@
-class cafe {
+// A faire tourner sur Mars uniquement
 
-    
+class PauseCafe {
 
-    int random(int seed, int max){
-        int next;
-        next = seed * 1103 + 12345;
-        return next%max;
-    }
-
-    void main(){
+        void main(){
         int guess, bingo, win, rounds, seed;
-        seed = 476;
-        bingo = random(seed, 101);
+        bingo = Random(101);
         guess = -1;
         
         win = 0;

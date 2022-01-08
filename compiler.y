@@ -3,7 +3,7 @@
 	#include "intermediaire.h"
 	#include "compiler_functions.h"
 	#include "hashtable.h"
-	#include "IOfunctions.h"
+	#include "library.h"
 	#include "text_formating.h"
 	#include "compiler.tab.h"
 	
@@ -429,7 +429,7 @@ Arg 		:	expr 					{ 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }  }
 											if( val == NULL) {
 												yyerror("\nErreur: Variable non déclarée\n"); 	return 1;  }
 											
-											$$ = get_arg_by_address($1, $4, val);  free(val);
+											$$ = get_arg_by_address($1+1, $4, val);  free(val);
 										}
 
 			|	address					{	
@@ -437,15 +437,25 @@ Arg 		:	expr 					{ 	if ($1.result.type == QO_GOTO) { $1 = goto_to_val($1); }  }
 											if( val == NULL) {	
 												yyerror("\nErreur: Variable non déclarée\n"); 	return 1; }
 											
-											$$ = get_arg_by_address($1, NULL, val);	free(val);
+											$$ = get_arg_by_address($1+1, NULL, val);	free(val);
 										}
 
 			|	%empty					{	$$ = NULL; }
 
 
-location	:	id						{	$$.type = ID_VAR; 	$$.stringval = $1; }
+location	:	id						{	item_table* val = lookup($1, curr_context);
+												if(val == NULL){
+													yyerror("Erreur: Variable non déclarée\n");
+													return 1;
+												}
+											$$.type = ID_VAR; 	$$.stringval = $1; }
 
 			|	id '[' expr ']'			{ 	
+											item_table* val = lookup($1, curr_context);
+												if(val == NULL){
+													yyerror("Erreur: Variable non déclarée\n");
+													return 1;
+												}
 											if($3.type != INT) {
 													yyerror("\nErreur: L'ndice d'accès à un tableau doit être de type INT\n"); 
 													return 1;	}

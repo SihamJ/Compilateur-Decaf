@@ -93,7 +93,7 @@ block new_block(int start, int end){
     return b;
 }
 
-void get_base_blocks(){
+void get_basic_blocks(){
     int counter = 0;
     for(int i=0; i<nextquad; i++){
         if(is_jump(global_code[i].type)){
@@ -121,7 +121,7 @@ int is_start(quad_type type){
   return 0;
 }
 
-void set_base_blocks(){
+void set_basic_blocks(){
     int start = -1;
     int end = -1;
     for(int i=0; i<nextquad; i++){
@@ -142,7 +142,7 @@ void set_base_blocks(){
     }
 }
 
-void print_base_blocks(){
+void print_basic_blocks(){
     for(int i = 2; i < nb_block; i++){
         printf("\nB%d:\n",i);
         printf("start: %d   -  End: %d \n",cfg[i]->start, cfg[i]->end);

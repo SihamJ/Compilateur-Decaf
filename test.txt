@@ -1,15 +1,15 @@
 class MasquageGlobale {
-    int _glob_b;
-    void f (int b)
-    {
-        b = 42;
-    }
+    
     void main ()
     {
-        int __glob_b;
-       __glob_b = 17;
-        f (0);
-        WriteInt (__glob_b);
-        WriteString ("=17\n");
+        int a;
+        a = 0;
+        if(a == 0){
+            WriteString("Exiting at 0");
+            Exit(a);
+        }
+        a = 1;
+        WriteString("Exiting at 1");
+        Exit(true);
     }
 }
