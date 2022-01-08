@@ -109,7 +109,7 @@ glob_id	:	id '[' int_literal ']' ',' glob_id	{
 														yyerror ("\nErreur: Taille du tableau déclarée inférieure ou égale à 0\n");	
 														return 1; }
 
-													$$ = get_declarations($1, NULL, QO_TAB, $3*4);	}
+													$$ = get_declarations($1, &$6, QO_TAB, $3*4);	}
 
 		|	id '[' int_literal ']'				{
 													if($3 <= 0) { 

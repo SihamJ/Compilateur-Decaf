@@ -5,6 +5,7 @@
 #include "hashtable.h"
 #include "translater.h"
 #include "text_formating.h"
+#include "CFG.h"
 
 extern int yyparse();
 extern int yylex();
@@ -12,6 +13,9 @@ extern int yydebug;
 extern int warning;
 extern int tos;
 extern int count;
+extern block cfg[MAX_CFG];
+extern int tab[5000];
+extern int nb_block;
 extern FILE* fout;
 extern FILE* src;
 void usage(char *name);
@@ -80,14 +84,20 @@ int main(int argc, char* argv[]){
 
         add_labels();    
         
-        if(inter)
+        if(inter){
             print_globalcode();
+           /* new_cfg();
+            get_base_blocks();
+            set_base_blocks();
+            print_base_blocks();*/
+        }
 
         translate();
 
         if(fout != stdout)
             fclose(fout);
 
+        
         
         free_tables();
         free_global_code();

@@ -382,6 +382,7 @@ expr_val get_literal(literal l){
 
 expr_val gen_global_scalar(location l, item_table* val) {
   expr_val res;
+  res.t = NULL; res.f = NULL;
     quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
     q1.u.global.name = l.stringval;	 q1.u.global.size = 4;
     q2.type = QO_EMPTY;
