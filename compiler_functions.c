@@ -383,17 +383,18 @@ expr_val get_literal(literal l){
 expr_val gen_global_scalar(location l, item_table* val) {
   expr_val res;
   res.t = NULL; res.f = NULL;
-    quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
-    q1.u.global.name = l.stringval;	 q1.u.global.size = 4;
-    q2.type = QO_EMPTY;
-    
-    Ht_item* item = new_temp(val->item->value);
-    quadop qo; qo.type = QO_TMP; qo.u.name = item->key;
-    gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
-    res.stringval = item->key;
-    res.type = val->item->value;
-    res.result = qo;
-    return res;
+
+  quadop q1,q2; 	q1.type = QO_GLOBAL; 	q1.u.global.type = QO_SCAL;
+  q1.u.global.name = l.stringval;	 q1.u.global.size = 4;
+  q2.type = QO_EMPTY;
+  
+  Ht_item* item = new_temp(val->item->value);
+  quadop qo; qo.type = QO_TMP; qo.u.name = item->key;
+  gencode(qo, q1, q1, Q_AFF, NULL, -1, NULL);
+  res.stringval = item->key;
+  res.type = val->item->value;
+  res.result = qo;
+  return res;
 
 }
 
@@ -407,13 +408,14 @@ char* verify_location_access(location l, item_table* val){
 
 expr_val gen_access_tab(location l, item_table *val){
 
-  expr_val res;     res.type = val->item->value;
+  expr_val res;     res.type = val->item->value;  res.t = NULL; res.f = NULL;
   quadop qo; 		    qo.type = QO_GLOBAL; 	        qo.u.global.type = QO_TAB;
   qo.u.global.name = l.stringval;   	            qo.u.global.size = val->item->size;
 
-  Ht_item* item = new_temp(INT);
+  Ht_item* item = new_temp(val->item->value);
   quadop q1, q2;    q2.type = QO_EMPTY;	    q1.type = QO_TMP; 		q1.u.name = item->key;
 
+  
 
   gencode(q1, qo, l.index, Q_ACCESTAB, NULL, -1, NULL); 	res.result = q1; 
   res.stringval = item->key;
