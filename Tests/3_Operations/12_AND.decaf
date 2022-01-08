@@ -1,0 +1,17 @@
+class Test {
+	void main(){
+		boolean a, b, c;
+		b = true;
+		c = true;
+		a = b && c;
+		WriteBool(a);
+		WriteString("=true");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=true");
+		WriteString("\n");
+		WriteBool(c);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

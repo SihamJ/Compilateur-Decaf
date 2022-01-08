@@ -1,0 +1,8 @@
+class Test {
+	void main(){
+		WriteInt(0);
+		WriteString("=");
+		WriteInt(0);
+		WriteString("\n");
+	}
+}

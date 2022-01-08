@@ -1,0 +1,14 @@
+class Test {
+	void main(){
+		int a;
+		boolean b;
+		a = 42;
+		b = true;
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

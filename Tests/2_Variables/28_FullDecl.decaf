@@ -1,0 +1,28 @@
+class Test {
+	int a;
+	boolean b;
+	int c[1];
+	boolean d[1];
+	void main(){
+		int e;
+		boolean f;
+		WriteInt(a);
+		WriteString("=0");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=false");
+		WriteString("\n");
+		WriteInt(c[0]);
+		WriteString("=0");
+		WriteString("\n");
+		WriteBool(d[0]);
+		WriteString("=false");
+		WriteString("\n");
+		WriteInt(e);
+		WriteString("=0");
+		WriteString("\n");
+		WriteBool(f);
+		WriteString("=false");
+		WriteString("\n");
+	}
+}

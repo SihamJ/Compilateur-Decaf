@@ -1,0 +1,9 @@
+class Test {
+	boolean a;
+	void main(){
+		a = true;
+		WriteBool(a);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

@@ -1,8 +1,0 @@
-class Test {
-	void main(){
-		bool a;
-		WriteBool(a);
-		WriteString("=false");
-		WriteString("\n");
-	}
-}

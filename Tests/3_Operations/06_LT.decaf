@@ -1,0 +1,18 @@
+class Test {
+	void main(){
+		boolean a;
+		int b, c;
+		b = 5;
+		c = 10;
+		a = b < c;
+		WriteBool(a);
+		WriteString("=true");
+		WriteString("\n");
+		WriteInt(b);
+		WriteString("=5");
+		WriteString("\n");
+		WriteInt(c);
+		WriteString("=10");
+		WriteString("\n");
+	}
+}
