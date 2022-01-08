@@ -5,13 +5,13 @@ class Test {
 		c = 5;
 		a = b + c;
 		WriteInt(a);
-		WriteString("=5");
+		WriteString("=7");
 		WriteString("\n");
 		WriteInt(b);
 		WriteString("=2");
 		WriteString("\n");
 		WriteInt(c);
-		WriteString("=3");
+		WriteString("=5");
 		WriteString("\n");
 	}
 }

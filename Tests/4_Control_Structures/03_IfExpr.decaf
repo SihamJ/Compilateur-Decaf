@@ -1,0 +1,12 @@
+class Test {
+	void main(){
+		int a;
+		a = 42;
+		WriteString("0=");
+		if (a > 40)
+		{
+			WriteString("0");
+		}
+		WriteString("\n");
+	}
+}

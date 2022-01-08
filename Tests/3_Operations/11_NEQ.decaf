@@ -12,7 +12,7 @@ class Test {
 		WriteString("=10");
 		WriteString("\n");
 		WriteInt(c);
-		WriteString("=10");
+		WriteString("=11");
 		WriteString("\n");
 	}
 }

@@ -1,0 +1,15 @@
+class Test {
+	void main(){
+		boolean a;
+		a = false;
+		WriteString("0=");
+		if (a)
+		{
+			WriteString("1");
+		} else 
+		{
+			WriteString("0");
+		}
+		WriteString("\n");
+	}
+}

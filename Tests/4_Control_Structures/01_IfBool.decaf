@@ -1,0 +1,12 @@
+class Test {
+	void main(){
+		boolean a;
+		a = true;
+		WriteString("0=");
+		if (a)
+		{
+			WriteString("0");
+		}
+		WriteString("\n");
+	}
+}
