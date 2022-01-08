@@ -245,14 +245,6 @@ expr_val get_max(char *counter_name, expr_val expr){
   return max;
 }
 
-
-void gen_q_pop(int count){
-  quadop q, qo; qo.type = QO_EMPTY;
-  q.type = QO_CST;
-  q.u.cst = count;
-  gencode(q, qo, qo, Q_POP, NULL, -1, NULL);
-}
-
 void gen_test_counter(char *counter_name, expr_val max){
   quadop qo,q1,q2;
   q1.type = QO_EMPTY;
@@ -277,6 +269,15 @@ void gen_increment_and_loopback(char* counter_name, int jump){
   /* gencode to jump back to the Marker to test if the counter reached its max value */
   gencode(qo, qo, qo, Q_GOTO, NULL, jump, NULL);
 }
+
+void gen_q_pop(int count){
+  quadop q, qo; qo.type = QO_EMPTY;
+  q.type = QO_CST;
+  q.u.cst = count;
+  gencode(q, qo, qo, Q_POP, NULL, -1, NULL);
+}
+
+
 
 void get_write_string_args(char *label, char*value){
   str_labels[str_count-1].label = label;
@@ -606,30 +607,30 @@ void gen_q_push(){
   gencode(q, q, q, Q_PUSH, NULL, -1, NULL);
 }
 
-statement pop_block(statement block, statement s){
+statement pop_block(statement block){
 
-  block = s; 
+  complete(block.next, nextquad); 
+  gen_q_pop(curr_context->size);
+  block.next = crelist(nextquad);  quadop q; q.type = QO_EMPTY;
+  gencode(q, q, q, Q_GOTO, NULL, -1, NULL);
+  
 
-  // if there are variable to pop from the block context.
+  // if there are variable to pop from the block context, we have to create pop quads for break and continue as they leave the block before reaching it
   // for return, we don't need this, we pop in end_func using $fp
   if(curr_context->size > 0){
-    if(block.brk != NULL) {
-      complete(block.brk, nextquad);	gen_q_pop(curr_context->size); block.brk = crelist(nextquad); quadop q; q.type = QO_EMPTY;
-      gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
-
-    if(block.next!= NULL) {
-      complete(block.next, nextquad); gen_q_pop(curr_context->size); block.next = crelist(nextquad); quadop q; q.type = QO_EMPTY;
-      gencode(q, q, q, Q_GOTO, NULL, -1, NULL);}
 
     if(block.cntu != NULL){
       complete(block.cntu, nextquad); gen_q_pop(curr_context->size); block.cntu = crelist(nextquad); quadop q; q.type = QO_EMPTY;
       gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
 
-    gen_q_pop(curr_context->size);
+    if(block.brk != NULL) {
+      complete(block.brk, nextquad);	gen_q_pop(curr_context->size); block.brk = crelist(nextquad); quadop q; q.type = QO_EMPTY;
+      gencode(q, q, q, Q_GOTO, NULL, -1, NULL); }
   }
   
   return block;
 }
+
 
 void initialise_lists(statement *s){
   s->brk = NULL;  s->cntu = NULL; s->rtrn = NULL; s->next = NULL; s->elseGoto = NULL;

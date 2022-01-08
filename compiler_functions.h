@@ -338,7 +338,7 @@ expr_val not_op(expr_val expr);
  * @param s 
  * @return statement 
  */
-statement pop_block(statement block, statement s);
+statement pop_block(statement block);
 
 
 /**

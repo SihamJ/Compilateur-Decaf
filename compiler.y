@@ -79,7 +79,6 @@ program	:  class id '{' {
 								if( ht_search( glob_context,"main") == NULL ) {	
 									yyerror("\nErreur: Pas de méthode main\n"); 
 									return 1; }
-								gen_q_pop(curr_context->size); 
 								if(tos) { print_ctx(); }
 								popctx();
 								return 0;
@@ -212,7 +211,7 @@ Param		:	type id ',' Param	{ 	$$ = get_param($2, $1, $4); 	}
 
 block 		:	'{' 	{ 	pushctx(CTX_BLOCK); 	 gen_q_push(); 		} 
 
-			V S2 '}' 	{ 	$$ = $4; $$ = pop_block($$, $4);  if(tos) { print_ctx(); }  popctx(); 		}
+			V S2 '}' 	{ 	$$ = $4; $$ = pop_block($$);  if(tos) { print_ctx(); }  popctx(); 		}
 
 S2 			:	S 		{	$$ = $1;	}
 
@@ -257,6 +256,7 @@ S 			: 	S M statement 	{
 									$$.brk = $1.brk; 	$$.next = $1.next; 	
 									$$.cntu = $1.cntu; 	$$.rtrn = $1.rtrn; 
 								}
+								
 
 statement 	:	location assign_op expr ';' {
 												initialise_lists(&$$);
@@ -269,13 +269,13 @@ statement 	:	location assign_op expr ';' {
 
 												// qo contains the type of location: Array or Scalar
 												// if location is an element in an array, q1 contains the index
-												quadop qo,q1,q2;	get_location(&qo, &q1, val, $1);	free(val);
+												quadop qo, q1, q2;	get_location(&qo, &q1, val, $1);	free(val);
 												
 												// from true/false list to value
 												 if($3.result.type == QO_GOTO) { $3 = goto_to_val($3);	complete($3.t, nextquad); free($3.t);	}
 												
 												// in the mips translater, we have to differentiate between | = | += | -= |  
-												 gencode(qo,$3.result,q1,$2, NULL,-1, NULL);	
+												 gencode(qo, $3.result, q1, $2, NULL,-1, NULL);	
 											}
 
 											
@@ -289,19 +289,17 @@ statement 	:	location assign_op expr ';' {
 											} 
 				M  							{	gen_test_counter($2, $7); } 
 					
-				block 						{
-											    complete($11.next, nextquad);		complete($11.cntu, nextquad);
-												free($11.next); 					free($11.cntu);
-												$$.next = crelist($9); 				$$.next = concat($$.next, $11.brk);	
-												$$.rtrn = $11.rtrn; 		 		gen_increment_and_loopback($2, $9); 
-												complete($$.next, nextquad);		gen_q_pop(curr_context->size); 
-												free($$.next);
-												$$.next = crelist( nextquad);		quadop qo; qo.type = QO_EMPTY;	
-												$$.brk = NULL;
+				block 						{	
+											    complete($11.next, nextquad); 			complete($11.cntu, nextquad);
+												gen_increment_and_loopback($2, $9); 	free($11.next);	free($11.cntu);
+												
+												$$.next = concat(crelist($9), $11.brk);	complete($$.next, nextquad);
+												gen_q_pop(curr_context->size);			$$.rtrn = $11.rtrn; 		 		
+												
+												$$.next = crelist( nextquad);			quadop qo; qo.type = QO_EMPTY;	
 												gencode(qo, qo, qo, Q_GOTO, NULL, -1, NULL); 
+												free($$.brk);
 
-												// Now that we know the context size, we go back to PUSH_CTX quad and update its value
-												 
 												if(tos) { print_ctx(); }
 												popctx(); 
 											}
@@ -311,7 +309,7 @@ statement 	:	location assign_op expr ';' {
 												// we return $2.result and we store the return type in qo for later verification of types
 												$$.rtrn = crelist(nextquad); 	quadop qo,q1;		qo.type = QO_CST;
 												qo.u.cst = $2.type; 			q1.type = QO_EMPTY;
-												if($2.type == QO_GOTO) { ;
+												if($2.type == QO_GOTO) { 
 													$2 = goto_to_val($2);	complete($2.t, nextquad);	free($2.t);}
 												gencode($2.result, qo, q1, Q_RETURN, NULL, -1, NULL); 
 											}
@@ -320,7 +318,7 @@ statement 	:	location assign_op expr ';' {
 											 	initialise_lists(&$$);
 												// we verify that this break statement is within a FOR loop
 												if(!is_a_parent(CTX_FOR)) { 
-													yyerror("\nErreur: Break; doit être au sein d'une boucle FOR\n"); 
+													yyerror("\nErreur: Break doit être au sein d'une boucle FOR\n"); 
 													return 1; }
 												quadop qo;	 qo.type = QO_EMPTY; 					
 												$$.brk = crelist(nextquad);
@@ -338,7 +336,8 @@ statement 	:	location assign_op expr ';' {
 												gencode(qo,qo,qo,Q_GOTO,NULL,-1,NULL); 
 											}
 
-			|	block						{
+			|	block						{	
+												initialise_lists(&$$);
 											 	$$.brk = $1.brk;	 $$.next = $1.next; 	
 												$$.cntu = $1.cntu; 	 $$.rtrn = $1.rtrn;
 											}
@@ -381,12 +380,14 @@ statement 	:	location assign_op expr ';' {
 											}
 
 ElseBlock	:	block 						{
+												initialise_lists(&$$);
 												$$.elseGoto = NULL; 	$$.isElseBlock = 0; 
 												$$.next = $1.next; 		$$.cntu = $1.cntu; 
 												$$.brk = $1.brk; 		$$.rtrn = $1.rtrn; 
 											}
 
 			|	block G Else M block		{
+												initialise_lists(&$$);
 												$$.isElseBlock = $4; 					$$.elseGoto = $2;	
 												$$.next = concat($1.next, $5.next); 	$$.rtrn = concat($1.rtrn, $5.rtrn);
 												$$.cntu = concat($1.cntu, $5.cntu); 	$$.brk = concat($1.brk, $5.brk);
