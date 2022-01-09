@@ -1,0 +1,6 @@
+class Test {
+	int a;
+	void main(){
+		a = true;
+	}
+}

@@ -13,7 +13,7 @@ class PauseCafe {
         WriteString("Enter your guess:\n\n");
 
         for i = 0, 4 {
-            WriteString("Round ");
+            WriteString("\nRound ");
             WriteInt(rounds);
             WriteString(":  ");
             ReadInt(&guess);

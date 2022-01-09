@@ -1,0 +1,7 @@
+class Test {
+	int a;
+    boolean b;
+	void main(){
+		a = b;
+	}
+}

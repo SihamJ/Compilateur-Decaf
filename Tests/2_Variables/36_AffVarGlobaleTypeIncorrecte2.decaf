@@ -1,0 +1,6 @@
+class Test {
+    boolean b;
+	void main(){
+		b = 1;
+	}
+}
