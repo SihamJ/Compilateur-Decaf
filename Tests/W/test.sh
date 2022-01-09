@@ -1,5 +1,5 @@
 #!/bin/bash
-DIRECTORIES="1_IO 2_Variables 3_Operations 4_Control_Structures 5_Functions 6_Context"	# Test files directories										# Test files search and order
+DIRECTORIES="1_IO 2_Variables 3_Operations 4_Control_Structures 5_Functions 6_Context"	# Test files directories
 SPIM="spim" 																			# Interpreter for the MIPS files
 DECAF="../../decaf"																		# Path to compiler executable
 REGEX="^([-]?[0-9]+|"true"|"false")=([-]?[0-9]+|"true"|"false")$"
