@@ -158,6 +158,6 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg);
 void mips_push_stack(int size);
 void mips_initialise_stack(int size);
 
-char* add_diez(char *name);
+char* add_namespace(char *name);
 
  #endif

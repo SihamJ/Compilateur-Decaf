@@ -1,9 +1,23 @@
-class AccesHorsBornes2 {
-    // suggéré par Evan Zarrella et son groupe
-    int a[3];
+class ForMasquage {
+
     void main ()
     {
-        a[1] += 3;
-        WriteInt(a[1]);
+        int i;
+        int si, sj;
+        i = 0; si = 0; sj = 0;
+        for i = 1, 10
+        {
+            int j;
+            j = i;
+            {
+                int i;
+                si += i;
+                sj += j;
+            }
+        }
+        WriteInt (i);  WriteString ("=0\n");
+        WriteInt (si); WriteString ("=0\n");
+        WriteInt (sj); WriteString ("=55\n");
     }
+
 }

@@ -7,20 +7,21 @@
 #include "intermediaire.h"
 #include "text_formating.h"
 
-
+// liste chaînée pour représenter l'index des successeurs/predecesseurs dans le CFG
+typedef struct pos{
+    int index;          
+    struct pos* next;
+} *pos;
 
 typedef struct block{
-    int index;
-    int start;
-    int end;
-    struct block* suiv;
-    struct block* prec;
-} *block;
+    int index;      // index dans le tableau
+    int start;      // index de début du bloc de base dans global_code
+    int end;        // index de fin du bloc de base adns global_code
+    pos suiv;      // index des successeurs dans le tableau
+    pos prec;      // index des predecesseurs dans le tableau
+} *block;   
 
-typedef struct pos{
-    int i;
-    struct pos* suiv;
-} *pos;
+
 
 void new_cfg();
 
@@ -41,5 +42,8 @@ void print_basic_blocks();
 int is_jump(quad_type type);
 
 int is_start(quad_type type);
+
+int islabel(int index);
+
 
 #endif

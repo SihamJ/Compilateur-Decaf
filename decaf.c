@@ -89,10 +89,6 @@ int main(int argc, char* argv[]){
         
         if(opti){
             optimize();
-            new_cfg();
-            get_basic_blocks();
-            set_basic_blocks();
-            print_basic_blocks();
         }
 
         if(inter)

@@ -31,52 +31,34 @@ void new_cfg(){
 
 void add_prec(int prec, int index){
 
-    int i = 0;
-    int j = 0;
+    if(index < nb_block){
+        pos p = (pos) malloc(sizeof(struct pos));
+        p->index = prec;
+        p->next = NULL;
 
-    while(j < nb_block && cfg[j]->index != index )
-        j++;
-    
-    if (j < nb_block){
-       
-        block b = cfg[j];
-
-        while(i < nb_block){
-            if(cfg[i]->index == prec){
-                block pt = b->prec;
-                while(pt->suiv != NULL){
-                    pt = pt->suiv;
-                }
-                pt->suiv = cfg[i];
-                pt->suiv->suiv = NULL;
-            }
-            i++;
+        if(cfg[index]->prec == NULL){
+            cfg[index]->prec = p;
+        }
+        else {
+            p->next = cfg[index]->prec;
+            cfg[index]->prec = p;
         }
     }
 }
 
 void add_suiv(int suiv, int index){
 
-    int i = 0;
-    int j = 0;
+    if(index < nb_block){
+        pos p = (pos) malloc(sizeof(struct pos));
+        p->index = suiv;
+        p->next = NULL;
 
-    while(j < nb_block && cfg[j]->index != index )
-        j++;
-    
-    if (j < nb_block){
-       
-        block b = cfg[j];
-
-        while(i < nb_block){
-            if(cfg[i]->index == suiv){
-                block pt = b->suiv;
-                while(pt->suiv != NULL){
-                    pt = pt->suiv;
-                }
-                pt->suiv = cfg[i];
-                pt->suiv->suiv = NULL;
-            }
-            i++;
+        if(cfg[index]->suiv == NULL){
+            cfg[index]->suiv = p;
+        }
+        else {
+            p->next = cfg[index]->prec;
+            cfg[index]->suiv = p;
         }
     }
 }
@@ -90,7 +72,16 @@ block new_block(int start, int end){
     block b = (block) malloc(sizeof(struct block));
     b->start = start;
     b->end = end;
+    b->prec = NULL;
+    b->suiv = NULL;
+    b->index = nb_block;
     return b;
+}
+
+void init_tab(){
+
+    for(int i = 0; i < nextquad; i++)
+        tab[i] = 0;
 }
 
 void get_basic_blocks(){
@@ -98,34 +89,28 @@ void get_basic_blocks(){
     for(int i=0; i<nextquad; i++){
         if(is_jump(global_code[i].type)){
             tab[i] = 2;
-            tab[i+1] = 1; 
-            tab[global_code[i].jump] = 1;
+            if(i < nextquad)
+                tab[i+1] = 1; 
         }
-        else if(is_start(global_code[i].type))
+        else if(is_start(global_code[i].type)){
             tab[i] = 1;
-        else 
-            tab[i] = 0; 
+            if(i>0)
+                tab[i-1] = 2;
+        }
+        if(islabel(i)){
+            if(tab[i] == 0)
+                tab[i] = 1;
+            if(i > 0)
+                tab[i-1] = 2;
+        }
     }
-}
-
-int is_jump(quad_type type){
-  if(type == Q_EQ || type == Q_NEQ || type == Q_LT || type == Q_GT || type == Q_LEQ || type == Q_GEQ || type == Q_GOTO || type == Q_SYSCALL )
-    return 1;
-  return 0;
-}
-
-
-int is_start(quad_type type){
-  if(type == Q_FUNC || type == Q_PUSH)
-    return 1;
-  return 0;
 }
 
 void set_basic_blocks(){
     int start = -1;
     int end = -1;
-    for(int i=0; i<nextquad; i++){
-        if(tab[i]==1)
+    for(int i = 0; i < nextquad; i++){
+        if(tab[i] == 1)
             start = i;
         else if(tab[i] == 2){
             if(start == -1)
@@ -142,9 +127,28 @@ void set_basic_blocks(){
     }
 }
 
+
+int is_jump(quad_type type){
+  if(type == Q_EQ || type == Q_NEQ || type == Q_LT || type == Q_GT || type == Q_LEQ || type == Q_GEQ || type == Q_GOTO || type == Q_SYSCALL || type == Q_ENDFUNC || type == Q_RETURN || type == Q_METHODCALL)
+    return 1;
+  return 0;
+}
+
+int is_start(quad_type type){
+  if(type == Q_FUNC || type == Q_PUSH)
+    return 1;
+  return 0;
+}
+
 void print_basic_blocks(){
+    printf("\n%s%sBlocs de Base:%s\n",CYAN,BOLD,NORMAL);
     for(int i = 2; i < nb_block; i++){
-        printf("\nB%d:\n",i);
-        printf("start: %d   -  End: %d \n",cfg[i]->start, cfg[i]->end);
+        printf("\n\t%sB%d%s \t%d  ->  %d\n",YELLOW, i-1, NORMAL, cfg[i]->start, cfg[i]->end);
     }
+}
+
+int islabel(int index){
+  if(global_code[index].label != NULL)
+    return 1;
+  return 0;
 }

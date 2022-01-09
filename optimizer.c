@@ -10,11 +10,7 @@ void useless_gotos(){
     }
 }
 
-int islabel(int index){
-  if(global_code[index].label != NULL)
-    return 1;
-  return 0;
-}
+
 
 int delete_quad(int index){
   
@@ -59,6 +55,10 @@ int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, cha
 
 void optimize(){
   useless_gotos();
+  new_cfg();
+  get_basic_blocks();
+  set_basic_blocks();
+  print_basic_blocks();
 }
 
 /* void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
