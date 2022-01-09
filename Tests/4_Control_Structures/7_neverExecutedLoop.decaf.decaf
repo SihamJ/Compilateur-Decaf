@@ -1,0 +1,12 @@
+class Test {
+	int a[5];
+	
+	void main(){
+
+		for index =0, -1
+		{
+			a[index] = 1;
+			WriteInt(0);
+		}
+	}
+}
