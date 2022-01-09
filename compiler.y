@@ -75,7 +75,7 @@ program	:  class id '{' {
 						 	pushctx(CTX_GLOB); glob_context = curr_context; 		
 							gen_q_push();
 							program_name = $2; 					// saving class name in a global variable
-							add_libs_to_tos(); 					// Adding the I/O functions to the global symbol table
+							add_libs_to_tos(); 					// Adding the library functions to the global symbol table
 						}
 
 						
@@ -136,16 +136,15 @@ method_decl	:		type id 	{	// We add id to the TOS and push a new context for the
 								}
 
 					'(' P ')' 	{	// item_table is a structure that has a couple (Ht_item*, HashTable*),
-									// returned by the function lookup(char *id) 
 									item_table* val = lookup($2, curr_context);
 
 									// item is an Ht_item, it contains the attribute p for the items of type method where we store
-									// the types of parameters that the method takes.
+									// the types of parameters that the method takes in.
 									val->item->p = $5;
 									free(val);
 								}
 
-					block		{	// We verify that return exists. Generates a warning if -Cafeine option is used
+					block		{	// We verify that return exists. Generates a warning if -W option is used
 									 int is_returnval=0; 
 									 if($8.rtrn == NULL) { 
 										 yywarning("\nWarning: Méthode de type non Void sans Return");  }
@@ -643,7 +642,7 @@ void yyerror(const char *msg) {
 
 void yywarning(const char *msg) {
 	if(warning == 1){
-		fprintf(stderr, "\t%s%s, at line %d\n%s",YELLOW, msg, yylineno, NORMAL);
+		fprintf(stderr, "\t%s%s, at line %d\n%s",PURPLE, msg, yylineno, NORMAL);
 		set_color(NORMAL);
 	}
 }

@@ -32,15 +32,15 @@ char* new_str(){
     a=a/10;
     cpt++;
   }
-  label = malloc(cpt+6);
-  sprintf(label, "str_%ld",str_count);
+  label = malloc(cpt+8);
+  sprintf(label, "__str_%ld",str_count);
   str_count++;
   return label;
 }
 
 char* new_endfunc_label(char *name){
-  char* label = malloc(strlen(name)+6);
-  sprintf(label, "fin_%s",name);
+  char* label = malloc(strlen(name)+8);
+  sprintf(label, "__end_%s",name);
   return label;
 }
 

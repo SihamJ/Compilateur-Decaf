@@ -60,29 +60,29 @@
  */
 #define MIPS_LIB_GET_TIME "\nGetTime:\n\tli $v0, 30\n\tsyscall\n\tjr $ra\n"
 
-#define MIPS_MACRO "\nSTR_TRUE: .asciiz \"true\"\nSTR_FALSE: .asciiz \"false\"\nSTR_DYN_CHECK: .asciiz \"**** Index Out Of Bound\"\nSTR_NO_RETURN: .asciiz \"**** control reaches end of non-void function\"\n"
+#define MIPS_MACRO "\n__str_TRUE: .asciiz \"true\"\n__str_FALSE: .asciiz \"false\"\n__str_DYN_CHECK: .asciiz \"**** Index Out Of Bound\"\n__str_NO_RETURN: .asciiz \"**** control reaches end of non-void function\"\n"
 
 /**
 * Assuming the value to print is stored in the stack
 * Called by jal, jalr $target_reg or jalr $ra $target_reg
 * Assuming having 'True' and 'False' stored as literal string in STR_TRUE and STR_FALSE
 */
-#define MIPS_LIB_IO_WRITE_BOOL "\nWriteBool:\n\tlw $a0, 0($sp)\n\tbeqz $a0 Load_False\n\tLoad_True:\n\tla $a0 STR_TRUE\n\tj Print_Bool\n\tLoad_False:\n\tla $a0 STR_FALSE\n\tPrint_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
+#define MIPS_LIB_IO_WRITE_BOOL "\nWriteBool:\n\tlw $a0, 0($sp)\n\tbeqz $a0 __glob_Load_False\n\t__glob_Load_True:\n\tla $a0 __str_TRUE\n\tj __glob_Print_Bool\n\t__glob_Load_False:\n\tla $a0 __str_FALSE\n\t__glob_Print_Bool:\n\tli $v0 4\n\tsyscall\n\tjr $ra\n"
 
 /**
  * Assuming the index is in $t0
  * Assuming the uppder bound of the array is in $t1
  * Called by jal when accessing tables
  */
-#define MIPS_DYN_CHECK "\nDYN_CHECK:\n\tbltz $s0 Out_Of_Bound\n\tbge $s0 $s1 Out_Of_Bound\n\tjr $ra\n"
+#define MIPS_DYN_CHECK "\n__glob_DYN_CHECK:\n\tbltz $s0 __glob_Out_Of_Bound\n\tbge $s0 $s1 __glob_Out_Of_Bound\n\tjr $ra\n"
 
 /* Print Error and quit program */
-#define MIPS_OUT_OF_BOUND "\nOut_Of_Bound:\n\tla $a0 STR_DYN_CHECK\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
+#define MIPS_OUT_OF_BOUND "\n__glob_Out_Of_Bound:\n\tla $a0 __str_DYN_CHECK\n\tli $v0 4\n\tsyscall\n\tj __glob_Quit_Program\n"
 
-#define MIPS_NO_RETURN "\nNo_Return:\n\tla $a0 STR_NO_RETURN\n\tli $v0 4\n\tsyscall\n\tj Quit_Program\n"
+#define MIPS_NO_RETURN "\n__glob_No_Return:\n\tla $a0 __str_NO_RETURN\n\tli $v0 4\n\tsyscall\n\tj __glob_Quit_Program\n"
 
 
-#define MIPS_QUIT_PROGRAM "\nQuit_Program:\n\tli $v0, 10 \n\tsyscall\n"
+#define MIPS_QUIT_PROGRAM "\n__glob_Quit_Program:\n\tli $v0, 10 \n\tsyscall\n"
 
 /**
  * @brief bzero() fuction in Mips

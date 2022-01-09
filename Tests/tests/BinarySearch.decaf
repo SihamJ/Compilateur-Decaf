@@ -1,4 +1,5 @@
 class BinarySearch {
+
     int buffer[10];
 
     int binarySearch(int l, int r, int x) {

@@ -11,6 +11,15 @@ char* add_to_tos(int type, char *name ){
     if(ht_search(glob_context, name) != NULL)
         return "\nErreur: Méthode déjà déclarée avec ce nom\n";
 
+    else if(strlen(name) > 6 && !strncmp(name, "__end_",6))
+      return "\nErreur: __end_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+
+    else if(strlen(name) > 6 && !strncmp(name, "__str_",6))
+      return "\nErreur: __str_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+
+    else if(strlen(name) > 7 && !strncmp(name, "__glob_",7))
+      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+
     /* Verifying that main is not declared with a return type other than void*/
     if(type != VOIDTYPE && !strcmp(name,"main"))
         return "\nErreur: La méthode main doit être de type void\n";
@@ -50,7 +59,7 @@ char* end_func(char *name, int index){
     quadop qo; 
     qo.type = QO_CST; 
     qo.u.cst = 10; 
-    gencode(qo,qo,qo, Q_SYSCALL, "end", -1, NULL);
+    gencode(qo,qo,qo, Q_SYSCALL, "__end_", -1, NULL);
   }
   else {
     char *label = new_endfunc_label(name);
@@ -83,9 +92,15 @@ char* field_declare(declaration *dec, int type){
     /* verifying that the ID does not already exist in the current context*/
     if( ht_search(glob_context, pt->name) != NULL ) 
       return "\nErreur: Identificateur déjà déclaré\n";
-    else if(strlen(pt->name) > 7 && !strncmp(pt->name, "__glob_",7)){
-      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local. Utilisez glob\n";
-    }
+      
+    else if(strlen(pt->name) > 7 && !strncmp(pt->name, "__glob_",7))
+      return "\nErreur: __glob_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local\n";
+
+    else if(strlen(pt->name) > 6 && !strncmp(pt->name, "__str_",6))
+      return "\nErreur: __str_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
+
+    else if(strlen(pt->name) > 6 && !strncmp(pt->name, "__end_",6))
+      return "\nErreur: __end_ est un mot reservé ne pouvant être utilisé qu'au sein d'un contexte local.\n";
 
     if(!strcmp(pt->name, next_label_name()))
       labelCount++;

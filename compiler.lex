@@ -129,5 +129,5 @@ comment 		\/\/.*
 %%
 
 void lexerror(const char *msg){
-	fprintf(stderr,"\n%s %s, at line %d%s\n\n",RED,msg,yylineno, NORMAL);
+	fprintf(stderr,"\n%s %s, at line %d%s\n\n", RED, msg, yylineno, NORMAL);
 }

@@ -115,9 +115,9 @@ int main(int argc, char* argv[]){
 
 
 void usage(char *name){
-    fprintf(stderr, "\n%s%8sUsage: %s <source> -o <dest> [-tos] [-i]\n",YELLOW,"",name);
+    fprintf(stderr, "\n%s%8sUsage: %s <source> -o <dest> [-tos] [-i] [-W] [-Cafeine]\n",YELLOW,"",name);
     fprintf(stderr, "%8sUsage: %s -version \n\n%s","",name,NORMAL);
-    fprintf(stderr, "\n%8s<source>\tFichier source à compiler\n%8s-o <dest>\tSpécifie le nom du fichier produit en assembleur MIPS (stdout pour sortie standard)\n%8s-tos\t\tAffiche la table des symboles\n%8s-i\t\tAffiche le code intermédiaire\n%8s-version\tAffiche les membres du groupe\n\n","","","","","");
+    fprintf(stderr, "\n%8s<source>\tFichier source à compiler\n%8s-o <dest>\tSpécifie le nom du fichier produit en assembleur MIPS (stdout = sortie standard)\n%8s-tos\t\tAffiche la table des symboles\n%8s-i\t\tAffiche le code intermédiaire\n%8s-version\tAffiche les membres du groupe\n%8s-W\t\tGénère les messages de Warning\n%8s-Cafeine\tOptimisation du code intermédiaire\n\n","","","","","","","");
     exit(0);
 }
 

@@ -25,7 +25,7 @@ void mips_dec_global(quadop q){
 
 		fprintf(fout, "\t%s: %s %s\n",add_diez(q.u.global.name), ".word", str);
 		// Save constant value length for Dynamic Check
-		fprintf(fout, "\t%s_SIZE: .word %d\n", q.u.global.name, q.u.global.size);
+		fprintf(fout, "\t%s_SIZE: .word %d\n", add_diez(q.u.global.name), q.u.global.size);
 	}
 }
 
@@ -279,9 +279,9 @@ void mips_syscall(int num){
  * @param offset The offset
  */
 void mips_tab_put(char *buffer_reg, char *tab_name, int offset) {
-	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", add_diez(tab_name)); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tli $s0 %d\n\tjal __glob_DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 	fprintf(fout, "\tsw %s %s+%d\n", buffer_reg, add_diez(tab_name), offset);
 }
@@ -290,9 +290,9 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (strcmp("$s0", offset_reg))
 		fprintf(fout, "\tmove $s0 %s\n",offset_reg);
 	
-	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t3
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", add_diez(tab_name)); // Load table size to $t3
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tjal __glob_DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tsw %s %s(%s)\n",buffer_reg, add_diez(tab_name), offset_reg);
@@ -306,8 +306,8 @@ void mips_tab_put_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
  */
 void mips_tab_get(char *buffer_reg, char *tab_name, int offset) {
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t3
-	fprintf(fout, "\tli $s0 %d\n\tjal DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", add_diez(tab_name)); // Load table size to $t3
+	fprintf(fout, "\tli $s0 %d\n\tjal __glob_DYN_CHECK\n", offset); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s+%d\n", buffer_reg, add_diez(tab_name), offset);
@@ -317,9 +317,9 @@ void mips_tab_get_IdxByReg(char *buffer_reg, char *tab_name, char *offset_reg) {
 	if (strcmp("$s0", offset_reg))
 		fprintf(fout, "\tmove $s0 %s\n",offset_reg);
 
-	fprintf(fout, "\tlw $s1 %s_SIZE\n", tab_name); // Load table size to $t1
+	fprintf(fout, "\tlw $s1 %s_SIZE\n", add_diez(tab_name)); // Load table size to $t1
 	fprintf(fout, "\tmove $t2 $ra\n"); // In case $ra is in use
-	fprintf(fout, "\tjal DYN_CHECK\n"); // Effectuate dynamic check for offset value
+	fprintf(fout, "\tjal __glob_DYN_CHECK\n"); // Effectuate dynamic check for offset value
 	fprintf(fout, "\tmove $ra $t2\n");
 
 	fprintf(fout, "\tlw %s %s(%s)\n", buffer_reg, add_diez(tab_name), offset_reg);
@@ -366,7 +366,7 @@ void mips_method_call(quad q, HashTable *ctx){
 
 	// if there is a return value, we save it to the corresponding offset
 	if(q.op2.type == QO_CST){
-		fprintf(fout,"\tbeqz $v1 No_Return\n"); // verif dynamique for return value
+		fprintf(fout,"\tbeqz $v1 __glob_No_Return\n"); // verif dynamique for return value
 		item_table *val = lookup(q.op3.u.name, ctx);
 		mips_write_stack("$v0", offset(val,ctx));
 	}
