@@ -40,9 +40,6 @@ class BinarySearch {
         size = 10;
         target = 20;
         result = binarySearch(0, size-1, target);
-        
-        WriteString("The target value is found at position:\n");
-        WriteInt(result);
-        WriteString("\n");
+        WriteInt(result);   WriteString("=3\n");
     }
 }
