@@ -1,0 +1,96 @@
+// a transformer en decaf
+class travellingSalesmanProblem {
+
+    int graph[16]; 
+    int vertex[3];
+    int perm[18];
+    int V;
+    int nrow;
+    int ncol;
+    int INT_MAX;
+
+    int min(int a, int b){
+        if(a > b){
+            return b;
+        }
+        return a;
+    }
+
+    int fact(int n){
+        for i = 1, n-1 {
+            n = n * i;
+        }
+        return n;
+    }
+
+    void swap(int a, int b){
+        int cp;
+        cp = perm[a];
+        perm[a] = b;
+        perm[b] = cp;
+    }
+
+    void permutations(){
+
+        int n;
+        n = fact(V-1);
+
+        for i = 0, n-1 {
+            for j = 0, V-2 {
+                swap((i * (V-2)) + j % (V-2), (i * (V-2)) + (j + 1) % (V-2));
+                swap((i * (V-2)) + (j + 1) % (V-2), (i * (V-2)) + (j + 2) % (V-2));
+            }
+            if( i % (V-2) == 0){
+                swap((i * (V-2)) + i % (V-2), (i * (V-2)) + (i + 2) % (V-2));
+            }
+        }
+    }
+
+    int travellingSalesmanProblem(int s)
+    {
+        
+        int j;
+        int min_path;
+        int nb_permutations;
+        min_path = INT_MAX;
+        
+        // store minimum weight Hamiltonian Cycle.
+        nb_permutations = fact(V-1);
+        permutations();
+        for i = 0, nb_permutations-1 {
+    
+            // store current Path weight(cost)
+            int current_pathweight;
+            // compute current path weight
+            int k;
+            k = s;
+
+            for j = 0, V-2 {
+                current_pathweight += graph[k*ncol + perm[ i*(V-1) + j]];
+                WriteInt(i*(V-1)+j);
+                k = perm[ i*(V-1) + j];
+            }
+            current_pathweight += graph[k*ncol + s];
+    
+            // update minimum
+            min_path = min(min_path, current_pathweight);
+        } 
+
+        return min_path;
+    }
+    
+    // Driver Code
+    void main()
+    {
+        int s;
+        graph[0] = 0; graph[1] = 10; graph[2] = 15; graph[3] = 20; graph[4] = 10; graph[5] = 0; graph[6] = 35; graph[7] = 25;
+        graph[8] = 15; graph[9] = 35; graph[10] = 0; graph[11] = 30; graph[12] = 20; graph[13] = 25; graph[14] = 30; graph[15] = 0;
+        nrow = 4;
+        ncol = 4;
+        V = 4;
+        INT_MAX = 100;
+        s = 0;
+        WriteInt(travellingSalesmanProblem(s));
+        WriteString("\n");
+    }
+}

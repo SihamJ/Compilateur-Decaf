@@ -11,6 +11,7 @@
 %}
 
 %option noyywrap
+%option yylineno
 
 alpha			[a-zA-Z_]
 char			[!#-&(-\[\]-_a-~]|[[:space:]]|{newline}|\\t|\\\'|\\\"|\\\\
@@ -128,5 +129,5 @@ comment 		\/\/.*
 %%
 
 void lexerror(const char *msg){
-	fprintf(stderr,"\n%s %s%s\n\n",RED,msg,NORMAL);
+	fprintf(stderr,"\n%s %s, at line %d%s\n\n",RED,msg,yylineno, NORMAL);
 }

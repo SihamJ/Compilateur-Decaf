@@ -10,6 +10,7 @@
 	int yylex();
 	int warning;
 	int tos;
+	extern int yylineno;
 	void yyerror( const char* );
 	void yywarning( const char *);
 	char* program_name;
@@ -40,6 +41,8 @@
 }
 
 %define parse.error verbose
+%locations 
+
 %token <intval> decimal_literal hex_literal char_literal bool_literal eq neq and or not leq geq aff_add aff_sub integer boolean voidtype '+' '-' '%' '/' '<' '>' '=' '!' '*'
 %token <stringval> id string_literal ReadInt address
 %token class If Else For Return Break Continue 
@@ -65,6 +68,7 @@
 %left NEG
 
 %start program
+
 %%
 
 program	:  class id '{' {
@@ -633,13 +637,13 @@ mul_op		:	'*'							{	$$ = Q_MUL;	}
 
 
 void yyerror(const char *msg) {
-	fprintf(stderr, "%s%8s\n",RED, msg);
+	fprintf(stderr, "%s%8s, at line %d\n",RED, msg, yylineno);
 	set_color(NORMAL);
 }
 
 void yywarning(const char *msg) {
 	if(warning == 1){
-		fprintf(stderr, "\t%s%s\n%s",YELLOW, msg, NORMAL);
+		fprintf(stderr, "\t%s%s, at line %d\n%s",YELLOW, msg, yylineno, NORMAL);
 		set_color(NORMAL);
 	}
 }
