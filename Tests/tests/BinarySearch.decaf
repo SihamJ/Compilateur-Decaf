@@ -1,0 +1,48 @@
+class BinarySearch {
+    int buffer[10];
+
+    int binarySearch(int l, int r, int x) {
+        if (r >= l)
+        {
+            int mid;
+            mid = l + (r - l)/2;
+    
+            if (buffer[mid] == x) {
+                return mid;
+            }
+
+            if (buffer[mid] > x) {
+                return binarySearch(l, mid-1, x);
+            }
+    
+            return binarySearch(mid+1, r, x);
+        }
+    
+    return -1;
+    }
+      
+    void main() {
+        int size;
+        int target;
+        int result;        
+
+        buffer[0] = 0;
+        buffer[1] = 1;
+        buffer[2] = 10;
+        buffer[3] = 20;
+        buffer[4] = 30;
+        buffer[5] = 50;
+        buffer[6] = 70;
+        buffer[7] = 90;
+        buffer[8] = 100;
+        buffer[9] = 800;
+
+        size = 10;
+        target = 20;
+        result = binarySearch(0, size-1, target);
+        
+        WriteString("The target value is found at position:\n");
+        WriteInt(result);
+        WriteString("\n");
+    }
+}
