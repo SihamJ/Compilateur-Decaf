@@ -1,15 +1,9 @@
-class MasquageGlobale {
-    
+class AccesHorsBornes2 {
+    // suggéré par Evan Zarrella et son groupe
+    int a[3];
     void main ()
     {
-        int a;
-        a = 0;
-        if(a == 0){
-            WriteString("Exiting at 0");
-            Exit(a);
-        }
-        a = 1;
-        WriteString("Exiting at 1");
-        Exit(true);
+        a[1] += 3;
+        WriteInt(a[1]);
     }
 }

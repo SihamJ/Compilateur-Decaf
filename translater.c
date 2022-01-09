@@ -40,7 +40,6 @@ void translate() {
     fprintf(fout, "%s", MIPS_QUIT_PROGRAM);
 	fprintf(fout, "%s", MIPS_OUT_OF_BOUND);
 	fprintf(fout, "%s", MIPS_DYN_CHECK);
-	//fprintf(fout, "%s", MIPS_BZERO);
 	fprintf(fout, "%s", MIPS_LIB_GET_TIME);
 	fprintf(fout, "%s", MIPS_NO_RETURN);
 	fprintf(fout, "%s", MIPS_RANDOM);
@@ -79,26 +78,46 @@ void translate() {
 			}
 			break;
 		case Q_AFFADD:
-			mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
-			mips_sum("$v0", "$t0", "$t1");
-			// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
-				item_table *val = lookup(global_code[i].op1.u.name, ctx);
-        		mips_write_stack("$v0",offset(val, ctx));
+				mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
+				item_table* val = lookup(global_code[i].op1.u.name, ctx);
+				mips_sum("$v0", "$t0", "$t1");
+				mips_write_stack("$v0", offset(val, ctx));
+			}	
+			else if(global_code[i].op1.type == QO_GLOBAL){
+				if(global_code[i].op1.u.global.type == QO_SCAL){
+					mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
+					mips_sum("$v0", "$t0", "$t1");
+					mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
+				}
+				else if(global_code[i].op1.u.global.type == QO_TAB){
+					mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
+					mips_sum("$v0", "$t0", "$t1"); // t1 is the value to store, we save it in v0 before DYNAMIC CHECK.
+					mips_load_1args(global_code[i].op3, ctx);
+					mips_tab_put_IdxByReg("$v0", global_code[i].op1.u.global.name,"$t0"); //t0 is the offset
+				}
 			}
-			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",add_diez(global_code[i].op1.u.global.name));
 			break;
 		case Q_AFFSUB:
-			mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
-			mips_sub("$v0", "$t0", "$t1");
-			// I push the result in $vo directly, but we might need to store the result to q0's memory
 			if(global_code[i].op1.type == QO_ID || global_code[i].op1.type == QO_TMP){
+				mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
 				item_table* val = lookup(global_code[i].op1.u.name, ctx);
-        		mips_write_stack("$v0",offset(val, ctx));
+				mips_sub("$v0", "$t0", "$t1");
+				mips_write_stack("$v0", offset(val, ctx));
+			}	
+			else if(global_code[i].op1.type == QO_GLOBAL){
+				if(global_code[i].op1.u.global.type == QO_SCAL){
+					mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
+					mips_sub("$v0", "$t0", "$t1"); 
+					mips_store_word("$v0", add_diez(global_code[i].op1.u.global.name));
+				}
+				else if(global_code[i].op1.u.global.type == QO_TAB){
+					mips_load_2args(global_code[i].op1, global_code[i].op2, ctx);
+					mips_sub("$v0", "$t0", "$t1"); // t1 is the value to store, we save it in v0 before DYNAMIC CHECK.
+					mips_load_1args(global_code[i].op3, ctx);
+					mips_tab_put_IdxByReg("$v0", global_code[i].op1.u.global.name,"$t0"); //t0 is the offset
+				}
 			}
-			else if(global_code[i].op1.type == QO_GLOBAL)
-				mips_store_word("$v0",add_diez(global_code[i].op1.u.global.name));
 			break;
         case Q_ADD:
         	// These two offsets should be deduced/implied in a proper way

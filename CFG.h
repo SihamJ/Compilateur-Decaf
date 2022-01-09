@@ -17,6 +17,10 @@ typedef struct block{
     struct block* prec;
 } *block;
 
+typedef struct pos{
+    int i;
+    struct pos* suiv;
+} *pos;
 
 void new_cfg();
 
