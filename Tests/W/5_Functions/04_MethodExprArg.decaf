@@ -1,0 +1,16 @@
+class Test {
+	void m1(int a){
+		WriteString("0=0");
+		WriteString("\n");
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+	}
+	void main(){
+		int b;
+		int c;
+		b = 6;
+		c = 7;
+		m1(b*c);
+	}
+}

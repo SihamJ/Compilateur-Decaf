@@ -1,0 +1,13 @@
+class Test {
+	void m1(int a){
+		a = a+2;
+	}
+	void main(){
+		int b;
+		b = 42;
+		m1(b);
+		WriteInt(b);
+		WriteString("=42");
+		WriteString("\n");
+	}
+}

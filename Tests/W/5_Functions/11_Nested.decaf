@@ -1,0 +1,12 @@
+class Test {
+	void m1(){
+		WriteString("0=0");
+		WriteString("\n");
+	}
+	void m2(){
+		m1();
+	}
+	void main(){
+		m1();
+	}
+}

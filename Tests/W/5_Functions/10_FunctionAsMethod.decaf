@@ -1,0 +1,10 @@
+class Test {
+	int m1(){
+		WriteString("0=0");
+		WriteString("\n");
+		return 42;
+	}
+	void main(){
+		m1();
+	}
+}

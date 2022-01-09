@@ -1,0 +1,21 @@
+class Test {
+	void m1(int a, boolean b, int c){
+		WriteInt(a);
+		WriteString("=41");
+		WriteString("\n");
+		WriteBool(b);
+		WriteString("=true");
+		WriteString("\n");
+		WriteInt(c);
+		WriteString("=42");
+		WriteString("\n");
+	}
+	void main(){
+		boolean d;
+		int e, f;
+		d = true;
+		e = 6;
+		f = 7;
+		m1(41, d, e*f);
+	}
+}
