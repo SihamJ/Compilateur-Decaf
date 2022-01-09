@@ -1,0 +1,16 @@
+class Test {
+	void main(){
+		int a;
+		for i = 0, 42
+		{
+			if (i > 36)
+			{
+				continue;
+			}
+			a = i;
+		}
+		WriteInt(a);
+		WriteString("=36");
+		WriteString("\n");
+	}
+}

@@ -1,0 +1,15 @@
+class Test {
+	void main(){
+		int a;
+		for i = 0, 7
+		{
+			for j = 0, 6
+			{
+				a = i * j;
+			}
+		}
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+	}
+}

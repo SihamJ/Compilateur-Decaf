@@ -1,0 +1,22 @@
+class Test {
+	void main(){
+		boolean a,b;
+		a = true;
+		b = false;
+		if (a)
+		{
+			if (b)
+			{
+				WriteString("1");
+			} else
+			{
+				WriteString("0");
+			}
+		} else
+		{
+			WriteString("1");
+		}
+		WriteString("=0");
+		WriteString("\n");
+	}
+}

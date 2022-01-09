@@ -1,0 +1,21 @@
+class Test {
+	void main(){
+		int a;
+		for i = 0, 11
+		{
+			for j = 0, 13
+			{
+				if (i % 2 == 0)
+				{
+					a = a;
+				} else
+				{
+					a = (i/2) * (j/2);
+				}
+			}
+		}
+		WriteInt(a);
+		WriteString("=30");
+		WriteString("\n");
+	}
+}
