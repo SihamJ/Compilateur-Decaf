@@ -1,9 +1,9 @@
 #!/bin/bash
 DIRECTORIES="1_IO 2_Variables 3_Operations 4_Control_Structures 5_Functions 6_Context"	# Test files directories
-FILES=`find $DIRECTORIES -name "*.decaf" | sort` 								# Test files search and order
-SPIM="spim" 																	# Interpreter for the MIPS files
-DECAF="../../decaf"																# Path to compiler executable
-REGEX="^([0-9]+|"true"|"false")=([0-9]+|"true"|"false")$"
+FILES=`find $DIRECTORIES -name "*.decaf" | sort` 										# Test files search and order
+SPIM="spim" 																			# Interpreter for the MIPS files
+DECAF="../../decaf"																		# Path to compiler executable
+REGEX="^([-]?[0-9]+|"true"|"false")=([-]?[0-9]+|"true"|"false")$"
 OK="\033[1;32mOK\033[0m"
 KO="\033[1;31mKO\033[0m"
 LOCALOK=0

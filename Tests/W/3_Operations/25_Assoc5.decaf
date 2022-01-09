@@ -1,0 +1,12 @@
+class Test {
+	void main(){
+		int a, b, c, d;
+		a = 6;
+		b = 6;
+		c = 6;
+		d = a + b * c;
+		WriteInt(d);
+		WriteString("=42");
+		WriteString("\n");
+	}
+}

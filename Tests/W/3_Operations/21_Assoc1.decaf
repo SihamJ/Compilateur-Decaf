@@ -1,0 +1,12 @@
+class Test {
+	void main(){
+		boolean a, b, c, d;
+		a = true;
+		b = true;
+		c = false;
+		d = a || b && c;
+		WriteBool(d);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

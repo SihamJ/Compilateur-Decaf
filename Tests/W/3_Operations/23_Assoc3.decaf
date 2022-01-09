@@ -1,0 +1,13 @@
+class Test {
+	void main(){
+		boolean a, d;
+		int b, c;
+		a = true;
+		b = 42;
+		c = 43;
+		d = a == b < c;
+		WriteBool(d);
+		WriteString("=true");
+		WriteString("\n");
+	}
+}

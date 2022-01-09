@@ -1,0 +1,12 @@
+class Test {
+	void main(){
+		int a;
+		WriteInt(a);
+		WriteString("=0");
+		WriteString("\n");
+		a += 42;
+		WriteInt(a);
+		WriteString("=42");
+		WriteString("\n");
+	}
+}
