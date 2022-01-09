@@ -1,6 +1,0 @@
-class Test {
-	void main(){
-        boolean a;
-		WriteInt(a);
-	}
-}

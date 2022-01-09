@@ -1,5 +1,6 @@
 class Test {
 	void main(){
-		WriteInt(true);
+        boolean a;
+		WriteInt(a);
 	}
 }
