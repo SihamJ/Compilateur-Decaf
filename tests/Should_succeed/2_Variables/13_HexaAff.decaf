@@ -1,0 +1,8 @@
+class Test {
+	void main(){
+		int a;
+		a = 0xfa1afe1;
+		WriteInt(a);
+		WriteString("=262254561\n");
+	}
+}

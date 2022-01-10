@@ -40,5 +40,10 @@ $(BIN_DIR) $(OBJ_DIR):
 clean:
 	@$(RM) -rv $(OBJ_DIR) $(EXE)
 	@$(RM) $(SRC_DIR)/compiler.tab.c $(SRC_DIR)/lex.yy.c $(INC_DIR)/compiler.tab.h
+	rm decaf.tar.gz
+
+archive:
+	tar -cvzf decaf.tar.gz src include Makefile Rapport.pdf compile_and_run.sh tests old
+
 
 -include $(OBJ:.o=.d)
