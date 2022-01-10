@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "" > test.log
+cd "$(dirname $0)"
 
 if [ ! "$1" == "-v" ]
 then
