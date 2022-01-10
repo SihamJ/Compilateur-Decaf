@@ -1,4 +1,4 @@
-#include "intermediaire.h"
+#include "../include/intermediaire.h"
 
 quad global_code[5000];
 size_t nextquad; 

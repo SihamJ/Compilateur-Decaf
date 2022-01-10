@@ -1,5 +1,5 @@
-#include "translater.h"
-#include "text_formating.h"
+#include "../include/translater.h"
+#include "../include/text_formating.h"
  /* Translater from intermediate code to ASM */
 
  /**

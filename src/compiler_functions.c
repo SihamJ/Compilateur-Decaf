@@ -1,5 +1,5 @@
 
-#include "compiler_functions.h"
+#include "../include/compiler_functions.h"
 
 /** @brief Functions used in the syntax rules "compiler.y" 
  * For code refactoring.

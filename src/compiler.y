@@ -1,11 +1,11 @@
 %{	
-	#include "token.h"
-	#include "intermediaire.h"
-	#include "compiler_functions.h"
-	#include "hashtable.h"
-	#include "library.h"
-	#include "text_formating.h"
-	#include "compiler.tab.h"
+	#include "../include/token.h"
+	#include "../include/intermediaire.h"
+	#include "../include/compiler_functions.h"
+	#include "../include/hashtable.h"
+	#include "../include/library.h"
+	#include "../include/text_formating.h"
+	#include "../include/compiler.tab.h"
 	
 	int yylex();
 	int warning;

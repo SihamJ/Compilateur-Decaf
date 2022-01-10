@@ -6,6 +6,7 @@ OK="\033[1;32mOK\033[0m"
 KO="\033[1;31mKO\033[0m"
 GLOBALOK=0
 GLOBALKO=0
+TOTALCOUNT=0
 
 cd $(dirname $0)
 
@@ -41,7 +42,15 @@ do
 		GLOBALKO=$((GLOBALKO+1))
 	fi
 	rm $curr_file.xout $curr_file.mips
+	TOTALCOUNT=$((TOTALCOUNT+1))
 done
+if [ $GLOBALKO == 0 ]
+then
+	GLOBALKO="\033[1;37m$GLOBALKO\033[0m"
+else
+	GLOBALKO="\033[1;31m$GLOBALKO\033[0m"
+fi
+GLOBALOK="\033[1;32m$GLOBALOK\033[0m"
 printf '%50s\n' | tr ' ' -
-echo -e "TOTAL\tPASSED: \033[1;32m$GLOBALOK\033[0m\tFAILED: \033[1;31m$GLOBALKO\033[0m"
+echo -e "TOTAL\tPASSED: $GLOBALOK\tFAILED: $GLOBALKO"
 printf '%50s\n' | tr ' ' -

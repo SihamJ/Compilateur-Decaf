@@ -1,4 +1,4 @@
-#include "hashtable.h"
+#include "../include/hashtable.h"
 
  HashTable* curr_context;
  HashTable* glob_context;

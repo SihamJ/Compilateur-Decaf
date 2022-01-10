@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "transTool.h"
+#include "../include/transTool.h"
 
 extern FILE *fout;
 static int tmp_reg_count = 0;

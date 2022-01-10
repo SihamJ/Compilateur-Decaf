@@ -1,4 +1,4 @@
-#include "library.h"
+#include "../include/library.h"
 
 void add_libs_to_tos(){
 

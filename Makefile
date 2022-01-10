@@ -1,75 +1,41 @@
-prefixe=compiler
-dep=intermediaire
-dep2=hashtable
-dep3=translater
-dep4=transTool
-dep5=library
-dep6=text_formating
-dep7=compiler_functions
-dep8=CFG
-dep9=optimizer
+CC = gcc
 
-all: decaf
+SRC_DIR := src
+OBJ_DIR := obj
+INC_DIR := include
+BIN_DIR := .
 
-decaf: $(prefixe).tab.o lex.yy.o decaf.o $(dep).o $(dep2).o $(dep3).o $(dep4).o $(dep5).o $(dep6).o $(dep7).o $(dep8).o $(dep9).o
-	$(CC) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+EXE := $(BIN_DIR)/decaf
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-$(dep).o : $(dep).c $(dep).h $(dep2).h token.h 
-	$(CC) -c -g $(dep).c
+CPPFLAGS := -Iinclude
+CFLAGS :=
+LDFLAGS :=
+LDLIBS :=
 
-$(dep2).o : $(dep2).c $(dep2).h $(dep).h token.h $(dep6).h
-	$(CC) -c -g $(dep2).c
+all: parser $(EXE)
 
-$(dep3).o : $(dep3).c $(dep3).h $(dep).h $(dep4).h $(dep2).h instructions.h
-	$(CC) -c -g $(dep3).c
+.PHONY: all clean
 
-$(dep4).o : $(dep4).c $(dep4).h $(dep).h $(dep6).h $(dep2).h instructions.h
-	$(CC) -c -g $(dep4).c
+$(EXE): $(OBJ) | $(BIN_DIR)
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
-$(dep5).o : $(dep5).c $(dep5).h 
-	$(CC) -c -g $(dep5).c
+parser:
+	bison -d $(SRC_DIR)/compiler.y
+	flex $(SRC_DIR)/compiler.lex
+	mv compiler.tab.c $(SRC_DIR)
+	mv compiler.tab.h $(INC_DIR)
+	mv lex.yy.c $(SRC_DIR)
 
-$(dep6).o : $(dep6).c $(dep6).h 
-	$(CC) -c -g $(dep6).c
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(dep7).o : $(dep7).c $(dep7).h $(dep).h $(dep2).h token.h
-	$(CC) -c -g $(dep7).c
-
-$(dep8).o : $(dep8).c $(dep).h $(dep8).h $(dep6).h
-	$(CC) -c -g $(dep8).c
-
-$(dep9).o : $(dep9).c $(dep).h $(dep8).h $(dep6).h
-	$(CC) -c -g $(dep9).c
-
-*.y : $(dep).h $(dep2).h $(dep5).h $(dep6).h token.h $(dep7).h 
-*.lex : $(dep).h token.h 
-
-$(prefixe).tab.c: $(prefixe).y
-	bison -t -d $(prefixe).y
-
-lex.yy.c: $(prefixe).lex $(prefixe).tab.h
-	flex $(prefixe).lex
-
-$(dep).c : $(dep).h $(dep2).h token.h
-$(dep2).c : $(dep2).h $(dep).h token.h
-$(dep3).c : $(dep3).h $(dep).h $(dep4).h $(dep2).h
-$(dep4).c : $(dep4).h $(dep).h $(dep6).h $(dep2).h
-$(dep5).c : $(dep5).h 
-$(dep6).c : $(dep6).h 
-$(dep7).c : $(dep7).h $(dep).h $(dep2).h token.h
-$(dep8).c : $(dep8).h $(dep).h $(dep6).h
-$(dep9).c : $(dep9).h $(dep8).h $(dep).h $(dep6).h
-
-doc:
-	bison --report=all --report-file=$(prefixe).output \
-		--graph=$(prefixe).dot --output=/dev/null \
-		$(prefixe).y
-	dot -Tpdf < $(prefixe).dot > $(prefixe).pdf
-
-archive:
-	tar -cvzf $(prefixe).tar.gz *.c *.h *.lex *.y *.txt Makefile
+$(BIN_DIR) $(OBJ_DIR):
+	mkdir -p $@
 
 clean:
-	rm -f *.o $(prefixe).tab.c $(prefixe).tab.h lex.yy.c decaf *.gz \
-		$(prefixe).output $(prefixe).dot $(prefixe).pdf
+	@$(RM) -rv $(BIN_DIR) $(OBJ_DIR) $(SCOP2_FILES) $(SCOP_FILES) $(EXE)
+	@$(RM) $(SRC_DIR)/compiler.tab.c $(SRC_DIR)/lex.yy.c $(INC_DIR)/compiler.tab.h
 
+-include $(OBJ:.o=.d)

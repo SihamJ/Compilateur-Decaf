@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include "intermediaire.h"
-#include "hashtable.h"
-#include "translater.h"
-#include "text_formating.h"
-#include "optimizer.h"
-#include "CFG.h"
+#include "../include/intermediaire.h"
+#include "../include/hashtable.h"
+#include "../include/translater.h"
+#include "../include/text_formating.h"
+#include "../include/optimizer.h"
+#include "../include/CFG.h"
 
 extern int yyparse();
 extern int yylex();

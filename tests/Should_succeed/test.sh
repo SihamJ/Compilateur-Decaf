@@ -9,6 +9,7 @@ LOCALOK=0
 LOCALKO=0
 GLOBALOK=0
 GLOBALKO=0
+TOTALCOUNT=0
 
 cd $(dirname $0)
 
@@ -56,14 +57,29 @@ do
 			LOCALKO=$((LOCALKO+1))
 		fi
 		rm $curr_file.xout $curr_file.mips
+		TOTALCOUNT=$((TOTALCOUNT+1))
 	done
-	echo -e "\n"
-	echo -e "PASSED: \033[1;32m$LOCALOK\033[0m\tFAILED: \033[1;31m$LOCALKO\033[0m"
 	GLOBALOK=$((GLOBALOK+LOCALOK))
 	GLOBALKO=$((GLOBALKO+LOCALKO))
+	if [ $LOCALKO == 0 ]
+	then
+		LOCALKO="\033[1;37m$LOCALKO\033[0m"
+	else
+		LOCALKO="\033[1;31m$LOCALKO\033[0m"
+	fi
+	LOCALOK="\033[1;32m$LOCALOK\033[0m"
+	echo -e "\n"
+	echo -e "PASSED: $LOCALOK\tFAILED: $LOCALKO"
 	LOCALOK=0
 	LOCALKO=0
 done
+if [ $GLOBALKO == 0 ]
+then
+	GLOBALKO="\033[1;37m$GLOBALKO\033[0m"
+else
+	GLOBALKO="\033[1;31m$GLOBALKO\033[0m"
+fi
+GLOBALOK="\033[1;32m$GLOBALOK\033[0m"
 printf '%50s\n' | tr ' ' -
-echo -e "TOTAL\tPASSED: \033[1;32m$GLOBALOK\033[0m\tFAILED: \033[1;31m$GLOBALKO\033[0m"
+echo -e "TOTAL\tPASSED: $GLOBALOK\tFAILED: $GLOBALKO"
 printf '%50s\n' | tr ' ' -

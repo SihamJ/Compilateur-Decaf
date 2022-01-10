@@ -3,10 +3,10 @@
 	#include <stdlib.h>
 	#include <stdbool.h>
 	#include <string.h>
-	#include "intermediaire.h"
-	#include "token.h"
-	#include "compiler.tab.h"
-	#include "text_formating.h"
+	#include "../include/intermediaire.h"
+	#include "../include/token.h"
+	#include "../include/compiler.tab.h"
+	#include "../include/text_formating.h"
 	void lexerror(const char *msg);
 %}
 

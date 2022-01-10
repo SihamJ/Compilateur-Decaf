@@ -1,4 +1,4 @@
-#include "CFG.h"
+#include "../include/CFG.h"
 
 
 block cfg[MAX_CFG];
