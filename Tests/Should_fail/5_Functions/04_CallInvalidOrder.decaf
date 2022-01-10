@@ -1,0 +1,11 @@
+class Test {
+	void m1(int a, bool b){
+		WriteString("0=1");
+		WriteString("\n");
+	}
+	void main(){
+		int c;
+		boolean d;
+		m1(d,c);
+	}
+}

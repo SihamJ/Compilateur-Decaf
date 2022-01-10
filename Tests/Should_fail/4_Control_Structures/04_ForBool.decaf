@@ -1,0 +1,10 @@
+class Test{
+	void main(){
+		boolean b;
+		for b = false, true	
+		{
+			WriteString("0=1");
+			WriteString("\n");
+		}
+	}
+}
