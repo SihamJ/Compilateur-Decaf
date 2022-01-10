@@ -1,0 +1,10 @@
+class Test {
+
+    int m1(){
+        return true;
+    }
+    
+	void main(){
+		m1();
+	}
+}

@@ -1,0 +1,10 @@
+class Test {
+
+    void m1(){
+        return 1;
+    }
+    
+	void main(){
+        
+	}
+}

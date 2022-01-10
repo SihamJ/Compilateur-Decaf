@@ -1,7 +1,9 @@
 class Test {
 
 	int noReturn(int a){
-        return 1.2;
+        if(a == 1){
+            return 1;
+        }
     }
     
 	void main(){

@@ -1,0 +1,8 @@
+class Test {
+	void main(){
+		int x;
+        x = 17;
+        WriteBool((x <= 42 != false));
+        WriteString ("=true\n");
+	}
+}

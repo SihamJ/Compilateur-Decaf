@@ -1,0 +1,14 @@
+class Test {
+
+	void main(){
+		boolean a;
+		boolean b;
+		boolean c;
+		boolean d;
+		a = true;
+		b = false;
+		c = true;
+		WriteBool (((a != b) && (b != c)) == (a == false && c || ! a && c == false));
+		WriteString ("=false\n");
+	}
+}

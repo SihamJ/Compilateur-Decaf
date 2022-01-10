@@ -1,7 +1,7 @@
 class Test {
 
 	int noReturn(int a){
-        return 1.2;
+        a = a * 2;
     }
     
 	void main(){
