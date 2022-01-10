@@ -1,0 +1,31 @@
+class Fibonacci {
+	int sum(int a, int b){
+		return a+b;
+	}
+	void main(){
+		int v1, v2, temp, max;
+		v1 = 0;
+		v2 = 1;
+		ReadInt(&max);
+		if(max < 0) {
+			WriteString("Please enter a positive number\n");
+			Exit(1);
+		}
+		if (max == 0) {
+			WriteInt(v1);
+			return;
+		}
+		if (max == 1) {
+			WriteInt(v2);
+			return;
+		}
+		for i = 2, max
+		{
+			temp = v2;
+			v2 = sum(v1, v2);
+			v1 = temp;
+		}
+		WriteInt(v2);
+		WriteString("\n");
+	}
+}
