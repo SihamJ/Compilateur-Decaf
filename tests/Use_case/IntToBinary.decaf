@@ -1,0 +1,21 @@
+class Convert {
+	void rec(int a){
+		int aux;
+		if (a < 2){
+			WriteInt(a);
+			return;
+		} else {
+			rec(a/2);
+			WriteInt(a%2);
+		}
+	}
+	void main(){
+		int a;
+		WriteString("Please enter positive integer value : ");
+		ReadInt(&a);
+		WriteInt(a);
+		WriteString(" in binary is ");
+		rec(a);
+		WriteString("\n");
+	}
+}
