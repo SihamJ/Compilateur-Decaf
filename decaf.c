@@ -57,7 +57,7 @@ int main(int argc, char* argv[]){
             usage(argv[0]);
         }
 
-        int i = 4; int opti = 0;
+        int i = 4; int opti = 0; int optip = 0;
         bool inter = false;
 
         while(i < argc){
@@ -69,8 +69,10 @@ int main(int argc, char* argv[]){
            
             else if(!strcmp(argv[i],"-W"))
                 warning = 1;
-            else if(!strcmp(argv[i],"-Cafeine"))
+            else if(!strcmp(argv[i],"-Caffeine"))
                 opti = 1;
+            else if(!strcmp(argv[i],"-Caffeine+"))
+                optip = 1;
             else
                 usage(argv[0]);
             i++;
@@ -87,11 +89,11 @@ int main(int argc, char* argv[]){
 
         add_labels();    
         
-        if(opti){
-            optimize();
+        if(opti || optip){
+            optimize(optip);
         }
 
-        if(inter)
+        if(inter && !optip)
             print_globalcode();
         
 

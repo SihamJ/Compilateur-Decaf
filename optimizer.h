@@ -20,6 +20,6 @@ void delete_quad_list(list n);
 
 void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p);
 
-void optimize();
+void optimize(int p);
 
 #endif

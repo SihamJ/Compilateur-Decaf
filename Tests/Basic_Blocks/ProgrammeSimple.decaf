@@ -1,0 +1,24 @@
+
+class ProgrammeSimple {
+
+    void main ()
+    {
+        int a, b, c, d;
+        int i, j;
+        i = 3;
+        j = 7;
+        a = i + j;
+        b = a * 2;
+        c = (i + j) * 4;
+        for k = 0, 10 {
+            d += i + j;
+        }
+
+        WriteInt(a);    WriteString("=10\n");
+        WriteInt(b);    WriteString("=20\n");
+        WriteInt(c);    WriteString("=40\n");
+        WriteInt(d);    WriteString("=110\n");
+    }
+}
+
+

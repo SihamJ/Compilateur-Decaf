@@ -53,12 +53,16 @@ int replace_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, cha
   return 1;
   }
 
-void optimize(){
+void optimize(int p){
   useless_gotos();
-  new_cfg();
-  get_basic_blocks();
-  set_basic_blocks();
-  print_basic_blocks();
+  
+  if(p){
+    print_globalcode();
+    new_cfg();
+    get_basic_blocks();
+    set_basic_blocks();
+    print_basic_blocks();
+  }
 }
 
 /* void insert_quad(int index, quadop op1, quadop op2, quadop op3, quad_type t, char *label, int jump, param p){
