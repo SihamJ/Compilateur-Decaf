@@ -1,4 +1,4 @@
-// A faire tourner sur Mars uniquement
+// A faire tourner sur Mars uniquement à cause de la fonction Random
 
 class PauseCafe {
 
@@ -22,12 +22,15 @@ class PauseCafe {
                 win = 1;
                 break;
             }
+
             if(guess < bingo){
                 WriteString("\nA little more!\n");
             }
+
             else{
                 WriteString("\nA little less!\n");
             }
+
             rounds=rounds+1;
         }
 
@@ -36,13 +39,8 @@ class PauseCafe {
             WriteInt(bingo);
         }
         else{
-            WriteString("\nBravo! You won in ");
-            WriteInt(rounds);
-            WriteString(" rounds!\n\n");
+            WriteString("\nBravo! You won in ");    WriteInt(rounds);   WriteString(" rounds!\n\n");
         }
-
-        
     }
-
 }
 

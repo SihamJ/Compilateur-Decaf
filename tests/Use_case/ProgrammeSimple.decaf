@@ -10,6 +10,7 @@ class ProgrammeSimple {
         a = i + j;
         b = a * 2;
         c = (i + j) * 4;
+        
         for k = 0, 10 {
             d += i + j;
         }

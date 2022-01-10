@@ -1,0 +1,12 @@
+class Warning {
+
+    int noReturn(int a){
+        a = a * 2;
+    }
+
+    void main(){
+        int a;
+        a = noReturn(a);
+    }
+    
+}

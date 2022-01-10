@@ -19,7 +19,7 @@ class BinarySearch {
             return binarySearch(mid+1, r, x);
         }
     
-    return -1;
+        return -1;
     }
       
     void main() {
@@ -41,6 +41,7 @@ class BinarySearch {
         size = 10;
         target = 20;
         result = binarySearch(0, size-1, target);
+        
         WriteInt(result);   WriteString("=3\n");
     }
 }

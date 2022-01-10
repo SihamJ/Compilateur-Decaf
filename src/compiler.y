@@ -642,7 +642,7 @@ void yyerror(const char *msg) {
 
 void yywarning(const char *msg) {
 	if(warning == 1){
-		fprintf(stderr, "\t%s%s, at line %d\n%s",PURPLE, msg, yylineno, NORMAL);
+		fprintf(stderr, "\t%s%s\n%s",PURPLE, msg, NORMAL);
 		set_color(NORMAL);
 	}
 }
