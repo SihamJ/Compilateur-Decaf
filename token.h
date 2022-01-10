@@ -16,6 +16,6 @@
 #define STRING 3        // used for WriteString function
 #define BOOLGOTO 4
 #define BOOLVAL 5
-#define CAPACITY 50000 // Size of the Hash Table
+#define CAPACITY 8192 // Size of the Hash Table
 #define LEXERROR -99;
 #endif
